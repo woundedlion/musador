@@ -1,0 +1,21 @@
+PROJECT(Librarian)
+
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+
+FILE(GLOB srcs src/*.cpp)
+FILE(GLOB hdrs *.h)
+SET(libs 
+		boost
+		Database
+		Indexer
+		Logger
+		Network
+		Server
+		Utilities
+)
+
+ADD_EXECUTABLE(${PROJECT_NAME} ${hdrs} ${srcs})
+
+ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${libs})
+ADD_DEPENDENCIES(${PROJECT_NAME} ${libs})
