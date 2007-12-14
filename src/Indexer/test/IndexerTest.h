@@ -3,7 +3,9 @@
 
 #include "Indexer.h"
 #include "Logger/Logger.h"
-#define LOG(LVL) Musador::LoggerConsole::instance()->log(Musador::LVL,"IndexerTest")
+SET_LOG_SENDER("IndexerTest")
+
+using namespace Musador;
 
 class IndexerTest : public CxxTest::TestSuite 
 {
@@ -12,22 +14,20 @@ public:
 	
 	IndexerTest()
 	{
-		
+		Musador::Logger::instance();		
 	}
 
 	~IndexerTest()
 	{
-
+		Musador::Logger::destroy();
 	}
 
 	void setUp() 
 	{
-		Musador::LoggerConsole::instance();
 	}
 
 	void tearDown()
 	{
-		Musador::LoggerConsole::destroy();
 	}
 
 	static void indexDoneSlot(const Musador::IndexerProgress& p)

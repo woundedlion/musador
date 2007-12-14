@@ -2,7 +2,7 @@
 #include "boost/bind.hpp"
 
 #include "Logger/Logger.h"
-#define LOG(LVL) Musador::LoggerConsole::instance()->log(Musador::LVL,"Proactor")
+SET_LOG_SENDER("Proactor")
 
 using namespace Musador;
 

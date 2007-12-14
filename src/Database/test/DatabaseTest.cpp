@@ -20,7 +20,7 @@ int main() {
 static DatabaseTest suite_DatabaseTest;
 
 static CxxTest::List Tests_DatabaseTest = { 0, 0 };
-CxxTest::StaticSuiteDescription suiteDescription_DatabaseTest( "C:/projects/Musador/src/Database/test/DatabaseTest.h", 7, "DatabaseTest", suite_DatabaseTest, Tests_DatabaseTest );
+CxxTest::StaticSuiteDescription suiteDescription_DatabaseTest( "C:/projects/Musador/src/Database/test/DatabaseTest.h", 9, "DatabaseTest", suite_DatabaseTest, Tests_DatabaseTest );
 
 static class TestDescription_DatabaseTest_testSqliteCreate : public CxxTest::RealTestDescription {
 public:

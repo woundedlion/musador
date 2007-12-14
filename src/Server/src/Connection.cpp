@@ -6,7 +6,8 @@
 #include "boost/shared_ptr.hpp"
 #include "Connection.h"
 #include "Logger/Logger.h"
-#define LOG(LVL) Musador::LoggerConsole::instance()->log(Musador::LVL,"Proactor")
+
+SET_LOG_SENDER("Proactor")
 
 using namespace Musador;
 

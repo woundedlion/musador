@@ -10,7 +10,7 @@
 #include "Utilities/MIMEResolver.h"
 
 #include "Logger/Logger.h"
-#define LOG(LVL) LoggerConsole::instance()->log(LVL,"Indexer")
+SET_LOG_SENDER("Indexer")
 
 using namespace Musador;
 
@@ -132,7 +132,7 @@ unsigned long Indexer::addDirectory(const fs::wdirectory_entry& dir)
 	{
 		if (!d.save())
 		{
-			LOG(Error) << "Save failed for directory: " << d.path;
+			LOG(Error) << "Save failed for directory: " << static_cast<std::wstring>(d.path);
 			return Indexer::INVALID_ID;
 		}
 	}
@@ -190,7 +190,7 @@ unsigned long Indexer::addFile(const fs::wdirectory_entry& file, unsigned long p
 	{
 		if (!f.save())
 		{
-			LOG(Error) << "Save failed for file: " << f.filename;
+			LOG(Error) << "Save failed for file: " << static_cast<std::wstring>(f.filename);
 			return Indexer::INVALID_ID;
 		}
 	}

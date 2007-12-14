@@ -5,7 +5,7 @@
 #include "boost/bind.hpp"
 #include "Logger/Logger.h"
 
-#define LOG(LVL) Musador::LoggerConsole::instance()->log(Musador::LVL,"Server")
+SET_LOG_SENDER("Server")
 
 using namespace Musador;
 

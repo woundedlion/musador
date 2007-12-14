@@ -10,8 +10,8 @@
 #include <string>
 #include "boost/thread.hpp"
 #include "boost/bind.hpp"
-#define LOG(LVL) Musador::LoggerConsole::instance()->log(Musador::LVL,"ServerTest")
 
+using namespace Musador;
 
 class ServerTest : public CxxTest::TestSuite 
 {
@@ -20,24 +20,22 @@ public:
 
 	ServerTest()
 	{
-
+		Musador::Logger::instance();
+		this->net = Musador::Network::instance();
 	}
 
 	~ServerTest()
 	{
-
+		Musador::Logger::destroy();
+		Musador::Network::destroy();
 	}
 
 	void setUp() 
 	{
-		Musador::LoggerConsole::instance();
-		this->net = Musador::Network::instance();
 	}
 
 	void tearDown()
 	{
-		Musador::LoggerConsole::destroy();
-		Musador::Network::destroy();
 	}
 
 
@@ -114,7 +112,7 @@ public:
 		}
 		for (int i = 0; i < 1 + r.rand(100); ++i)
 		{
-		net->send(c, &data[0], data.size(), NULL);
+			net->send(c, &data[0], data.size(), NULL);
 		}
 		net->closeSocket(c);
 		::InterlockedIncrement(&succeeded);

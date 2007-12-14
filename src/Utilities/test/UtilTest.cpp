@@ -19,11 +19,11 @@ int main() {
 static UtilTest suite_UtilTest;
 
 static CxxTest::List Tests_UtilTest = { 0, 0 };
-CxxTest::StaticSuiteDescription suiteDescription_UtilTest( "C:/projects/Musador/src/Utilities/test/UtilTest.h", 7, "UtilTest", suite_UtilTest, Tests_UtilTest );
+CxxTest::StaticSuiteDescription suiteDescription_UtilTest( "C:/projects/Musador/src/Utilities/test/UtilTest.h", 9, "UtilTest", suite_UtilTest, Tests_UtilTest );
 
 static class TestDescription_UtilTest_testEscapeQuotes : public CxxTest::RealTestDescription {
 public:
- TestDescription_UtilTest_testEscapeQuotes() : CxxTest::RealTestDescription( Tests_UtilTest, suiteDescription_UtilTest, 22, "testEscapeQuotes" ) {}
+ TestDescription_UtilTest_testEscapeQuotes() : CxxTest::RealTestDescription( Tests_UtilTest, suiteDescription_UtilTest, 24, "testEscapeQuotes" ) {}
  void runTest() { suite_UtilTest.testEscapeQuotes(); }
 } testDescription_UtilTest_testEscapeQuotes;
 

@@ -2,7 +2,9 @@
 
 #include "Database.h"
 #include "Logger/Logger.h"
-#define LOG(LVL) Musador::LoggerConsole::instance()->log(Musador::LVL,"DatabaseTest")
+SET_LOG_SENDER("DatabaseTest")
+
+using namespace Musador;
 
 class DatabaseTest : public CxxTest::TestSuite 
 {
@@ -13,22 +15,20 @@ public:
 	
 	DatabaseTest()
 	{
-		
+		Musador::Logger::instance();
 	}
 
 	~DatabaseTest()
 	{
-
+		Musador::Logger::destroy();
 	}
 
 	void setUp() 
 	{
-		Musador::LoggerConsole::instance();
 	}
 
 	void tearDown()
 	{
-		Musador::LoggerConsole::destroy();
 	}
 
 

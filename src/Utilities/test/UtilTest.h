@@ -2,7 +2,9 @@
 
 #include "Util.h"
 #include "Logger/Logger.h"
-#define LOG(LVL) Musador::LoggerConsole::instance()->log(Musador::LVL,"UtilTest")
+SET_LOG_SENDER("UtilTest")
+
+using namespace Musador;
 
 class UtilTest : public CxxTest::TestSuite 
 {
@@ -11,12 +13,12 @@ public:
 	
 	UtilTest()
 	{
-		
+		Musador::Logger::instance();		
 	}
 
 	~UtilTest()
 	{
-
+		Musador::Logger::destroy();
 	}
 
 	void testEscapeQuotes()
@@ -34,11 +36,9 @@ public:
 
 	void setUp() 
 	{
-		Musador::LoggerConsole::instance();
 	}
 
 	void tearDown()
 	{
-		Musador::LoggerConsole::destroy();
 	}
 };

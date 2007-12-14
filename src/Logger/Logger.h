@@ -1,12 +1,23 @@
 #ifndef LOGGER_0777D49A_2E1F_4bc4_8B1E_7FD79440AA48
 #define LOGGER_0777D49A_2E1F_4bc4_8B1E_7FD79440AA48
 
-#include <string>
+#include "boost/thread.hpp"
+#include "boost/thread/mutex.hpp"
+#include "boost/lexical_cast.hpp"
+#include <sstream>
+#include <queue>
+#include "Utilities/Util.h"
 #include "Utilities/Singleton.h"
-#include "LogStream.h"
+
+#define SET_LOG_SENDER(sender)
 
 namespace Musador
 {
+	typedef boost::condition Condition;
+	typedef boost::thread Thread;
+	typedef boost::mutex Mutex;
+	typedef boost::mutex::scoped_lock Guard;
+
 	typedef enum 
 	{
 		Debug = 'D',
@@ -16,33 +27,75 @@ namespace Musador
 		Critical = 'C'
 	} LogLevel;
 
-	class Logger 
+	class Logger : public Singleton<Logger>
 	{
+	friend class LogWriter;
+	public:
+	
+		Logger();
+		
+		~Logger();
 
+		void shutdown();
+
+		void run();
+
+		LogWriter operator()(LogLevel lvl);
+		LogWriter operator()(LogLevel lvl, const std::string& sender);
+		LogWriter operator()(LogLevel lvl, const std::wstring& sender);
+		LogWriter operator()(LogLevel lvl, const std::string& sender, const std::string& tag);
+		LogWriter operator()(LogLevel lvl, const std::wstring& sender, const std::wstring& tag);
+
+	private:
+
+		void log(const std::wstring& msg);
+
+		Mutex logLock;
+		Condition logPending;	
+		std::queue<std::wstring> logMessages;
+
+		Thread * logThread;
+	};
+
+	class LogWriter
+	{
 	public:
 
-		virtual LogStream& log(LogLevel lvl) = 0;
-		
-		virtual LogStream& log(LogLevel lvl, const std::string& sender) = 0;
+		LogWriter(Logger * logger, LogLevel lvl, const std::wstring& sender, const std::wstring& tag);
 
-		virtual LogStream& log(LogLevel lvl, const std::wstring& sender) = 0;
-		
-		virtual LogStream& log(LogLevel lvl, const std::string& sender, const std::string& tag) = 0;
+		~LogWriter();
 
-		virtual LogStream& log(LogLevel lvl, const std::string& sender, const std::wstring& tag) = 0;
+		template <typename T>
+		LogWriter& operator<<(const T& msg);
 
-		virtual LogStream& log(LogLevel lvl, const std::wstring& sender, const std::string& tag) = 0;
+	private:
 
-		virtual LogStream& log(LogLevel lvl, const std::wstring& sender, const std::wstring& tag) = 0;
-
-	protected:
-
-		LogStream * logStream;
-
+		Logger * logger;
+		std::wstringstream logStream;
 	};
+
+	template <typename T>
+	inline LogWriter& LogWriter::operator<<(const T& msg)
+	{
+		this->logStream << msg;
+		return (*this);
+	}
+
+	template <>
+	inline LogWriter& LogWriter::operator<<<char>(const char& msg)
+	{
+		this->logStream << Util::utf8ToUnicode(msg);
+		return (*this);
+	}
+
+	template <>
+	inline LogWriter& LogWriter::operator<<<std::string>(const std::string& msg)
+	{
+		this->logStream << Util::utf8ToUnicode(msg);
+		return (*this);
+	}
 }
 
-#include "LoggerNull.h"
-#include "LoggerConsole.h"
+#define LOG (*Musador::Logger::instance())
 
 #endif

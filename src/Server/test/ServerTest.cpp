@@ -24,7 +24,7 @@ CxxTest::StaticSuiteDescription suiteDescription_ServerTest( "C:/projects/Musado
 
 static class TestDescription_ServerTest_testServerIO : public CxxTest::RealTestDescription {
 public:
- TestDescription_ServerTest_testServerIO() : CxxTest::RealTestDescription( Tests_ServerTest, suiteDescription_ServerTest, 46, "testServerIO" ) {}
+ TestDescription_ServerTest_testServerIO() : CxxTest::RealTestDescription( Tests_ServerTest, suiteDescription_ServerTest, 44, "testServerIO" ) {}
  void runTest() { suite_ServerTest.testServerIO(); }
 } testDescription_ServerTest_testServerIO;
 
