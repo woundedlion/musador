@@ -6,8 +6,7 @@
 #include "boost/shared_ptr.hpp"
 #include "Connection.h"
 #include "Logger/Logger.h"
-
-SET_LOG_SENDER("Proactor")
+#define LOG_SENDER L"Proactor"
 
 using namespace Musador;
 

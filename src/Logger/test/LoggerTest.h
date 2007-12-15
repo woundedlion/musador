@@ -27,61 +27,6 @@ public:
 	{
 	}
 
-	void testLoggerConsole() 
-	{
-		Musador::Logger& log = *Musador::Logger::instance();
-
-		// Macro Sender
-		log(Musador::Debug) << "Testing Console Logger | const std::wstring: " << std::wstring(L"Success");
-		log(Musador::Info) << "Testing Console Logger | const std::string: " << std::string("Success");
-		log(Musador::Warning) << "Testing Console Logger | const wchar_t *: " << L"Success";
-		log(Musador::Error) <<  "Testing Console Logger | const char *: " << "Success";
-		log(Musador::Critical) << "Testing Console Logger | wchar_t: " << L'Y';
-		log(Musador::Debug) << "Testing Console Logger | char: " << 'Y';
-		log(Musador::Info) << "Testing Console Logger | short: " << (short)123;
-		log(Musador::Warning) << "Testing Console Logger | int: " << (int)123;
-		log(Musador::Error) << "Testing Console Logger | long: " << (long)123;
-		log(Musador::Critical) << "Testing Console Logger | long long: " << (long long)123;
-		log(Musador::Debug) << "Testing Console Logger | float: " << (float)123.456;
-		log(Musador::Info) << "Testing Console Logger | double: " << (double)123.456;
-		log(Musador::Warning) << "Testing Console Logger | bool(T): " << true;
-		log(Musador::Error) << "Testing Console Logger | bool(F): " << false;
-
-		// Empty Tag
-		log(Musador::Debug, L"LoggerTest") << "Testing Console Logger | const std::wstring: " << std::wstring(L"Success");
-		log(Musador::Info, L"LoggerTest") << "Testing Console Logger | const std::string: " << std::string("Success");
-		log(Musador::Warning, L"LoggerTest") << "Testing Console Logger | const wchar_t *: " << L"Success";
-		log(Musador::Error, L"LoggerTest") <<  "Testing Console Logger | const char *: " << "Success";
-		log(Musador::Critical, L"LoggerTest") << "Testing Console Logger | wchar_t: " << L'Y';
-		log(Musador::Debug, L"LoggerTest") << "Testing Console Logger | char: " << 'Y';
-		log(Musador::Info, L"LoggerTest") << "Testing Console Logger | short: " << (short)123;
-		log(Musador::Warning, L"LoggerTest") << "Testing Console Logger | int: " << (int)123;
-		log(Musador::Error, L"LoggerTest") << "Testing Console Logger | long: " << (long)123;
-		log(Musador::Critical, L"LoggerTest") << "Testing Console Logger | long long: " << (long long)123;
-		log(Musador::Debug, L"LoggerTest") << "Testing Console Logger | float: " << (float)123.456;
-		log(Musador::Info, L"LoggerTest") << "Testing Console Logger | double: " << (double)123.456;
-		log(Musador::Warning, L"LoggerTest") << "Testing Console Logger | bool(T): " << true;
-		log(Musador::Error, L"LoggerTest") << "Testing Console Logger | bool(F): " << false;
-
-		// Tagged
-		log(Musador::Debug, L"LoggerTest",L"Tag") << "Testing Console Logger | const std::wstring: " << std::wstring(L"Success");
-		log(Musador::Info, L"LoggerTest",L"Tag") << "Testing Console Logger | const std::string: " << std::string("Success");
-		log(Musador::Warning, L"LoggerTest",L"Tag") << "Testing Console Logger | const wchar_t *: " << L"Success";
-		log(Musador::Error, L"LoggerTest",L"Tag") <<  "Testing Console Logger | const char *: " << "Success";
-		log(Musador::Critical, L"LoggerTest",L"Tag") << "Testing Console Logger | wchar_t: " << L'Y';
-		log(Musador::Debug, L"LoggerTest",L"Tag") << "Testing Console Logger | char: " << 'Y';
-		log(Musador::Info, L"LoggerTest",L"Tag") << "Testing Console Logger | short: " << (short)123;
-		log(Musador::Warning, L"LoggerTest",L"Tag") << "Testing Console Logger | int: " << (int)123;
-		log(Musador::Error, L"LoggerTest",L"Tag") << "Testing Console Logger | long: " << (long)123;
-		log(Musador::Critical, L"LoggerTest",L"Tag") << "Testing Console Logger | long long: " << (long long)123;
-		log(Musador::Debug, L"LoggerTest",L"Tag") << "Testing Console Logger | float: " << (float)123.456;
-		log(Musador::Info, L"LoggerTest",L"Tag") << "Testing Console Logger | double: " << (double)123.456;
-		log(Musador::Warning, L"LoggerTest",L"Tag") << "Testing Console Logger | bool(T): " << true;
-		log(Musador::Error, L"LoggerTest",L"Tag") << "Testing Console Logger | bool(F): " << false;
-
-		Musador::Logger::destroy();
-	}
-
 	void testLoggerMT()
 	{
 		const int BANK_COUNT = 10;
@@ -104,7 +49,7 @@ public:
 			loggingThreads[i]->join();
 			delete loggingThreads[i];
 		}
-	
+
 		Musador::Logger::destroy();
 	}
 
@@ -116,6 +61,48 @@ public:
 			log(Musador::Info, boost::lexical_cast<std::wstring,int>(id)) << i ;
 		}
 	}
+
+
+	void testLoggerConsole() 
+	{
+		Musador::Logger& log = *Musador::Logger::instance();
+		log.setLevel(Musador::Debug);
+
+		// Empty Sender
+		log(Musador::Debug) << "Testing Console Logger | const std::wstring: " << std::wstring(L"Success");
+		log(Musador::Info) << "Testing Console Logger | const std::string: " << std::string("Success");
+		log(Musador::Warning) << "Testing Console Logger | const wchar_t *: " << L"Success";
+		log(Musador::Error) <<  "Testing Console Logger | const char *: " << "Success";
+		log(Musador::Critical) << "Testing Console Logger | wchar_t: " << L'Y';
+		log(Musador::Debug) << "Testing Console Logger | char: " << 'Y';
+		log(Musador::Info) << "Testing Console Logger | short: " << (short)123;
+		log(Musador::Warning) << "Testing Console Logger | int: " << (int)123;
+		log(Musador::Error) << "Testing Console Logger | long: " << (long)123;
+		log(Musador::Critical) << "Testing Console Logger | long long: " << (long long)123;
+		log(Musador::Debug) << "Testing Console Logger | float: " << (float)123.456;
+		log(Musador::Info) << "Testing Console Logger | double: " << (double)123.456;
+		log(Musador::Warning) << "Testing Console Logger | bool(T): " << true;
+		log(Musador::Error) << "Testing Console Logger | bool(F): " << false;
+
+		// Sender
+		log(Musador::Debug, L"LoggerTest") << "Testing Console Logger | const std::wstring: " << std::wstring(L"Success");
+		log(Musador::Info, L"LoggerTest") << "Testing Console Logger | const std::string: " << std::string("Success");
+		log(Musador::Warning, L"LoggerTest") << "Testing Console Logger | const wchar_t *: " << L"Success";
+		log(Musador::Error, L"LoggerTest") <<  "Testing Console Logger | const char *: " << "Success";
+		log(Musador::Critical, L"LoggerTest") << "Testing Console Logger | wchar_t: " << L'Y';
+		log(Musador::Debug, L"LoggerTest") << "Testing Console Logger | char: " << 'Y';
+		log(Musador::Info, L"LoggerTest") << "Testing Console Logger | short: " << (short)123;
+		log(Musador::Warning, L"LoggerTest") << "Testing Console Logger | int: " << (int)123;
+		log(Musador::Error, L"LoggerTest") << "Testing Console Logger | long: " << (long)123;
+		log(Musador::Critical, L"LoggerTest") << "Testing Console Logger | long long: " << (long long)123;
+		log(Musador::Debug, L"LoggerTest") << "Testing Console Logger | float: " << (float)123.456;
+		log(Musador::Info, L"LoggerTest") << "Testing Console Logger | double: " << (double)123.456;
+		log(Musador::Warning, L"LoggerTest") << "Testing Console Logger | bool(T): " << true;
+		log(Musador::Error, L"LoggerTest") << "Testing Console Logger | bool(F): " << false;
+
+		Musador::Logger::destroy();
+	}
+
 
 	void testLoggerNull() 
 	{

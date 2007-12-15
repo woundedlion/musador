@@ -5,7 +5,7 @@
 #include "boost/bind.hpp"
 #include "Logger/Logger.h"
 
-SET_LOG_SENDER("Server")
+#define LOG_SENDER L"Server"
 
 using namespace Musador;
 

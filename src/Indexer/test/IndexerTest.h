@@ -3,7 +3,8 @@
 
 #include "Indexer.h"
 #include "Logger/Logger.h"
-SET_LOG_SENDER("IndexerTest")
+#define LOG_SENDER L"IndexerTest"
+
 
 using namespace Musador;
 

@@ -5,12 +5,12 @@
 
 #include "Server.h"
 #include "HTTPProtocol.h"
-#include "Logger/Logger.h"
 #include "Utilities/MTRand.h"
 #include <string>
 #include "boost/thread.hpp"
 #include "boost/bind.hpp"
-
+#include "Logger/Logger.h"
+#define LOG_SENDER L"ServerTest"
 using namespace Musador;
 
 class ServerTest : public CxxTest::TestSuite 

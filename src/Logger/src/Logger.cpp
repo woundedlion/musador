@@ -12,7 +12,8 @@ template LogWriter& LogWriter::operator<<<std::wstring>(const std::wstring&);
 // Logger
 //////////////////////////////////////////////////////////////////////////
 
-Logger::Logger() 
+Logger::Logger() :
+level(Info)
 {
 	this->logThread = new Thread(boost::bind(&Logger::run,this));
 }
@@ -48,31 +49,25 @@ void Logger::run()
 	}
 }
 
+void Logger::setLevel(LogLevel lvl)
+{
+	this->level = lvl;
+}
+
 LogWriter Logger::operator()(LogLevel lvl)
 {
-	return LogWriter(this,lvl,L"",L"");
+	return LogWriter(this,lvl,L"");
 }
 
 LogWriter Logger::operator()(LogLevel lvl, const std::string& sender)
 {
-	return LogWriter(this,lvl,Util::utf8ToUnicode(sender),L"");
+	return LogWriter(this,lvl,Util::utf8ToUnicode(sender));
 }
 
 LogWriter Logger::operator()(LogLevel lvl, const std::wstring& sender)
 {
-	return LogWriter(this,lvl,sender,L"");
+	return LogWriter(this,lvl,sender);
 }
-
-LogWriter Logger::operator()(LogLevel lvl, const std::string& sender, const std::string& tag)
-{
-	return LogWriter(this,lvl,Util::utf8ToUnicode(sender),Util::utf8ToUnicode(tag));
-}
-
-LogWriter Logger::operator()(LogLevel lvl, const std::wstring& sender, const std::wstring& tag)
-{
-	return LogWriter(this,lvl,sender,tag);
-}
-
 
 void Logger::log(const std::wstring& msg)
 {
@@ -84,22 +79,50 @@ void Logger::log(const std::wstring& msg)
 //////////////////////////////////////////////////////////////////////////
 // LogWriter
 //////////////////////////////////////////////////////////////////////////
-LogWriter::LogWriter(Logger * logger, LogLevel lvl, const std::wstring& sender, const std::wstring& tag) :
-logger(logger)
+LogWriter::LogWriter(Logger * logger, LogLevel lvl, const std::wstring& sender) :
+logger(logger),
+active(false),
+silent(false)
 {
+	if (lvl < logger->level)
+	{
+		this->silent = true;
+		return;
+	}
+
 	// Timestamp 
 	wchar_t timeBuf[20];
 	time_t rawTime;
 	::time(&rawTime);
 	struct tm * locTime = ::localtime(&rawTime);
 	::wcsftime(timeBuf,20,L"%y.%m.%d|%H:%M:%S",locTime);
-	this->logStream << L"[" << (char)lvl << L"] " << timeBuf << L" <" << sender.c_str() << L">" << L" {" << tag << L"} ";
+	this->logStream << L"[" << static_cast<char>(lvl & 0xff) << L"] " << timeBuf << L" <" << sender.c_str() << L"> ";
 }
 
 LogWriter::~LogWriter()
 {
-	this->logger->log(this->logStream.str());
+	if (this->active)
+	{
+		this->logger->log(this->logStream.str());
+	}
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Convenience free functions
+//////////////////////////////////////////////////////////////////////////
+LogWriter Musador::log(LogLevel lvl)
+{
+	return (*Logger::instance())(lvl);
+}
+
+LogWriter Musador::log(LogLevel lvl, const std::string& sender)
+{
+	return (*Logger::instance())(lvl,sender);
+}
+
+LogWriter Musador::log(LogLevel lvl, const std::wstring& sender)
+{
+	return (*Logger::instance())(lvl,sender);
+}
 
 

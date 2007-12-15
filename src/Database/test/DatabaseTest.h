@@ -2,7 +2,8 @@
 
 #include "Database.h"
 #include "Logger/Logger.h"
-SET_LOG_SENDER("DatabaseTest")
+
+#define LOG_SENDER L"DatabaseTest"
 
 using namespace Musador;
 

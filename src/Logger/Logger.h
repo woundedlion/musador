@@ -9,7 +9,6 @@
 #include "Utilities/Util.h"
 #include "Utilities/Singleton.h"
 
-#define SET_LOG_SENDER(sender)
 
 namespace Musador
 {
@@ -20,11 +19,11 @@ namespace Musador
 
 	typedef enum 
 	{
-		Debug = 'D',
-		Info = 'I',
-		Warning = 'W',
-		Error = 'E',
-		Critical = 'C'
+		Debug = 0x0100 | 'D',
+		Info = 0x0200 | 'I',
+		Warning = 0x0300 | 'W',
+		Error = 0x0400 | 'E',
+		Critical = 0x0500 | 'C'
 	} LogLevel;
 
 	class Logger : public Singleton<Logger>
@@ -40,11 +39,11 @@ namespace Musador
 
 		void run();
 
+		void setLevel(LogLevel lvl);
+
 		LogWriter operator()(LogLevel lvl);
 		LogWriter operator()(LogLevel lvl, const std::string& sender);
 		LogWriter operator()(LogLevel lvl, const std::wstring& sender);
-		LogWriter operator()(LogLevel lvl, const std::string& sender, const std::string& tag);
-		LogWriter operator()(LogLevel lvl, const std::wstring& sender, const std::wstring& tag);
 
 	private:
 
@@ -54,6 +53,8 @@ namespace Musador
 		Condition logPending;	
 		std::queue<std::wstring> logMessages;
 
+		LogLevel level;
+
 		Thread * logThread;
 	};
 
@@ -61,7 +62,7 @@ namespace Musador
 	{
 	public:
 
-		LogWriter(Logger * logger, LogLevel lvl, const std::wstring& sender, const std::wstring& tag);
+		LogWriter(Logger * logger, LogLevel lvl, const std::wstring& sender);
 
 		~LogWriter();
 
@@ -72,30 +73,49 @@ namespace Musador
 
 		Logger * logger;
 		std::wstringstream logStream;
+		bool active;
+		bool silent;
 	};
 
 	template <typename T>
 	inline LogWriter& LogWriter::operator<<(const T& msg)
 	{
-		this->logStream << msg;
+		if (!this->silent)
+		{
+			this->active = true;
+			this->logStream << msg;
+		}
 		return (*this);
 	}
 
 	template <>
 	inline LogWriter& LogWriter::operator<<<char>(const char& msg)
 	{
-		this->logStream << Util::utf8ToUnicode(msg);
+		if (!this->silent)
+		{
+			this->active = true;
+			this->logStream << Util::utf8ToUnicode(msg);
+		}
 		return (*this);
 	}
 
 	template <>
 	inline LogWriter& LogWriter::operator<<<std::string>(const std::string& msg)
 	{
-		this->logStream << Util::utf8ToUnicode(msg);
+		if (!this->silent)
+		{
+			this->active = true;
+			this->logStream << Util::utf8ToUnicode(msg);
+		}
 		return (*this);
 	}
+
+	LogWriter log(LogLevel lvl);
+	LogWriter log(LogLevel lvl, const std::string& sender);
+	LogWriter log(LogLevel lvl, const std::wstring& sender);
+
+	#define LOG(x) log(x,LOG_SENDER)
 }
 
-#define LOG (*Musador::Logger::instance())
 
 #endif

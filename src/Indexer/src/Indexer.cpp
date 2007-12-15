@@ -10,7 +10,7 @@
 #include "Utilities/MIMEResolver.h"
 
 #include "Logger/Logger.h"
-SET_LOG_SENDER("Indexer")
+#define LOG_SENDER L"Indexer"
 
 using namespace Musador;
 

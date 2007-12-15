@@ -2,7 +2,7 @@
 #include "boost/bind.hpp"
 
 #include "Logger/Logger.h"
-SET_LOG_SENDER("Proactor")
+#define LOG_SENDER L"Proactor"
 
 using namespace Musador;
 

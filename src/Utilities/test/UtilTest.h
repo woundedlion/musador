@@ -2,7 +2,7 @@
 
 #include "Util.h"
 #include "Logger/Logger.h"
-SET_LOG_SENDER("UtilTest")
+#define LOG_SENDER L"UtilTest"
 
 using namespace Musador;
 
