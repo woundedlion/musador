@@ -31,7 +31,7 @@ Connection::~Connection()
 	{
 		try
 		{
-			LOG(Info) << " Closing socket " << this->sock;
+			LOG(Debug) << " Closing socket " << this->sock;
 			Network::instance()->closeSocket(this->sock);
 		}
 		catch(const NetworkException& e)

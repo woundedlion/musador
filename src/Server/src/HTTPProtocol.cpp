@@ -1,4 +1,5 @@
 #include "HTTPProtocol.h"
+#include "HTTP.h"
 
 using namespace Musador;
 
