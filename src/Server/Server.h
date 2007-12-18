@@ -52,10 +52,7 @@ namespace Musador
 
 		void start();
 
-		void acceptConnections(	boost::shared_ptr<Protocol> protocol,
-								const sockaddr_in& localEP,
-								int socketType = SOCK_STREAM, 
-								int socketProto = IPPROTO_TCP);
+                void acceptConnections(boost::shared_ptr<ProtocolFactory> protocolFactory, const sockaddr_in& localEP, int socketType = SOCK_STREAM, int socketProto = IPPROTO_TCP);
 
 		void waitForStart();
 
@@ -92,7 +89,7 @@ namespace Musador
 
 		// State collections
 		typedef std::map<SOCKET, boost::shared_ptr<Connection> > ConnCollection;
-		typedef std::map<SOCKET,boost::shared_ptr<Protocol> >	ListenerCollection;
+                typedef std::map<SOCKET,boost::shared_ptr<ProtocolFactory> > ListenerCollection;
 
 		ConnCollection conns;
 		Mutex connsMutex;
@@ -105,7 +102,7 @@ namespace Musador
         Condition runningCV;
 
 		// Network
-		ListenerCollection listeners;
+		ListenerCollection listenerProtocols;
 
 		// I/O
 		Proactor io;

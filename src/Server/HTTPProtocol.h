@@ -28,5 +28,7 @@ namespace Musador
 		Mutex sessionsMutex;
 
 	};
+
+        class HTTPProtocolFactory : public ConcreteFactory<Protocol,HTTPProtocol> { };
 }
 #endif

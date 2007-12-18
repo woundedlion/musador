@@ -45,10 +45,10 @@ void Server::start()
 	boost::thread ioThread(boost::bind(&Server::runIO,this));
 }
 
-void Server::acceptConnections(boost::shared_ptr<Protocol> protocol, 
-							   const sockaddr_in& localEP, 
-							   int socketType /* = SOCK_STREAM */, 
-							   int socketProto /* = IPPROTO_TCP */)
+void Server::acceptConnections(boost::shared_ptr<ProtocolFactory> protocolFactory, 
+			       const sockaddr_in& localEP, 
+			       int socketType /* = SOCK_STREAM */, 
+			       int socketProto /* = IPPROTO_TCP */)
 {
 	// Set up server socket
 	try
@@ -56,7 +56,7 @@ void Server::acceptConnections(boost::shared_ptr<Protocol> protocol,
 		SOCKET s = net->socket(localEP.sin_family,socketType,socketProto);
 		net->bind(s,const_cast<sockaddr_in *>(&localEP));
 		net->listen(s);
-		this->listeners[s] = protocol;
+		this->listenerProtocols[s] = protocolFactory;
 		io.beginAccept(s,boost::bind(&Server::onAccept,this,_1,_2));
 	}
 	catch (const NetworkException& e)
@@ -123,7 +123,7 @@ void Server::runIO()
 	LOG(Info) << "Server shutting down...";
 	this->killConnections();
 	
-	for (ListenerCollection::iterator iter = this->listeners.begin(); iter != this->listeners.end(); ++iter)
+	for (ListenerCollection::iterator iter = this->listenerProtocols.begin(); iter != this->listenerProtocols.end(); ++iter)
 	{
 		try
 		{	
@@ -154,7 +154,7 @@ void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 	// Register for accept notification
 	io.beginAccept(msgAccept->listener,boost::bind(&Server::onAccept,this,_1,_2));
 	
-	msgAccept->conn->setProtocol(this->listeners[msgAccept->listener]);
+        msgAccept->conn->setProtocol(boost::shared_ptr<Protocol>(this->listenerProtocols[msgAccept->listener]->create()));
 	this->addConnection(msgAccept->conn);
 
 	// Register for read notification
@@ -172,7 +172,7 @@ void Server::onRead(boost::shared_ptr<IOMsg> msg, boost::any tag)
 			// Process the message
 			if (NULL != msgRead->conn->getProtocol())
 			{
-				*msgRead->conn->getProtocol() << msgRead;
+				*(msgRead->conn->getProtocol()) << msgRead;
 			}
 			// Register for read notification
 			io.beginRead(msgRead->conn,boost::bind(&Server::onRead,this,_1,_2));

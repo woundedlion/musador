@@ -2,6 +2,7 @@
 #define PROTOCOL_B85D188B_14AE_402b_8977_BEB491AAB474
 
 #include "boost/shared_ptr.hpp"
+#include "Utilities/Factory.h"
 #include "IOMessages.h"
 
 namespace Musador
@@ -10,8 +11,10 @@ namespace Musador
 	{
 	public:
 		virtual void operator<<(boost::shared_ptr<IOMsgReadComplete> msgRead) = 0;
-	};
+                virtual ~Protocol() {};
+        };
 
+        typedef AbstractFactory<Protocol> ProtocolFactory;
 }
 
 #endif
