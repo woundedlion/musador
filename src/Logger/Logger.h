@@ -26,6 +26,39 @@ namespace Musador
 		Critical = 0x0500 | 'C'
 	} LogLevel;
 
+        class LogStatement
+        {
+        public:
+
+            LogStatement(LogLevel lvl, const std::wstring& msg) : lvl(lvl),msg(msg) {}
+
+            LogLevel lvl;
+            std::wstring msg;
+        };
+
+        class LogListener
+        {
+        public:
+
+            virtual ~LogListener() {}
+            virtual void send(const LogStatement& stmt) = 0;
+        };
+
+        class ConsoleLogListener : public LogListener
+        {
+        public:
+
+            ConsoleLogListener();    
+            void send(const LogStatement& stmt);
+
+        private:
+
+#ifdef _WINDOWS
+            HANDLE hStd;        
+            LogLevel curLevel;
+#endif
+        };
+
 	class Logger : public Singleton<Logger>
 	{
 	friend class LogWriter;
@@ -47,11 +80,11 @@ namespace Musador
 
 	private:
 
-		void log(const std::wstring& msg);
+		void send(const LogStatement& stmt);
 
 		Mutex logLock;
 		Condition logPending;	
-		std::queue<std::wstring> logMessages;
+		std::queue<LogStatement> logMessages;
 
 		LogLevel level;
 
@@ -75,6 +108,7 @@ namespace Musador
 		std::wstringstream logStream;
 		bool active;
 		bool silent;
+                LogLevel lvl;
 	};
 
 	template <typename T>

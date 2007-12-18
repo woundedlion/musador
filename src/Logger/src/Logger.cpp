@@ -26,24 +26,25 @@ Logger::~Logger()
 
 void Logger::shutdown()
 {
-	this->log(L"SHUTDOWN");
+	this->send(LogStatement(Debug,L"SHUTDOWN"));
 	this->logThread->join();
 }
 
 void Logger::run()
 {
+        ConsoleLogListener listener;
 	while (true)
 	{
 		Guard guard(this->logLock);
 		while (this->logMessages.size() <= 0) this->logPending.wait(guard);
-		if (this->logMessages.front() == L"SHUTDOWN")
+		if (this->logMessages.front().msg == L"SHUTDOWN")
 		{
-			std::wcout << L"Logger shutting down..." << std::endl;
+			listener.send(LogStatement(Info,L"Logger shutting down..."));
 			break;
 		}
 		else
 		{
-			std::wcout << this->logMessages.front() << std::endl;
+			listener.send(this->logMessages.front());
 			this->logMessages.pop();
 		}
 	}
@@ -69,10 +70,10 @@ LogWriter Logger::operator()(LogLevel lvl, const std::wstring& sender)
 	return LogWriter(this,lvl,sender);
 }
 
-void Logger::log(const std::wstring& msg)
+void Logger::send(const LogStatement& stmt)
 {
 	Guard guard(this->logLock);
-	this->logMessages.push(msg);
+	this->logMessages.push(stmt);
 	this->logPending.notify_one();
 }
 
@@ -82,7 +83,8 @@ void Logger::log(const std::wstring& msg)
 LogWriter::LogWriter(Logger * logger, LogLevel lvl, const std::wstring& sender) :
 logger(logger),
 active(false),
-silent(false)
+silent(false),
+lvl(lvl)
 {
 	if (lvl < logger->level)
 	{
@@ -103,8 +105,49 @@ LogWriter::~LogWriter()
 {
 	if (this->active)
 	{
-		this->logger->log(this->logStream.str());
+            this->logger->send(LogStatement(this->lvl, this->logStream.str()));
 	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// LogListener
+//////////////////////////////////////////////////////////////////////////
+ConsoleLogListener::ConsoleLogListener()
+#ifdef _WINDOWS
+: 
+hStd(::GetStdHandle(STD_OUTPUT_HANDLE)),
+curLevel(Info)
+#endif
+{
+
+}
+void ConsoleLogListener::send(const LogStatement& stmt)
+{
+#ifdef _WINDOWS
+        if (stmt.lvl != this->curLevel)
+        {
+            this->curLevel = stmt.lvl;
+            WORD color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+            switch (stmt.lvl)
+            {
+                case Debug:
+                    color = FOREGROUND_BLUE;
+                    break;
+                case Warning:
+                    color = FOREGROUND_BLUE | FOREGROUND_GREEN;
+                    break;
+                case Error:
+                    color = FOREGROUND_RED | FOREGROUND_GREEN;
+                    break;
+                case Critical:
+                    color = FOREGROUND_RED;
+                    break;
+            }
+            ::SetConsoleTextAttribute(this->hStd, color);
+        }
+#endif
+
+        std::wcout << stmt.msg << std::endl;
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -32,6 +32,7 @@ public:
 
 	void setUp() 
 	{
+            Logger::instance()->setLevel(Debug);
 	}
 
 	void tearDown()
@@ -47,12 +48,11 @@ public:
 		s.start();
 		s.waitForStart();
 
-		boost::shared_ptr<Musador::Protocol> proto(new Musador::HTTPProtocol());
 		sockaddr_in localEP = {0};
 		localEP.sin_family = AF_INET;
 		localEP.sin_addr.s_addr = ::inet_addr("0.0.0.0");
 		localEP.sin_port = ::htons(5152);
-		s.acceptConnections(proto,localEP);
+                s.acceptConnections(boost::shared_ptr<HTTPProtocolFactory>(new HTTPProtocolFactory()),localEP);
 
 		const int BANK_COUNT = 10;
 		const int BANK_SIZE = 10;
