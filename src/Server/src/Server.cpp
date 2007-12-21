@@ -64,6 +64,7 @@ void Server::acceptConnections(boost::shared_ptr<ProtocolFactory> protocolFactor
 		LOG(Error) << e.what();
 		return;
 	}
+        LOG(Debug) << "Accepting connections on " << ::inet_ntoa(localEP.sin_addr) << ":" << ::ntohs(localEP.sin_port);
 }
 
 void Server::waitForStart()

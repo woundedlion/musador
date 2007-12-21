@@ -1,6 +1,7 @@
 #include "Librarian.h"
 #include "Server/HTTPProtocol.h"
 #include "Network/Network.h"
+#include "Logger/Logger.h"
 
 using namespace Musador;
 
@@ -17,6 +18,9 @@ Librarian::~Librarian()
 
 int Librarian::run(unsigned long argc, wchar_t * argv[])
 {
+#if _DEBUG
+    Logger::instance()->setLevel(Debug);
+#endif
 	this->server.start();
 	sockaddr_in ep = {0};
 	ep.sin_family = AF_INET;

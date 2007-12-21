@@ -11,6 +11,12 @@ namespace Musador
 	{
 	public:
 
+                enum StateType
+                {
+                    RECV_REQ_HEADER_STATE,
+                    RECV_REQ_DATA_STATE,
+                };
+
 		HTTPProtocol();
 		
 		~HTTPProtocol();
@@ -18,16 +24,11 @@ namespace Musador
 		void operator<<(boost::shared_ptr<IOMsgReadComplete> msgRead);
 
 	private:
-
-		typedef std::vector<boost::shared_ptr<HTTP::StateStore> > SessionCollection;
-		typedef std::vector<boost::shared_ptr<HTTP::User> > UserCollection;
-
-		UserCollection users;
-		Mutex usersMutex;
-		SessionCollection sessions;
-		Mutex sessionsMutex;
-
-	};
+    
+            StateType state;
+            void stateRecvReqHeader(boost::shared_ptr<IOMsgReadComplete> msgRead);
+            void stateRecvReqData(boost::shared_ptr<IOMsgReadComplete> msgRead);
+        };
 
         class HTTPProtocolFactory : public ConcreteFactory<Protocol,HTTPProtocol> { };
 }
