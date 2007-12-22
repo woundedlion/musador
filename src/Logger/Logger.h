@@ -49,13 +49,23 @@ namespace Musador
         public:
 
             ConsoleLogListener();    
+			~ConsoleLogListener();
             void send(const LogStatement& stmt);
 
         private:
 
 #ifdef _WINDOWS
-            HANDLE hStd;        
+            HANDLE hOut;        
+			WORD oldColor;
             LogLevel curLevel;
+			
+			static const WORD LOG_COLOR = FOREGROUND_RED | FOREGROUND_GREEN| FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+			static const WORD LOG_COLOR_DEBUG = FOREGROUND_BLUE;
+			static const WORD LOG_COLOR_INFO = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+			static const WORD LOG_COLOR_WARNING = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+			static const WORD LOG_COLOR_ERROR = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+			static const WORD LOG_COLOR_CRITICAL = FOREGROUND_RED | FOREGROUND_INTENSITY;
+
 #endif
         };
 

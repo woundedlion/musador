@@ -93,6 +93,7 @@ namespace Musador
 			int sendRequest();
 
 			SOCKET remoteSocket;
+
 			std::string request;
 			std::string requestURI;
 			std::string queryString;

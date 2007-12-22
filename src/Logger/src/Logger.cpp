@@ -115,35 +115,57 @@ LogWriter::~LogWriter()
 ConsoleLogListener::ConsoleLogListener()
 #ifdef _WINDOWS
 : 
-hStd(::GetStdHandle(STD_OUTPUT_HANDLE)),
-curLevel(Info)
+hOut(::GetStdHandle(STD_OUTPUT_HANDLE)),
+curLevel(Info),
+oldColor(FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN)
 #endif
 {
-
+#ifdef _WINDOWS_
+	CONSOLE_SCREEN_BUFFER_INFO bi = {0};
+	BOOL r = ::GetConsoleScreenBufferInfo(this->hOut, &bi);
+	if (r)
+	{
+		this->oldColor = bi.wAttributes & LOG_COLOR;
+	}
+	::SetConsoleTextAttribute(this->hOut,LOG_COLOR_INFO);
+#endif
 }
+
+ConsoleLogListener::~ConsoleLogListener()
+{
+#ifdef _WINDOWS_
+	::SetConsoleTextAttribute(this->hOut,this->oldColor);
+#endif
+}
+
 void ConsoleLogListener::send(const LogStatement& stmt)
 {
 #ifdef _WINDOWS
         if (stmt.lvl != this->curLevel)
         {
             this->curLevel = stmt.lvl;
-            WORD color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+			WORD color = 0;
             switch (stmt.lvl)
             {
                 case Debug:
-                    color = FOREGROUND_BLUE;
+                    color = LOG_COLOR_DEBUG;
                     break;
-                case Warning:
-                    color = FOREGROUND_BLUE | FOREGROUND_GREEN;
+				case Info:
+					color = LOG_COLOR_INFO;
+					break;
+				case Warning:
+                    color = LOG_COLOR_WARNING;
                     break;
                 case Error:
-                    color = FOREGROUND_RED | FOREGROUND_GREEN;
+                    color = LOG_COLOR_ERROR;
                     break;
                 case Critical:
-                    color = FOREGROUND_RED;
+                    color = LOG_COLOR_CRITICAL;
                     break;
-            }
-            ::SetConsoleTextAttribute(this->hStd, color);
+				default:
+					return;
+			}
+            ::SetConsoleTextAttribute(this->hOut, color);
         }
 #endif
 

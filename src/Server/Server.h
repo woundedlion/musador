@@ -52,7 +52,10 @@ namespace Musador
 
 		void start();
 
-                void acceptConnections(boost::shared_ptr<ProtocolFactory> protocolFactory, const sockaddr_in& localEP, int socketType = SOCK_STREAM, int socketProto = IPPROTO_TCP);
+        void acceptConnections(	boost::shared_ptr<ProtocolFactory> protocolFactory, 
+								const sockaddr_in& localEP, 
+								int socketType = SOCK_STREAM, 
+								int socketProto = IPPROTO_TCP);
 
 		void waitForStart();
 
