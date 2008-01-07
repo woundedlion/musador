@@ -33,10 +33,6 @@ namespace Musador
 
 		void setRemoteEP(sockaddr_in localEP);
 
-		boost::shared_ptr<Protocol> getProtocol();
-
-		void setProtocol(boost::shared_ptr<Protocol> protocol);
-
 		std::string toString();
 
 	private:
@@ -44,7 +40,6 @@ namespace Musador
 		sockaddr_in localEP;
 		sockaddr_in remoteEP;
 		SOCKET sock;
-		boost::shared_ptr<Protocol> protocol;
 
 	};
 

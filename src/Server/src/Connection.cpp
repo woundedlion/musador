@@ -71,16 +71,6 @@ void Connection::setRemoteEP(sockaddr_in remoteEP)
 	this->remoteEP = remoteEP;
 }
 
-boost::shared_ptr<Protocol> Connection::getProtocol()
-{
-	return this->protocol;
-}
-
-void Connection::setProtocol(boost::shared_ptr<Protocol> protocol)
-{
-	this->protocol = protocol;
-}
-
 std::string Connection::toString()
 {
 	std::string r;

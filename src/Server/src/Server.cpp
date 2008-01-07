@@ -154,9 +154,9 @@ void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 	// Register for accept notification
 	io.beginAccept(msgAccept->listener,boost::bind(&Server::onAccept,this,_1,_2));
 	
-        msgAccept->conn->setProtocol(boost::shared_ptr<Protocol>(this->listenerProtocols[msgAccept->listener]->create()));
-	this->addConnection(msgAccept->conn);
-
+        ConnCtx ctx;
+        ctx.protocol.reset(this->listenerProtocols[msgAccept->listener]->create());
+	this->addConnection(msgAccept->conn, ctx);
 	// Register for read notification
 	io.beginRead(msgAccept->conn,boost::bind(&Server::onRead,this,_1,_2));
 }
@@ -168,14 +168,11 @@ void Server::onRead(boost::shared_ptr<IOMsg> msg, boost::any tag)
 	{
 	case IO_READ_COMPLETE:
 		{
-			boost::shared_ptr<IOMsgReadComplete> msgRead(boost::shared_static_cast<IOMsgReadComplete>(msg));
-			// Process the message
-			if (NULL != msgRead->conn->getProtocol())
-			{
-				*(msgRead->conn->getProtocol()) << msgRead;
-			}
-			// Register for read notification
-			io.beginRead(msgRead->conn,boost::bind(&Server::onRead,this,_1,_2));
+		    boost::shared_ptr<IOMsgReadComplete> msgRead(boost::shared_static_cast<IOMsgReadComplete>(msg));
+		    // Process the message
+                    (*this->conns[msgRead->conn].protocol) << msgRead;
+                    // Register for read notification
+		    io.beginRead(msgRead->conn,boost::bind(&Server::onRead,this,_1,_2));
 		}
 		break;
 	case IO_ERROR:
@@ -210,17 +207,17 @@ void Server::onWrite(boost::shared_ptr<IOMsg> msg, boost::any tag)
 	}
 }
 
-void Server::addConnection(boost::shared_ptr<Connection> conn)
+void Server::addConnection(boost::shared_ptr<Connection> conn, ConnCtx ctx)
 {
 	Guard guard(this->connsMutex);
-	this->conns[conn->getSocket()] = conn;
+	this->conns[conn] = ctx;
 }
 
 void Server::removeConnection(boost::shared_ptr<Connection> conn)
 {
 	Guard guard(this->connsMutex);
 	ConnCollection::iterator iter;
-	if ((iter = this->conns.find(conn->getSocket())) != this->conns.end())
+	if ((iter = this->conns.find(conn)) != this->conns.end())
 	{
 		this->conns.erase(iter);
 	}

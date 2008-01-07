@@ -91,7 +91,13 @@ namespace Musador
 		Musador::Network * net;
 
 		// State collections
-		typedef std::map<SOCKET, boost::shared_ptr<Connection> > ConnCollection;
+                class ConnCtx
+                {
+                public:
+                    boost::shared_ptr<Protocol> protocol;
+                };
+
+                typedef std::map<boost::shared_ptr<Connection>, ConnCtx> ConnCollection;
                 typedef std::map<SOCKET,boost::shared_ptr<ProtocolFactory> > ListenerCollection;
 
 		ConnCollection conns;
@@ -110,7 +116,7 @@ namespace Musador
 		// I/O
 		Proactor io;
 
-		void addConnection(boost::shared_ptr<Connection> conn);
+                void addConnection(boost::shared_ptr<Connection> conn, ConnCtx ctx);
 		void removeConnection(boost::shared_ptr<Connection> conn);
 		void killConnection(boost::shared_ptr<Connection> conn);
 		void killConnections();
