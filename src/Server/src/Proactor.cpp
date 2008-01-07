@@ -43,7 +43,7 @@ void Proactor::runIO()
 			DWORD nBytes = 0;
 			CompletionCtx * ctxPtr = 0;
 			ULONG_PTR completionKey;
-			if (::GetQueuedCompletionStatus(this->iocp, &nBytes, &completionKey, reinterpret_cast<OVERLAPPED **>(&ctxPtr),1000))
+			if (::GetQueuedCompletionStatus(this->iocp, &nBytes, &completionKey, reinterpret_cast<OVERLAPPED **>(&ctxPtr),500))
 			{
 				boost::shared_ptr<CompletionCtx> ctx(ctxPtr);
 				switch(ctx->msg->getType())

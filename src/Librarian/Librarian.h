@@ -4,6 +4,8 @@
 #include "Utilities/WindowsService.h"
 #include "Indexer/Indexer.h"
 #include "Server/Server.h"
+#include "Server/Server.h"
+#include "Utilities/Console.h"
 
 using namespace Musador;
 namespace Musador

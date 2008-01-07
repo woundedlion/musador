@@ -8,7 +8,7 @@
 #include <queue>
 #include "Utilities/Util.h"
 #include "Utilities/Singleton.h"
-
+#include "Utilities/Console.h"
 
 namespace Musador
 {
@@ -26,48 +26,44 @@ namespace Musador
 		Critical = 0x0500 | 'C'
 	} LogLevel;
 
-        class LogStatement
-        {
-        public:
+    class LogStatement
+    {
+    public:
 
-            LogStatement(LogLevel lvl, const std::wstring& msg) : lvl(lvl),msg(msg) {}
+        LogStatement(LogLevel lvl, const std::wstring& msg) : lvl(lvl),msg(msg) {}
 
-            LogLevel lvl;
-            std::wstring msg;
-        };
+        LogLevel lvl;
+        std::wstring msg;
+    };
 
-        class LogListener
-        {
-        public:
+    class LogListener
+    {
+    public:
 
-            virtual ~LogListener() {}
-            virtual void send(const LogStatement& stmt) = 0;
-        };
+        virtual ~LogListener() {}
+        virtual void send(const LogStatement& stmt) = 0;
+    };
 
-        class ConsoleLogListener : public LogListener
-        {
-        public:
+    class ConsoleLogListener : public LogListener
+    {
+    public:
 
-            ConsoleLogListener();    
-			~ConsoleLogListener();
-            void send(const LogStatement& stmt);
+        ConsoleLogListener();    
+		~ConsoleLogListener();
+        void send(const LogStatement& stmt);
 
-        private:
+    private:
 
-#ifdef _WINDOWS
-            HANDLE hOut;        
-			WORD oldColor;
-            LogLevel curLevel;
-			
-			static const WORD LOG_COLOR = FOREGROUND_RED | FOREGROUND_GREEN| FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-			static const WORD LOG_COLOR_DEBUG = FOREGROUND_BLUE;
-			static const WORD LOG_COLOR_INFO = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
-			static const WORD LOG_COLOR_WARNING = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
-			static const WORD LOG_COLOR_ERROR = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
-			static const WORD LOG_COLOR_CRITICAL = FOREGROUND_RED | FOREGROUND_INTENSITY;
+        Console console;
+		LogLevel curLevel;
+		
+		static const Console::TextColor LOG_COLOR_DEBUG = Console::COLOR_BLUE_LO;
+		static const Console::TextColor LOG_COLOR_INFO = Console::COLOR_WHITE_LO;
+		static const Console::TextColor LOG_COLOR_WARNING = Console::COLOR_CYAN_HI;
+		static const Console::TextColor LOG_COLOR_ERROR = Console::COLOR_YELLOW_HI;
+		static const Console::TextColor LOG_COLOR_CRITICAL = Console::COLOR_RED_HI;
 
-#endif
-        };
+	};
 
 	class Logger : public Singleton<Logger>
 	{

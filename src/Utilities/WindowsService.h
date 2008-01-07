@@ -29,6 +29,8 @@ public:
 
 	void start();
 
+	void stop();
+
 	static void WINAPI runThunk(DWORD argc, LPTSTR argv[])
 	{
 		T::instance()->_run(argc, argv);
@@ -198,6 +200,12 @@ void WindowsService<T>::start()
 }
 
 template <class T>
+void WindowsService<T>::stop()
+{
+	::SetEvent(this->evtStop);
+}
+
+template <class T>
 void WindowsService<T>::waitForStop()
 {
 	::WaitForSingleObject(this->evtStop,INFINITE);
@@ -232,7 +240,7 @@ void WindowsService<T>::_ctrl(DWORD opCode)
 	{
 	case SERVICE_CONTROL_STOP:
 		this->setStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
-		::SetEvent(this->evtStop);
+		this->stop();
 		this->ctrl(opCode);
 		return;
 	case SERVICE_CONTROL_INTERROGATE: 

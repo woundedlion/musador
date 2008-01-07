@@ -34,7 +34,6 @@ running(false)
 
 Server::~Server() 
 {
-    this->stop();
 	this->net = NULL;
     Musador::Network::destroy();
 }
@@ -78,6 +77,7 @@ void Server::waitForStart()
 
 void Server::stop() 
 {
+	LOG(Info) << "Server shutting down...";
 	this->io.doShutdown = true;
 }
 
@@ -121,7 +121,6 @@ void Server::runIO()
 */	
 
 	// Shutting down...
-	LOG(Info) << "Server shutting down...";
 	this->killConnections();
 	
 	for (ListenerCollection::iterator iter = this->listenerProtocols.begin(); iter != this->listenerProtocols.end(); ++iter)

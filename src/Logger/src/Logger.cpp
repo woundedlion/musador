@@ -32,7 +32,7 @@ void Logger::shutdown()
 
 void Logger::run()
 {
-        ConsoleLogListener listener;
+    ConsoleLogListener listener;
 	while (true)
 	{
 		Guard guard(this->logLock);
@@ -112,39 +112,22 @@ LogWriter::~LogWriter()
 //////////////////////////////////////////////////////////////////////////
 // LogListener
 //////////////////////////////////////////////////////////////////////////
-ConsoleLogListener::ConsoleLogListener()
-#ifdef _WINDOWS
-: 
-hOut(::GetStdHandle(STD_OUTPUT_HANDLE)),
-curLevel(Info),
-oldColor(FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN)
-#endif
+ConsoleLogListener::ConsoleLogListener() :
+curLevel(Info)
 {
-#ifdef _WINDOWS_
-	CONSOLE_SCREEN_BUFFER_INFO bi = {0};
-	BOOL r = ::GetConsoleScreenBufferInfo(this->hOut, &bi);
-	if (r)
-	{
-		this->oldColor = bi.wAttributes & LOG_COLOR;
-	}
-	::SetConsoleTextAttribute(this->hOut,LOG_COLOR_INFO);
-#endif
+	this->console.setTextColor(LOG_COLOR_INFO);
 }
 
 ConsoleLogListener::~ConsoleLogListener()
 {
-#ifdef _WINDOWS_
-	::SetConsoleTextAttribute(this->hOut,this->oldColor);
-#endif
 }
 
 void ConsoleLogListener::send(const LogStatement& stmt)
 {
-#ifdef _WINDOWS
         if (stmt.lvl != this->curLevel)
         {
             this->curLevel = stmt.lvl;
-			WORD color = 0;
+			Console::TextColor color = Console::COLOR_WHITE_HI;
             switch (stmt.lvl)
             {
                 case Debug:
@@ -165,9 +148,8 @@ void ConsoleLogListener::send(const LogStatement& stmt)
 				default:
 					return;
 			}
-            ::SetConsoleTextAttribute(this->hOut, color);
+            this->console.setTextColor(color);
         }
-#endif
 
         std::wcout << stmt.msg << std::endl;
 }
