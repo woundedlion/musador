@@ -7,7 +7,6 @@
 #include "Protocol.h"
 #include "IOMessages.h"
 
-
 namespace Musador
 {
 

@@ -149,184 +149,6 @@ HTTP::Request::Request() {
 HTTP::Request::~Request() {
 }
 
-void HTTP::Request::receiveFrom(SOCKET remoteSocket) {
-	this->remoteSocket = remoteSocket;
-	this->status = 500;
-	this->reason = "Internal Server Error";
-	this->headers.clear();
-	this->params.clear();
-	this->request.clear();
-	this->requestURI.clear();
-	this->authString.clear();
-
-	// recieve the request into request buffer
-	char req[MAXREQSIZE+1];
-	size_t pos = 0;
-	int rcvd = 0;
-	bool foundTerm = false;
-	do {
-		rcvd = recv(remoteSocket,req+pos,(int)(MAXREQSIZE-pos),0);
-		if (rcvd == SOCKET_ERROR) {
-			//int error = WSAGetLastError();
-			this->status = -1;
-			return;
-		}
-		pos += rcvd;
-		if (strstr(req,HTTP_TERM))
-			foundTerm = true;
-	} while(rcvd > 0 && pos < MAXREQSIZE && !foundTerm );
-	if (pos == 0) {
-		return;
-	}
-	req[pos] = 0;
-	request = req;
-
-	// parse the request line
-	size_t pos2 = 0;
-	pos = 0;
-	size_t lineEnd;
-	std::string token;
-	lineEnd = request.find("\r\n");
-	if (lineEnd == std::string::npos) {
-		status = 400; // Bad Request
-		reason = "Bad Request";
-		return;
-	}
-	std::string reqLine = request.substr(0,lineEnd); 
-
-	// Parse Method
-	pos2 = reqLine.find(' ',pos);
-	if (pos2 == std::string::npos) {
-		status = 501; // Method not implemented;
-		reason = "Method not implemented";
-		return;
-	}
-	token = reqLine.substr(pos,pos2-pos);
-	if (token == "GET")
-		method = GET;
-	else if (token == "POST")
-		method = POST;
-	else {
-		status = 501; // Method not implemented;
-		reason = "Method not implemented";
-		return;
-	}
-	pos = ++pos2;
-
-	// Parse URL
-	pos2 = reqLine.find(' ',pos);
-	token = reqLine.substr(pos,pos2-pos);
-	if (token.empty() || token[0] != '/') { // Bad URL
-		status = 400; // Bad Request
-		reason = "Bad Request";
-		return;
-	}
-	bool hasQS = false;
-	if (token.find('?') != std::string::npos) { // check for querystring
-		pos2 = reqLine.find('?',pos);
-		requestURI = reqLine.substr(pos,pos2-pos);
-		hasQS = true;
-	} else {
-		requestURI = token;
-	}
-	HTTP::urlDecode(requestURI);
-	pos = ++pos2;
-
-	// Parse Query String
-	if (hasQS) {
-		pos2 = reqLine.find(' ',pos);
-		if (pos2 == std::string::npos) {
-			status = 400; // Bad Request
-			reason = "Bad Request";
-			return;
-		}
-		token = reqLine.substr(pos,pos2-pos);
-		queryString = token;
-		pos = ++pos2;
-	}
-
-	// Parse Protocol
-	pos2 = lineEnd;
-	if (pos2 > pos) {
-		token = reqLine.substr(pos,pos2-pos);
-		protocol = token;
-		pos2 += 2;
-		pos = pos2;
-	}
-
-	// Parse Headers
-	std::pair<std::string,std::string> nameValuePair;
-	size_t termPos = request.find(HTTP_TERM,pos);
-	while ((pos2 < termPos) && (pos2 = request.find("\r\n",pos)) != std::string::npos) {
-		token = request.substr(pos,pos2-pos);
-		if (Util::parseNameValuePair(token,':',nameValuePair))
-			headers.insert(nameValuePair);
-		pos2 += 2;
-		pos = pos2;
-	}
-
-	// parse data if POST
-	if (method == POST) {
-		pos+=2;
-		unsigned int dataLength = atoi(headers["Content-Length"].c_str());
-		if ((request.length() - pos) < dataLength) { // more request to rcv
-			size_t dataPos = 0;
-			do {
-				rcvd = recv(remoteSocket,req+dataPos,MAXREQSIZE-(int)dataPos,0);
-				if (rcvd == SOCKET_ERROR) {
-					//int error = WSAGetLastError();
-					this->status = -1;
-					return;
-				}
-				dataPos += rcvd;
-			} while(rcvd > 0 && dataPos < dataLength - (request.length() - pos) && dataPos < MAXREQSIZE);
-			request.append(req);
-		}
-		pos2 = pos + atoi(headers["Content-Length"].c_str());
-		data = request.substr(pos,pos2-pos);
-//		if (true) { //maybe check Content-Type header here?
-			pos = 0;
-			while ((pos2 = data.find("&",pos)) != std::string::npos) {
-				token = data.substr(pos,pos2-pos);
-				if (Util::parseNameValuePair(token,'=',nameValuePair)) {
-					HTTP::urlDecode(nameValuePair);
-					params.insert(nameValuePair);
-				}
-				pos = ++pos2;
-			}
-			if (pos < data.length()) { // get last param without trailing ampersand
-				token = data.substr(pos);
-				if (Util::parseNameValuePair(token,'=',nameValuePair)) {
-					HTTP::urlDecode(nameValuePair);
-					params.insert(nameValuePair);
-				}
-			}			
-//		}
-	}
-
-	// Parse Parameters
-                                                                                                                                                                                                                	pos = 0;
-	while ((pos2 = queryString.find("&",pos)) != std::string::npos) {
-		token = queryString.substr(pos,pos2-pos);
-		if (Util::parseNameValuePair(token,'=',nameValuePair)) {
-			HTTP::urlDecode(nameValuePair);
-			params.insert(nameValuePair);
-		}
-		pos = ++pos2;
-	}
-	if (pos < queryString.length()) { // get last param without trailing ampersand
-		token = queryString.substr(pos);
-		if (Util::parseNameValuePair(token,'=',nameValuePair)) {
-			HTTP::urlDecode(nameValuePair);
-			params.insert(nameValuePair);
-		}
-	}
-
-	// All good, return
-	this->status = 0;
-	this->reason = "";
-}
-
 void HTTP::Request::requestInfo(std::stringstream &info) {
 	info	<< "<table border=\"0\" cellspacing=\"2\">\r\n"
 				<< "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Request:</b></td><td valign=\"top\"><pre>" 
@@ -360,34 +182,26 @@ void HTTP::Request::requestInfo(std::stringstream &info) {
 	info << "</table>";
 }
 
-int HTTP::Request::sendHeaders() {
+void HTTP::Request::sendHeaders(const Connection& conn) {
 	std::stringstream reqData;
-	std::string methodStr;
-	if (method == Request::GET) 
-		methodStr = "GET";
-	else
-		methodStr = "POST";
-	reqData << methodStr << " " << requestURI << "?" << queryString << " " << protocol << "\r\n";
+	reqData << method << " " << requestURI << "?" << queryString << " " << protocol << "\r\n";
 	std::map<std::string,std::string>::iterator hdr;
 	for (hdr = headers.begin(); hdr != headers.end(); ++hdr) {
 		reqData << hdr->first << ": " << hdr->second << "\r\n";
 	}
 	reqData << "\r\n";
-	return sendRaw(reqData.str().c_str(),reqData.tellp());
+	sendRaw(conn, reqData.str().c_str(),reqData.tellp());
 }
 
-int HTTP::Request::sendRaw(const char * data, int size) {
-	int sent = 0;
-	// write to socket
-	sent = send(remoteSocket, data, size, 0);
-	if(sent == SOCKET_ERROR) { return 0;}
-	return sent;
+void HTTP::Request::sendRequest(const Connection& conn) {
+	this->sendHeaders(conn);
+	this->sendRaw(conn,this->data.c_str(),static_cast<int>(this->data.size()));
 }
 
-
-int HTTP::Request::sendRequest() {
-	return this->sendHeaders() + this->sendRaw(this->data.c_str(),(int)(this->data.size()));
+void HTTP::Request::sendRaw(const Connection& conn, const char * data, int size) {
+	// write to connection
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //// Response
@@ -400,116 +214,24 @@ HTTP::Response::Response() {
 	headers["Content-Type"] = "text/html";
 }
 
-void HTTP::Response::receiveFrom(SOCKET remoteSocket) {
-	this->remoteSocket = remoteSocket;
-
-	// recieve the response into buffer
-	std::string response;
-	char res[MAXREQSIZE+1];
-	size_t pos = 0;
-	int rcvd = 0;
-	bool foundTerm = false;
-	do {
-		rcvd = recv(remoteSocket,res+pos,(int)(MAXREQSIZE-pos),0);
-		if (rcvd == SOCKET_ERROR) {
-			//int error = WSAGetLastError();
-			return;
-		}
-		pos += rcvd;
-		if (strstr(res,HTTP_TERM))
-			foundTerm = true;
-	} while(rcvd > 0 && pos < MAXREQSIZE && !foundTerm );
-	res[pos] = 0; // NULL Terminate
-	response = res;
-
-	// parse the response line
-	size_t pos2 = 0;
-	pos = 0;
-	size_t lineEnd;
-	std::string token;
-	lineEnd = response.find("\r\n");
-	if (lineEnd == std::string::npos) {
-		return;
-	}
-	std::string resLine = response.substr(0,lineEnd); 
-
-	// Parse protocol
-	pos2 = resLine.find(' ',pos);
-	if (pos2 == std::string::npos) { // Bad protocol
-		return;
-	}
-	token = resLine.substr(pos,pos2-pos);
-	protocol = token;
-	pos = ++pos2;
-
-	// Parse Status
-	pos2 = resLine.find(' ',pos);
-	token = resLine.substr(pos,pos2-pos);
-	if (token.empty()) { // Bad Status
-		return;
-	}
-	status = atoi(token.c_str());
-	pos = ++pos2;
-
-	// Parse Reason
-	pos2 = lineEnd;
-	if (pos2 > pos) {
-		token = resLine.substr(pos,pos2-pos);
-		reason = token;
-		pos2 += 2;
-		pos = pos2;
-	}
-
-	// Parse Headers
-	std::pair<std::string,std::string> nameValuePair;
-	size_t termPos = response.find(HTTP_TERM,pos);
-	while ((pos2 < termPos) && (pos2 = response.find("\r\n",pos)) != std::string::npos) {
-		token = response.substr(pos,pos2-pos);
-		if (Util::parseNameValuePair(token,':',nameValuePair))
-			headers.insert(nameValuePair);
-		pos2 += 2;
-		pos = pos2;
-	}
-
-	// parse message
-	pos+=2;
-	unsigned int dataLength = (unsigned int)atoi(headers["Content-Length"].c_str());
-	
-	if ((response.length() - pos) < dataLength) { // more response to rcv
-		size_t dataPos;
-		do {	
-			dataPos = 0;
-			do {
-				rcvd = recv(remoteSocket,res+dataPos,MAXREQSIZE-(int)dataPos-1,0);
-				if (rcvd == SOCKET_ERROR) {
-					//int error = WSAGetLastError();
-					return;
-				}
-				dataPos += rcvd;
-			} while(rcvd > 0 && dataPos < dataLength && dataPos < (size_t)(MAXREQSIZE - 1));
-			res[dataPos] = 0;
-			response.append(res);
-		} while(rcvd > 0 && dataPos < dataLength);
-	}
-	pos2 = pos + atoi(headers["Content-Length"].c_str());
-	data = response.substr(pos,pos2-pos);
-}
-
 HTTP::Response::~Response() {
 
 }
 
-void HTTP::Response::setData(const std::string& responseData) {
+void HTTP::Response::setData(const std::string& responseData) 
+{
 	data = responseData;
 	char contLen[sizeof(unsigned int)*8+1];
 	headers["Content-Length"] = _itoa((int)(data.size()),contLen,10);
 }
 
-const std::string& HTTP::Response::getData() {
+const std::string& HTTP::Response::getData() 
+{
 	return data;
 }
 
-int HTTP::Response::sendHeaders() {
+void HTTP::Response::sendHeaders(const Connection& conn) 
+{
 	std::stringstream responseData;
 	responseData << protocol << " " << status << " " << reason << "\r\n";
 	std::map<std::string,std::string>::iterator hdr;
@@ -517,21 +239,16 @@ int HTTP::Response::sendHeaders() {
 		responseData << hdr->first << ": " << hdr->second << "\r\n";
 	}
 	responseData << "\r\n";
-	return sendRaw(responseData.str().c_str(),responseData.tellp());
+	this->sendRaw(conn, responseData.str().c_str(),responseData.tellp());
 }
 
-int HTTP::Response::sendRaw(const char * data, unsigned int size) {
-	int sent = 0;
-	// write to socket
-	sent = send(remoteSocket, data, size, 0);
-	if(sent == SOCKET_ERROR) { /* DWORD err = GetLastError(); */ return 0;}
-	return sent;
+void HTTP::Response::sendResponse(const Connection& conn) {
+	this->sendHeaders(conn);
+	this->sendRaw(conn, this->data.c_str(),(unsigned int)(this->data.size()));
 }
 
-
-int HTTP::Response::sendResponse() {
-	int h = this->sendHeaders();
-	return h + this->sendRaw(this->data.c_str(),(unsigned int)(this->data.size()));
+void HTTP::Response::sendRaw(const Connection& conn, const char * data, unsigned int size) {
+	// write to connection
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

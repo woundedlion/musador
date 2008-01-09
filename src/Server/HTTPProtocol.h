@@ -11,11 +11,11 @@ namespace Musador
 	{
 	public:
 
-                enum StateType
-                {
-                    RECV_REQ_HEADER_STATE,
-                    RECV_REQ_DATA_STATE,
-                };
+		enum StateType
+		{
+			RECV_REQ_HEADER_STATE,
+			RECV_REQ_DATA_STATE,
+		};
 
 		HTTPProtocol();
 		
@@ -26,8 +26,13 @@ namespace Musador
 	private:
     
             StateType state;
-            void stateRecvReqHeader(boost::shared_ptr<IOMsgReadComplete> msgRead);
-            void stateRecvReqData(boost::shared_ptr<IOMsgReadComplete> msgRead);
+			std::auto_ptr<HTTP::Request> req;
+			std::auto_ptr<HTTP::Response> res;
+
+			void stateRecvReqHeader(boost::shared_ptr<IOMsgReadComplete> msgRead);
+			void stateRecvReqData(boost::shared_ptr<IOMsgReadComplete> msgRead);
+			void error(const Connection& conn, int errCode, const char * errMsg);
+
         };
 
         class HTTPProtocolFactory : public ConcreteFactory<Protocol,HTTPProtocol> { };

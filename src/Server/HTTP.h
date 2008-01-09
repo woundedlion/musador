@@ -5,11 +5,12 @@
 #include <map>
 #include <sstream>
 
+#include "Connection.h"
 #include "Utilities/Util.h"
 #include "Utilities/MTRand.h"
-#include "Codec.h"
 #include "boost/shared_ptr.hpp"
-#include "boost/thread\mutex.hpp"
+#include "boost/thread/mutex.hpp"
+
 typedef boost::mutex Mutex;
 typedef boost::mutex::scoped_lock Guard;
 
@@ -81,18 +82,15 @@ namespace Musador
 		class Request 
 		{
 		public:
-			enum reqMeths { GET, HEAD, POST, PUT };
 
 			Request();
 			~Request();
 
-			void receiveFrom(SOCKET remoteSocket);
-			int sendHeaders();
-			int sendRaw(const char * data,int size);
-			void setData(const std::string&);
-			int sendRequest();
+			void sendHeaders(const Connection& conn);
+			void sendRequest(const Connection& conn);
+			void sendRaw(const Connection& conn, const char * data,int size);
 
-			SOCKET remoteSocket;
+			void setData(const std::string&);
 
 			std::string request;
 			std::string requestURI;
@@ -100,14 +98,16 @@ namespace Musador
 			std::string protocol;
 			int status;
 			std::string reason;
-			reqMeths method;	
+			std::string method;	
 			std::map<std::string,std::string> params;
 			std::map<std::string,std::string> headers;
 			std::string data;
 			std::string authString;
 
 			void requestInfo(std::stringstream& info);
+
 		private:
+
 		};
 
 		//////////////////////////////////////////////////////////////////////
@@ -120,19 +120,22 @@ namespace Musador
 			~Response();
 
 			void receiveFrom(SOCKET remoteSocket);
-			int sendHeaders();
-			int sendRaw(const char * data,unsigned int size);
+			void sendHeaders(const Connection& conn);
+			void sendResponse(const Connection& conn);
+			void sendRaw(const Connection& conn, const char * data,unsigned int size);
+
 			void setData(const std::string&);
 			const std::string& getData();
-			int sendResponse();
 
-			SOCKET remoteSocket;
 			std::string protocol;
 			int status;
 			std::string reason;
 			std::map<std::string,std::string> headers;
+
 		private:
+
 			std::string data;
+
 		};
 
 		//////////////////////////////////////////////////////////////////////

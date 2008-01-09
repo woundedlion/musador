@@ -2,6 +2,7 @@
 #include "HTTP.h"
 #include "boost/regex.hpp"
 #include "Logger/Logger.h"
+#include "Connection.h"
 #define LOG_SENDER L"HTTP"
 
 
@@ -34,7 +35,7 @@ void HTTPProtocol::stateRecvReqHeader(boost::shared_ptr<IOMsgReadComplete> msgRe
 {
     const char * start = msgRead->buf.get() + msgRead->off;
     const char * end = msgRead->buf.get() + msgRead->len;
-    boost::regex expr("^(GET|POST|HEAD|OPTIONS)[[:s:]]+(/[^\\r\\n]*)[[:s:]]+HTTP/(1.[01])\\r\\n(([[:alnum:]\\-]+):[[:s:]]*([^\\r\\n]*))*\\r\\n"); 
+	boost::regex expr("^(GET|POST|HEAD|OPTIONS)[[:s:]]+(?:/[^\\r\\n]*)[[:s:]]+HTTP/(1.[01])\\r\\n((?:[[:alnum:]\\-]+):[[:s:]]*(?:[^\\r\\n]*))*\\r\\n"); 
     boost::cmatch matches;
     bool valid = false;
     try
@@ -47,7 +48,37 @@ void HTTPProtocol::stateRecvReqHeader(boost::shared_ptr<IOMsgReadComplete> msgRe
     }
     if (valid)
     {
-        LOG(Debug) << matches.str();
-    }
+		if (matches[1] == "GET")
+		{
+			this->error(*msgRead->conn, 405, "Method not supported");
+			
+		}
+		else if(matches[1] == "POST")
+		{
+			this->error(*msgRead->conn, 405, "Method not supported");
 
+		}
+		else if (matches[1] == "HEAD")
+		{
+			this->error(*msgRead->conn, 405, "Method not supported");
+
+		}
+		else if (matches[1] == "OPTIONS")
+		{
+			this->error(*msgRead->conn, 405, "Method not supported");
+		}
+		else
+		{
+			this->error(*msgRead->conn, 405, "Method not supported");
+		}
+    }
 }
+
+void HTTPProtocol::error(const Connection& conn, int errCode, const char * errMsg)
+{
+	HTTP::Response res;
+	res.status = errCode;
+	res.reason = errMsg;
+	res.sendResponse(conn);
+}
+
