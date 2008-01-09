@@ -2,7 +2,7 @@ PROJECT(Utilities)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-FILE(GLOB srcs src/*.cpp)
+FILE(GLOB srcs src/*.c src/*.cpp)
 FILE(GLOB hdrs *.h)
 SET(libs 
 		boost
