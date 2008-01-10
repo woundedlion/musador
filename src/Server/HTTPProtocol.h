@@ -31,7 +31,7 @@ namespace Musador
 
 			void stateRecvReqHeader(boost::shared_ptr<IOMsgReadComplete> msgRead);
 			void stateRecvReqData(boost::shared_ptr<IOMsgReadComplete> msgRead);
-			void error(const Connection& conn, int errCode, const char * errMsg);
+			void error(Connection& conn, int errCode, const char * errMsg);
 
         };
 

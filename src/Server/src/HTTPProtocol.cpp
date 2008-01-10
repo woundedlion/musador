@@ -74,11 +74,14 @@ void HTTPProtocol::stateRecvReqHeader(boost::shared_ptr<IOMsgReadComplete> msgRe
     }
 }
 
-void HTTPProtocol::error(const Connection& conn, int errCode, const char * errMsg)
+void HTTPProtocol::error(Connection& conn, int errCode, const char * errMsg)
 {
 	HTTP::Response res;
 	res.status = errCode;
 	res.reason = errMsg;
+	res.data << "<h1>" << errCode << " " << errMsg << "</h1>";
+	res.headers["Content-Type"] = "text/html";
+	res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data.tellp());
 	res.sendResponse(conn);
 }
 

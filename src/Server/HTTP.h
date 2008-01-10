@@ -86,11 +86,8 @@ namespace Musador
 			Request();
 			~Request();
 
-			void sendHeaders(const Connection& conn);
-			void sendRequest(const Connection& conn);
-			void sendRaw(const Connection& conn, const char * data,int size);
-
-			void setData(const std::string&);
+			void sendHeaders(Connection& conn);
+			void sendRequest(Connection& conn);
 
 			std::string request;
 			std::string requestURI;
@@ -101,8 +98,8 @@ namespace Musador
 			std::string method;	
 			std::map<std::string,std::string> params;
 			std::map<std::string,std::string> headers;
-			std::string data;
 			std::string authString;
+			std::stringstream data;
 
 			void requestInfo(std::stringstream& info);
 
@@ -120,21 +117,14 @@ namespace Musador
 			~Response();
 
 			void receiveFrom(SOCKET remoteSocket);
-			void sendHeaders(const Connection& conn);
-			void sendResponse(const Connection& conn);
-			void sendRaw(const Connection& conn, const char * data,unsigned int size);
-
-			void setData(const std::string&);
-			const std::string& getData();
+			void sendHeaders(Connection& conn);
+			void sendResponse(Connection& conn);
 
 			std::string protocol;
 			int status;
 			std::string reason;
 			std::map<std::string,std::string> headers;
-
-		private:
-
-			std::string data;
+			std::stringstream data;
 
 		};
 

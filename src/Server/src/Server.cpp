@@ -56,7 +56,7 @@ void Server::acceptConnections(boost::shared_ptr<ProtocolFactory> protocolFactor
 		net->bind(s,const_cast<sockaddr_in *>(&localEP));
 		net->listen(s);
 		this->listenerProtocols[s] = protocolFactory;
-		io.beginAccept(s,boost::bind(&Server::onAccept,this,_1,_2));
+		Proactor::instance()->beginAccept(s,boost::bind(&Server::onAccept,this,_1,_2));
 	}
 	catch (const NetworkException& e)
 	{
@@ -78,7 +78,7 @@ void Server::waitForStart()
 void Server::stop() 
 {
 	LOG(Info) << "Server shutting down...";
-	this->io.doShutdown = true;
+	Proactor::instance()->doShutdown = true;
 }
 
 void Server::waitForStop()
@@ -106,19 +106,7 @@ void Server::runIO()
 	}
 
 	// start IO engine
-	this->io.runIO();
-/*	const int NUM_IO_THREADS = 2;
-	boost::thread * ioThreads[NUM_IO_THREADS];
-	for (int i = 0; i < NUM_IO_THREADS; ++i)
-	{
-		ioThreads[i] = new boost::thread(boost::bind(&Proactor::runIO,&this->io));
-	}
-	for (int i = 0; i < NUM_IO_THREADS; ++i)
-	{
-		ioThreads[i]->join();
-		delete ioThreads[i];
-	}
-*/	
+	Proactor::instance()->runIO();
 
 	// Shutting down...
 	this->killConnections();
@@ -152,13 +140,13 @@ void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 	boost::shared_ptr<IOMsgAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgAcceptComplete>(msg));
 
 	// Register for accept notification
-	io.beginAccept(msgAccept->listener,boost::bind(&Server::onAccept,this,_1,_2));
+	Proactor::instance()->beginAccept(msgAccept->listener,boost::bind(&Server::onAccept,this,_1,_2));
 	
-        ConnCtx ctx;
-        ctx.protocol.reset(this->listenerProtocols[msgAccept->listener]->create());
+    ConnCtx ctx;
+    ctx.protocol.reset(this->listenerProtocols[msgAccept->listener]->create());
 	this->addConnection(msgAccept->conn, ctx);
 	// Register for read notification
-	io.beginRead(msgAccept->conn,boost::bind(&Server::onRead,this,_1,_2));
+	Proactor::instance()->beginRead(msgAccept->conn,boost::bind(&Server::onRead,this,_1,_2));
 }
 
 
@@ -170,9 +158,9 @@ void Server::onRead(boost::shared_ptr<IOMsg> msg, boost::any tag)
 		{
 		    boost::shared_ptr<IOMsgReadComplete> msgRead(boost::shared_static_cast<IOMsgReadComplete>(msg));
 		    // Process the message
-                    (*this->conns[msgRead->conn].protocol) << msgRead;
-                    // Register for read notification
-		    io.beginRead(msgRead->conn,boost::bind(&Server::onRead,this,_1,_2));
+            (*this->conns[msgRead->conn].protocol) << msgRead;
+            // Register for read notification
+		    Proactor::instance()->beginRead(msgRead->conn,boost::bind(&Server::onRead,this,_1,_2));
 		}
 		break;
 	case IO_ERROR:

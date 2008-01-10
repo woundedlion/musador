@@ -1,6 +1,7 @@
 #ifndef CONNECTION_A8167A71_4E20_466d_8D70_C211158BB00D
 #define CONNECTION_A8167A71_4E20_466d_8D70_C211158BB00D
 
+#include <sstream>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include "Network/Network.h"
@@ -33,6 +34,12 @@ namespace Musador
 		void setRemoteEP(sockaddr_in localEP);
 
 		std::string toString();
+
+		void beginWrite(boost::shared_array<char> data, unsigned int len);
+
+		void beginWrite(const std::string& str);
+
+		void beginWrite(std::stringstream& dataStream);
 
 	private:
 

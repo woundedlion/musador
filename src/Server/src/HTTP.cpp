@@ -182,7 +182,7 @@ void HTTP::Request::requestInfo(std::stringstream &info) {
 	info << "</table>";
 }
 
-void HTTP::Request::sendHeaders(const Connection& conn) {
+void HTTP::Request::sendHeaders(Connection& conn) {
 	std::stringstream reqData;
 	reqData << method << " " << requestURI << "?" << queryString << " " << protocol << "\r\n";
 	std::map<std::string,std::string>::iterator hdr;
@@ -190,16 +190,13 @@ void HTTP::Request::sendHeaders(const Connection& conn) {
 		reqData << hdr->first << ": " << hdr->second << "\r\n";
 	}
 	reqData << "\r\n";
-	sendRaw(conn, reqData.str().c_str(),reqData.tellp());
+
+	conn.beginWrite(reqData);
 }
 
-void HTTP::Request::sendRequest(const Connection& conn) {
+void HTTP::Request::sendRequest(Connection& conn) {
 	this->sendHeaders(conn);
-	this->sendRaw(conn,this->data.c_str(),static_cast<int>(this->data.size()));
-}
-
-void HTTP::Request::sendRaw(const Connection& conn, const char * data, int size) {
-	// write to connection
+	conn.beginWrite(this->data);
 }
 
 
@@ -212,25 +209,14 @@ HTTP::Response::Response() {
 	status = 200;
 	reason = "OK";
 	headers["Content-Type"] = "text/html";
+	headers["Content-Length"] = "0";
 }
 
 HTTP::Response::~Response() {
 
 }
 
-void HTTP::Response::setData(const std::string& responseData) 
-{
-	data = responseData;
-	char contLen[sizeof(unsigned int)*8+1];
-	headers["Content-Length"] = _itoa((int)(data.size()),contLen,10);
-}
-
-const std::string& HTTP::Response::getData() 
-{
-	return data;
-}
-
-void HTTP::Response::sendHeaders(const Connection& conn) 
+void HTTP::Response::sendHeaders(Connection& conn) 
 {
 	std::stringstream responseData;
 	responseData << protocol << " " << status << " " << reason << "\r\n";
@@ -239,16 +225,13 @@ void HTTP::Response::sendHeaders(const Connection& conn)
 		responseData << hdr->first << ": " << hdr->second << "\r\n";
 	}
 	responseData << "\r\n";
-	this->sendRaw(conn, responseData.str().c_str(),responseData.tellp());
+
+	conn.beginWrite(responseData);
 }
 
-void HTTP::Response::sendResponse(const Connection& conn) {
+void HTTP::Response::sendResponse(Connection& conn) {
 	this->sendHeaders(conn);
-	this->sendRaw(conn, this->data.c_str(),(unsigned int)(this->data.size()));
-}
-
-void HTTP::Response::sendRaw(const Connection& conn, const char * data, unsigned int size) {
-	// write to connection
+	conn.beginWrite(this->data);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

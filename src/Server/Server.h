@@ -113,10 +113,7 @@ namespace Musador
 		// Network
 		ListenerCollection listenerProtocols;
 
-		// I/O
-		Proactor io;
-
-                void addConnection(boost::shared_ptr<Connection> conn, ConnCtx ctx);
+		void addConnection(boost::shared_ptr<Connection> conn, ConnCtx ctx);
 		void removeConnection(boost::shared_ptr<Connection> conn);
 		void killConnection(boost::shared_ptr<Connection> conn);
 		void killConnections();

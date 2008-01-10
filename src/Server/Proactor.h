@@ -5,7 +5,7 @@
 #include "boost/signals.hpp"
 #include "boost/any.hpp"
 #include "boost/thread.hpp"
-#include "Utilities/MessageSink.h"
+#include "Utilities/Singleton.h"
 #include "Network/Network.h"
 #include "IOMessages.h"
 
@@ -28,9 +28,8 @@ namespace Musador
 
 	//////////////////////////////////////////////////////////////////////////
 	/// Proactor 
-	/// Provides an asynchronous interface to register callbacks to be 
-	/// triggered by I/O completion events. 
-	class Proactor
+	/// Provides an asynchronous IO interface
+	class Proactor : public Singleton<Proactor>
 	{
 	public:
 
