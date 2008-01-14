@@ -8,8 +8,7 @@
 
 using namespace Musador;
 
-HTTPProtocol::HTTPProtocol() :
-state(RECV_REQ_HEADER_STATE)
+HTTPProtocol::HTTPProtocol() 
 {
 
 }
@@ -21,17 +20,21 @@ HTTPProtocol::~HTTPProtocol()
 
 void HTTPProtocol::operator<<(boost::shared_ptr<IOMsgReadComplete> msgRead)
 {
-    switch (this->state)
-    {
-    case RECV_REQ_HEADER_STATE:
-        this->stateRecvReqHeader(msgRead);
-        break;
-    case RECV_REQ_DATA_STATE:
-        break;
-    }
+
 }
 
-void HTTPProtocol::stateRecvReqHeader(boost::shared_ptr<IOMsgReadComplete> msgRead)
+void HTTPProtocol::error(Connection& conn, int errCode, const char * errMsg)
+{
+	HTTP::Response res;
+	res.status = errCode;
+	res.reason = errMsg;
+	res.data << "<h1>" << errCode << " " << errMsg << "</h1>";
+	res.headers["Content-Type"] = "text/html";
+	res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data.tellp());
+	res.sendResponse(conn);
+}
+
+void HTTPProtocol::readReqHeader(boost::shared_ptr<IOMsgReadComplete> msgRead)
 {
     const char * start = msgRead->buf.get() + msgRead->off;
     const char * end = msgRead->buf.get() + msgRead->len;
@@ -74,14 +77,5 @@ void HTTPProtocol::stateRecvReqHeader(boost::shared_ptr<IOMsgReadComplete> msgRe
     }
 }
 
-void HTTPProtocol::error(Connection& conn, int errCode, const char * errMsg)
-{
-	HTTP::Response res;
-	res.status = errCode;
-	res.reason = errMsg;
-	res.data << "<h1>" << errCode << " " << errMsg << "</h1>";
-	res.headers["Content-Type"] = "text/html";
-	res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data.tellp());
-	res.sendResponse(conn);
-}
+
 

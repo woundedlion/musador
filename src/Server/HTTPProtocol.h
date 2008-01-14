@@ -4,18 +4,31 @@
 #include "Protocol.h"
 #include "HTTP.h"
 
+#include "boost/statechart/state_machine.hpp"
+#include "boost/statechart/event.hpp"
+#include "boost/statechart/simple_state.hpp"
+#include <boost/statechart/transition.hpp>
+
+namespace sc = boost::statechart;
+
 namespace Musador
 {
-
 	class HTTPProtocol : public Protocol
 	{
 	public:
 
-		enum StateType
+		struct StateRecvReqHeader;
+		struct FSM : sc::state_machine<FSM, StateRecvReqHeader> {};
+
+		struct EvtGotHeader : sc::event<EvtGotHeader> {};
+
+		struct StateRecvReqData : sc::simple_state<StateRecvReqData,FSM> {};
+
+		struct StateRecvReqHeader : sc::simple_state<StateRecvReqHeader,FSM>
 		{
-			RECV_REQ_HEADER_STATE,
-			RECV_REQ_DATA_STATE,
+			typedef sc::transition< EvtGotHeader, StateRecvReqData > reactions;
 		};
+
 
 		HTTPProtocol();
 		
@@ -25,13 +38,13 @@ namespace Musador
 
 	private:
     
-            StateType state;
 			std::auto_ptr<HTTP::Request> req;
 			std::auto_ptr<HTTP::Response> res;
 
-			void stateRecvReqHeader(boost::shared_ptr<IOMsgReadComplete> msgRead);
-			void stateRecvReqData(boost::shared_ptr<IOMsgReadComplete> msgRead);
 			void error(Connection& conn, int errCode, const char * errMsg);
+
+			void readReqHeader(boost::shared_ptr<IOMsgReadComplete> msgRead);
+			void readReqData(boost::shared_ptr<IOMsgReadComplete> msgRead);
 
         };
 
