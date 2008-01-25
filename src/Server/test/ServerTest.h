@@ -4,7 +4,7 @@
 #include <cxxtest\TestSuite.h>
 
 #include "Server.h"
-#include "HTTPProtocol.h"
+#include "TestConnection.h"
 #include "Utilities/MTRand.h"
 #include <string>
 #include "boost/thread.hpp"
@@ -52,7 +52,7 @@ public:
 		localEP.sin_family = AF_INET;
 		localEP.sin_addr.s_addr = ::inet_addr("0.0.0.0");
 		localEP.sin_port = ::htons(5152);
-                s.acceptConnections(boost::shared_ptr<HTTPProtocolFactory>(new HTTPProtocolFactory()),localEP);
+        s.acceptConnections<TestConnection>(localEP);
 
 		const int BANK_COUNT = 10;
 		const int BANK_SIZE = 10;

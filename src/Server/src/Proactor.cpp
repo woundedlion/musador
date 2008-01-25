@@ -72,13 +72,11 @@ void Proactor::runIO()
 	} while(this->doRecycle);
 }
 
-void Proactor::beginAccept(SOCKET listenSocket, EventHandler handler, boost::any tag /* = NULL */)
-{
-	boost::shared_ptr<IOMsgAcceptComplete> msgAccept(new IOMsgAcceptComplete());
-	this->beginAccept(listenSocket, handler, msgAccept, tag);
-}
 
-void Proactor::beginAccept(SOCKET listenSocket, EventHandler handler, boost::shared_ptr<IOMsgAcceptComplete> msgAccept, boost::any tag /* = NULL */)
+void Proactor::beginAccept(SOCKET listenSocket, 
+						   boost::shared_ptr<ConnectionFactory> connFactory, 
+						   EventHandler handler, 
+						   boost::any tag /* = NULL */)
 {
 	// Load AcceptEx function
 	if (NULL == this->fnAcceptEx)
@@ -125,13 +123,13 @@ void Proactor::beginAccept(SOCKET listenSocket, EventHandler handler, boost::sha
 	
 	// Associate the listening socket with the IO completion port
 	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(listenSocket), this->iocp, NULL, NULL);
-	msgAccept->listener = listenSocket;
 
-	// Create completion context to send off into asynchronous land
-	if (NULL == msgAccept->conn)
-	{
-		msgAccept->conn.reset(new Connection(Network::instance()->socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)));
-	}
+	// Create the completion data
+	boost::shared_ptr<IOMsgAcceptComplete> msgAccept(new IOMsgAcceptComplete());
+	msgAccept->listener = listenSocket;
+	msgAccept->conn.reset(connFactory->create());
+	msgAccept->conn->setSocket(Network::instance()->socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+	
 	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
 	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
 	ctx->msg = msgAccept;
@@ -153,6 +151,7 @@ void Proactor::beginAccept(SOCKET listenSocket, EventHandler handler, boost::sha
 		if (ERROR_IO_PENDING != err)
 		{
 			LOG(Critical) << "AcceptEx failed to accept a connection: " << err;
+			Network::instance()->closeSocket(msgAccept->conn->getSocket());
 			return;
 		}
 	}

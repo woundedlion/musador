@@ -44,28 +44,6 @@ void Server::start()
 	boost::thread ioThread(boost::bind(&Server::runIO,this));
 }
 
-void Server::acceptConnections(boost::shared_ptr<ProtocolFactory> protocolFactory, 
-			       const sockaddr_in& localEP, 
-			       int socketType /* = SOCK_STREAM */, 
-			       int socketProto /* = IPPROTO_TCP */)
-{
-	// Set up server socket
-	try
-	{
-		SOCKET s = net->socket(localEP.sin_family,socketType,socketProto);
-		net->bind(s,const_cast<sockaddr_in *>(&localEP));
-		net->listen(s);
-		this->listenerProtocols[s] = protocolFactory;
-		Proactor::instance()->beginAccept(s,boost::bind(&Server::onAccept,this,_1,_2));
-	}
-	catch (const NetworkException& e)
-	{
-		LOG(Error) << e.what();
-		return;
-	}
-        LOG(Debug) << "Accepting connections on " << ::inet_ntoa(localEP.sin_addr) << ":" << ::ntohs(localEP.sin_port);
-}
-
 void Server::waitForStart()
 {
 	Guard guard(this->runningMutex);
@@ -111,7 +89,7 @@ void Server::runIO()
 	// Shutting down...
 	this->killConnections();
 	
-	for (ListenerCollection::iterator iter = this->listenerProtocols.begin(); iter != this->listenerProtocols.end(); ++iter)
+	for (ListenerCollection::iterator iter = this->listeners.begin(); iter != this->listeners.end(); ++iter)
 	{
 		try
 		{	
@@ -134,80 +112,68 @@ void Server::runIO()
 	}
 }
 
+template <class ConnType>
+void Server::acceptConnections(
+							   const sockaddr_in& localEP, 
+							   int socketType /* = SOCK_STREAM */, 
+							   int socketProto /* = IPPROTO_TCP */)
+{
+	// Set up server socket
+	try
+	{
+		SOCKET s = net->socket(localEP.sin_family,socketType,socketProto);
+		net->bind(s,const_cast<sockaddr_in *>(&localEP));
+		net->listen(s);
+		this->listeners[s] = boost::shared_ptr<ConnectionFactory>(new ConcreteFactory<Connection,ConnType>());
+		Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2));
+	}
+	catch (const NetworkException& e)
+	{
+		LOG(Error) << e.what();
+		return;
+	}
+	LOG(Debug) << "Accepting connections on " << ::inet_ntoa(localEP.sin_addr) << ":" << ::ntohs(localEP.sin_port);
+}
+
+
 void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 {
 
 	boost::shared_ptr<IOMsgAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgAcceptComplete>(msg));
 
-	// Register for accept notification
-	Proactor::instance()->beginAccept(msgAccept->listener,boost::bind(&Server::onAccept,this,_1,_2));
+	// Register for another accept notification
+	Proactor::instance()->beginAccept(msgAccept->listener,this->listeners[msgAccept->listener],boost::bind(&Server::onAccept,this,_1,_2));
 	
-    ConnCtx ctx;
-    ctx.protocol.reset(this->listenerProtocols[msgAccept->listener]->create());
-	this->addConnection(msgAccept->conn, ctx);
-	// Register for read notification
-	Proactor::instance()->beginRead(msgAccept->conn,boost::bind(&Server::onRead,this,_1,_2));
+	// Set up the new connection
+	msgAccept->conn->setErrorHandler(boost::bind(&Server::onError,this,_1));
+	this->addConnection(msgAccept->conn);
+	// Start reading on the connection
+	msgAccept->conn->accepted();
 }
 
-
-void Server::onRead(boost::shared_ptr<IOMsg> msg, boost::any tag)
+void Server::onError(boost::shared_ptr<IOMsgError> msgErr)
 {
-	switch (msg->getType())
+	// Kill the connection
+	if (NULL != msgErr->err)
 	{
-	case IO_READ_COMPLETE:
-		{
-		    boost::shared_ptr<IOMsgReadComplete> msgRead(boost::shared_static_cast<IOMsgReadComplete>(msg));
-		    // Process the message
-            (*this->conns[msgRead->conn].protocol) << msgRead;
-            // Register for read notification
-		    Proactor::instance()->beginRead(msgRead->conn,boost::bind(&Server::onRead,this,_1,_2));
-		}
-		break;
-	case IO_ERROR:
-		boost::shared_ptr<IOMsgError> msgErr(boost::shared_static_cast<IOMsgError>(msg));
-		// Kill the connection
-		if (NULL != msgErr->err)
-		{
-			LOG(Info) << "Socket error detected on socket " << msg->conn->getSocket() << ": " << msgErr->err;
-		}
-		this->killConnection(msg->conn);
-		break;
+		LOG(Info) << "Socket error detected on socket " << msgErr->conn->getSocket() << ": " << msgErr->err;
 	}
+	this->killConnection(msgErr->conn);
 }
 
-void Server::onWrite(boost::shared_ptr<IOMsg> msg, boost::any tag)
-{
-	switch (msg->getType())
-	{
-	case IO_WRITE_COMPLETE:
-		{
-		}
-		break;
-	case IO_ERROR:
-		boost::shared_ptr<IOMsgError> msgErr(boost::shared_static_cast<IOMsgError>(msg));
-		// Kill the connection
-		if (NULL != msgErr->err)
-		{
-			LOG(Info) << "Socket error detected on socket " << msg->conn->getSocket() << ": " << msgErr->err;
-		}
-		this->killConnection(msg->conn);
-		break;
-	}
-}
-
-void Server::addConnection(boost::shared_ptr<Connection> conn, ConnCtx ctx)
+void Server::addConnection(boost::shared_ptr<Connection> conn)
 {
 	Guard guard(this->connsMutex);
-	this->conns[conn] = ctx;
+	this->conns.push_back(conn);
 }
 
 void Server::removeConnection(boost::shared_ptr<Connection> conn)
 {
 	Guard guard(this->connsMutex);
-	ConnCollection::iterator iter;
-	if ((iter = this->conns.find(conn)) != this->conns.end())
+	for (ConnCollection::iterator iter = this->conns.begin(); iter!= this->conns.end(); ++iter)
 	{
 		this->conns.erase(iter);
+		break;
 	}
 }
 
@@ -223,6 +189,19 @@ void Server::killConnections()
 	ConnCollection::iterator iter;
 	this->conns.clear();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Template specializations
+
+#include "HTTPConnection.h"
+template void Server::acceptConnections<HTTPConnection>(const sockaddr_in& localEP, 
+														int socketType /* = SOCK_STREAM */, 
+														int socketProto /* = IPPROTO_TCP */);
+
+#include "../test/TestConnection.h"
+template void Server::acceptConnections<TestConnection>(const sockaddr_in& localEP, 
+														int socketType /* = SOCK_STREAM */, 
+														int socketProto /* = IPPROTO_TCP */);
 
 /*
 bool Server::serveFile(Request * request, string path,stringMap args, Response * response) {

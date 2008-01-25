@@ -2,11 +2,12 @@
 
 #include <algorithm>
 #include "boost/lexical_cast.hpp"
+#include "boost/bind.hpp"
 #include "Network/Network.h"
 #include "boost/shared_ptr.hpp"
 #include "Connection.h"
-#include "Proactor.h"
 #include "Logger/Logger.h"
+#include "Proactor.h"
 #define LOG_SENDER L"Proactor"
 
 using namespace Musador;
@@ -72,6 +73,11 @@ void Connection::setRemoteEP(sockaddr_in remoteEP)
 	this->remoteEP = remoteEP;
 }
 
+void Connection::setErrorHandler(ErrorHandler errorHandler)
+{
+	this->errorHandler = errorHandler;
+}
+
 std::string Connection::toString()
 {
 	std::string r;
@@ -85,9 +91,19 @@ std::string Connection::toString()
 	return r;
 }
 
+void Connection::beginRead()
+{
+	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&Connection::onRead,this,_1,_2));
+}
+
+void Connection::beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead)
+{
+	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&Connection::onRead,this,_1,_2), msgRead);
+}
+
 void Connection::beginWrite(boost::shared_array<char> data, unsigned int len)
 {
-	Proactor::instance()->beginWrite(this->shared_from_this(), NULL, data, len);
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onRead,this,_1,_2), data, len);
 }
 
 void Connection::beginWrite(const std::string& str)
@@ -95,7 +111,7 @@ void Connection::beginWrite(const std::string& str)
 	unsigned int len = str.size();
 	boost::shared_array<char> data(new char[len]);
 	str.copy(data.get(), len);
-	Proactor::instance()->beginWrite(this->shared_from_this(), NULL, data, len);
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWrite,this,_1,_2), data, len);
 }
 
 void Connection::beginWrite(std::stringstream& dataStream)
@@ -105,6 +121,48 @@ void Connection::beginWrite(std::stringstream& dataStream)
 	{
 		boost::shared_array<char> data(new char[len]);
 		dataStream.str().copy(data.get(),len);
-		Proactor::instance()->beginWrite(this->shared_from_this(), NULL, data, len);
+		Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWrite,this,_1,_2), data, len);
+	}
+}
+
+void Connection::onRead(boost::shared_ptr<IOMsg> msg, boost::any tag)
+{
+	switch (msg->getType())
+	{
+	case IO_READ_COMPLETE:
+		{
+			boost::shared_ptr<IOMsgReadComplete> msgRead(boost::shared_static_cast<IOMsgReadComplete>(msg));
+			*this << msgRead;
+		}
+		break;
+	case IO_ERROR:
+		{
+			if (NULL != this->errorHandler)
+			{
+				boost::shared_ptr<IOMsgError> msgErr(boost::shared_static_cast<IOMsgError>(msg));
+				this->errorHandler(msgErr);
+			}
+		}
+		break;
+	}
+}
+
+void Connection::onWrite(boost::shared_ptr<IOMsg> msg, boost::any tag)
+{
+	switch (msg->getType())
+	{
+	case IO_WRITE_COMPLETE:
+		{
+		}
+		break;
+	case IO_ERROR:
+		{
+			if (NULL != this->errorHandler)
+			{
+				boost::shared_ptr<IOMsgError> msgErr(boost::shared_static_cast<IOMsgError>(msg));
+				this->errorHandler(msgErr);
+			}
+		}
+		break;
 	}
 }

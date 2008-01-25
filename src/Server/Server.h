@@ -5,7 +5,6 @@
 #include "Utilities/MIMEResolver.h"
 #include "boost/shared_ptr.hpp"
 #include "boost/thread.hpp"
-#include "Protocol.h"
 #include "Connection.h"
 #include "Proactor.h"
 
@@ -52,8 +51,8 @@ namespace Musador
 
 		void start();
 
-        void acceptConnections(	boost::shared_ptr<ProtocolFactory> protocolFactory, 
-								const sockaddr_in& localEP, 
+		template <class ConnType>
+		void acceptConnections(	const sockaddr_in& localEP, 
 								int socketType = SOCK_STREAM, 
 								int socketProto = IPPROTO_TCP);
 
@@ -69,11 +68,7 @@ namespace Musador
 
 		void onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag);
 
-		void onRead(boost::shared_ptr<IOMsg> msg, boost::any tag);
-
-		void onWrite(boost::shared_ptr<IOMsg> msg, boost::any tag);
-
-		void onDisconnect(boost::shared_ptr<IOMsg> msg, boost::any tag);
+		void onError(boost::shared_ptr<IOMsgError> msgErr);
 
 		/*
 		bool authReq(const Request& request, const StateStore& session);
@@ -91,14 +86,8 @@ namespace Musador
 		Musador::Network * net;
 
 		// State collections
-                class ConnCtx
-                {
-                public:
-                    boost::shared_ptr<Protocol> protocol;
-                };
-
-                typedef std::map<boost::shared_ptr<Connection>, ConnCtx> ConnCollection;
-                typedef std::map<SOCKET,boost::shared_ptr<ProtocolFactory> > ListenerCollection;
+        typedef std::vector<boost::shared_ptr<Connection> > ConnCollection;
+		typedef std::map<SOCKET,boost::shared_ptr<ConnectionFactory> > ListenerCollection;
 
 		ConnCollection conns;
 		Mutex connsMutex;
@@ -111,9 +100,9 @@ namespace Musador
         Condition runningCV;
 
 		// Network
-		ListenerCollection listenerProtocols;
+		ListenerCollection listeners;
 
-		void addConnection(boost::shared_ptr<Connection> conn, ConnCtx ctx);
+		void addConnection(boost::shared_ptr<Connection> conn);
 		void removeConnection(boost::shared_ptr<Connection> conn);
 		void killConnection(boost::shared_ptr<Connection> conn);
 		void killConnections();

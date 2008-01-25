@@ -8,6 +8,7 @@
 #include "Utilities/Singleton.h"
 #include "Network/Network.h"
 #include "IOMessages.h"
+#include "Connection.h"
 
 #ifdef WIN32
 	#include <windows.h>
@@ -43,14 +44,31 @@ namespace Musador
 
 		void runIO();
 
-		void beginAccept(SOCKET listenSocket, EventHandler handler, boost::any tag = NULL);
-		void beginAccept(SOCKET listenSocket, EventHandler handler, boost::shared_ptr<IOMsgAcceptComplete> msgAccept, boost::any tag = NULL);
 
-		void beginRead(boost::shared_ptr<Connection> conn, EventHandler handler, boost::any tag = NULL);
-		void beginRead(boost::shared_ptr<Connection> conn, EventHandler handler, boost::shared_ptr<IOMsgReadComplete> msgRead, boost::any tag = NULL);
+		void beginAccept(SOCKET listenSocket, 
+						 boost::shared_ptr<ConnectionFactory> connFactory, 
+						 EventHandler handler, 
+						 boost::any tag = NULL);
 
-		void beginWrite(boost::shared_ptr<Connection> conn, EventHandler handler, boost::shared_array<char> data, int len, boost::any tag = NULL);
-		void beginWrite(boost::shared_ptr<Connection> conn, EventHandler handler, boost::shared_ptr<IOMsgWriteComplete> msgWrite, boost::any tag = NULL);
+		void beginRead(boost::shared_ptr<Connection> conn, 
+					   EventHandler handler, 
+					   boost::any tag = NULL);
+		
+		void beginRead(boost::shared_ptr<Connection> conn, 
+					   EventHandler handler, 
+					   boost::shared_ptr<IOMsgReadComplete> msgRead, 
+					   boost::any tag = NULL);
+
+		void beginWrite(boost::shared_ptr<Connection> conn, 
+										  EventHandler handler, 
+										  boost::shared_array<char> data, 
+										  int len, 
+										  boost::any tag = NULL);
+
+		void beginWrite(boost::shared_ptr<Connection> conn, 
+						EventHandler handler, 
+						boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
+						boost::any tag = NULL);
 
 		volatile bool doRecycle;
 		volatile bool doShutdown;
