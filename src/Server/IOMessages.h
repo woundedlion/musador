@@ -11,9 +11,6 @@ namespace Musador
 
 	class Connection;
 
-	const int SEND_CHUNK_SIZE = 4096;
-	const int RECV_CHUNK_SIZE = 4096;
-
 	enum IOMsgType
 	{
 		IO_WRITE_COMPLETE,
@@ -42,7 +39,7 @@ namespace Musador
 	public:
 
 		inline IOMsgWriteComplete() : IOMsg(IO_WRITE_COMPLETE),
-			buf(new char[SEND_CHUNK_SIZE]),
+			buf(new char[IOMsgWriteComplete::MAX]),
 			len(0),
 			off(0)
 		{
@@ -51,6 +48,7 @@ namespace Musador
 		boost::shared_array<char> buf;
 		unsigned long len;
 		unsigned long off;
+		static const int MAX = 4096;
 	};
 
 	class IOMsgReadComplete : public IOMsg
@@ -58,7 +56,7 @@ namespace Musador
 	public:
 
 		inline IOMsgReadComplete() : IOMsg(IO_READ_COMPLETE),
-			buf(new char[RECV_CHUNK_SIZE]),
+			buf(new char[IOMsgReadComplete::MAX]),
 			len(0),
 			off(0)
 		{
@@ -67,6 +65,7 @@ namespace Musador
 		boost::shared_array<char> buf;
 		unsigned long len;
 		unsigned long off;
+		static const int MAX = 4096;
 	};
 
 	class IOMsgAcceptComplete : public IOMsg

@@ -4,7 +4,6 @@
 #include <cxxtest\TestSuite.h>
 
 #include "Server.h"
-#include "TestConnection.h"
 #include "Utilities/MTRand.h"
 #include <string>
 #include "boost/thread.hpp"
@@ -12,6 +11,13 @@
 #include "Logger/Logger.h"
 #define LOG_SENDER L"ServerTest"
 using namespace Musador;
+
+class TestConnection : public Connection
+{
+	void accepted() { this->beginRead(); }
+	void operator<<(boost::shared_ptr<IOMsgReadComplete> msgRead) { this->beginRead(); }
+	void operator<<(boost::shared_ptr<IOMsgWriteComplete> msgRead) { this->beginRead(); }
+};
 
 class ServerTest : public CxxTest::TestSuite 
 {

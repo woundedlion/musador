@@ -153,6 +153,8 @@ void Connection::onWrite(boost::shared_ptr<IOMsg> msg, boost::any tag)
 	{
 	case IO_WRITE_COMPLETE:
 		{
+			boost::shared_ptr<IOMsgWriteComplete> msgWrite(boost::shared_static_cast<IOMsgWriteComplete>(msg));
+			*this << msgWrite;
 		}
 		break;
 	case IO_ERROR:

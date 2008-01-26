@@ -6,6 +6,7 @@
 #include "boost/any.hpp"
 #include "boost/thread.hpp"
 #include "Utilities/Singleton.h"
+#include "Utilities/StreamException.h"
 #include "Network/Network.h"
 #include "IOMessages.h"
 #include "Connection.h"
@@ -87,6 +88,8 @@ namespace Musador
 
 	};
 
+	class IOException : public StreamException<IOException> { };
+
 #ifdef WIN32
 	class CompletionCtx : public OVERLAPPED
 	{
@@ -101,9 +104,5 @@ namespace Musador
 #endif
 
 }
-
-
-
-#include "Connection.h"
 
 #endif

@@ -202,6 +202,11 @@ void Proactor::beginRead(boost::shared_ptr<Connection> conn,
 						 boost::shared_ptr<IOMsgReadComplete> msgRead, 
 						 boost::any tag /* = NULL */)
 {
+	if (msgRead->MAX == msgRead->len)
+	{
+		throw IOException() << "Message overflow at " << msgRead->MAX << " bytes";
+	}
+
 	// Associate the socket with the IO completion port
 	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(conn->getSocket()), this->iocp, NULL, NULL);
 
@@ -218,7 +223,7 @@ void Proactor::beginRead(boost::shared_ptr<Connection> conn,
 	DWORD flags = 0;
 	WSABUF buf = {0};
 	buf.buf = msgRead->buf.get() + msgRead->len;
-	buf.len = RECV_CHUNK_SIZE - msgRead->len;
+	buf.len = msgRead->MAX - msgRead->len;
 	if ( 0 != ::WSARecv(conn->getSocket(),
 						&buf,
 						1,

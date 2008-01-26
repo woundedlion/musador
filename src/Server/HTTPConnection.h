@@ -27,6 +27,7 @@ namespace Musador
 		// Protocol State Machine
 
 		// States
+		struct StateClosed;
 		struct StateRecvReq;
 		struct StateRecvReqHeader;
 		struct StateRecvReqBody;
@@ -38,80 +39,110 @@ namespace Musador
 		struct StateSendResBodyChunk;
 
 		// Events
-		struct EvtError : sc::event<EvtError> {};
-		struct EvtRecvdReqHeader : sc::event<EvtRecvdReqHeader> {};
-		struct EvtRecvdReqChunk : sc::event<EvtRecvdReqChunk> {};
-		struct EvtRecvdReq : sc::event<EvtRecvdReq> {};
-		struct EvtSentResHeader : sc::event<EvtSentResHeader> {};
-		struct EvtSentResChunk : sc::event<EvtSentResChunk> {};
-		struct EvtSentRes : sc::event<EvtSentRes> {};
+		struct EvtOpen : sc::event<EvtOpen> {};
+		struct EvtReadComplete : sc::event<EvtReadComplete> 
+		{
+			EvtReadComplete(boost::shared_ptr<IOMsgReadComplete> msgRead) : msgRead(msgRead) {}
+			boost::shared_ptr<IOMsgReadComplete> msgRead;
+		};
+		struct EvtReqDone : sc::event<EvtReqDone> {};
+		struct EvtWriteComplete : sc::event<EvtWriteComplete> {};
+		struct EvtClose : sc::event<EvtClose> {};
+		struct EvtKeepAlive : sc::event<EvtKeepAlive> {};
 
 		// State definitions, transitions
-		struct FSM : sc::state_machine<FSM,StateRecvReq>
+		struct FSM : sc::state_machine<FSM,StateClosed>
 		{
 			FSM(Connection& conn);
 
 			Connection& conn;
-			std::auto_ptr<HTTP::Request> req;
-			std::auto_ptr<HTTP::Response> res;
-			std::queue<boost::shared_ptr<IOMsgReadComplete> > msgsIn;
+			HTTP::Request req;
+			HTTP::Response res;			
+		};
+
+		struct StateClosed : sc::simple_state<StateClosed,FSM>
+		{
+			typedef sc::transition<EvtOpen,StateRecvReq> reactions;
 		};
 
 		struct StateRecvReq : sc::simple_state<StateRecvReq,FSM,StateRecvReqHeader>
 		{
-			typedef sc::transition<EvtRecvdReq,StateSendRes> reactions;
+			typedef sc::transition<EvtReqDone,StateSendRes> reactions;
 			
 		};
 
 		struct StateRecvReqHeader : sc::state<StateRecvReqHeader,StateRecvReq>
 		{
 			typedef mpl::list<
-				sc::transition<EvtError,StateReqError>,
-				sc::custom_reaction<EvtRecvdReqHeader>
+				sc::custom_reaction<EvtReadComplete>
 			> reactions;
 
 			StateRecvReqHeader(my_context ctx);
-			sc::result react(const EvtRecvdReqHeader& evt);
+			sc::result react(const EvtReadComplete& evt);
 
 		};
 
-		struct StateReqError : sc::simple_state<StateReqError,StateRecvReq>
+		struct StateReqError : sc::state<StateReqError,StateRecvReq>
 		{
-
+			StateReqError(my_context ctx);
 		};
 
-		struct StateRecvReqBodyChunk : sc::simple_state<StateRecvReqBodyChunk,StateRecvReq>
+		struct StateRecvReqBodyChunk : sc::state<StateRecvReqBodyChunk,StateRecvReq>
 		{
-			typedef sc::transition<EvtRecvdReqChunk,StateRecvReqBodyChunk> reactions;			
+			typedef mpl::list<
+				sc::custom_reaction<EvtReadComplete>
+			> reactions;
+
+			StateRecvReqBodyChunk(my_context ctx);
+			sc::result react(const EvtReadComplete& evt);
 		};
 
-		struct StateRecvReqBody : sc::simple_state<StateRecvReqBody,StateRecvReq>
+		struct StateRecvReqBody : sc::state<StateRecvReqBody,StateRecvReq>
 		{
+			typedef mpl::list<
+				sc::custom_reaction<EvtReadComplete>
+			> reactions;
 
+			StateRecvReqBody(my_context ctx);
+			sc::result react(const EvtReadComplete& evt);
 		};
 
 		struct StateSendRes : sc::simple_state<StateSendRes,FSM,StateSendResHeader>
 		{
-			typedef sc::custom_reaction<EvtSentRes> reactions;	
-
-			sc::result react(const EvtSentRes& evt);
+			typedef mpl::list<
+				typedef sc::transition<EvtClose,StateClosed>,	
+				typedef sc::transition<EvtKeepAlive,StateRecvReq>
+			> reactions;
 		};
 
-		struct StateSendResHeader : sc::simple_state<StateSendResHeader,StateSendRes>
+		struct StateSendResHeader : sc::state<StateSendResHeader,StateSendRes>
 		{
-			typedef sc::custom_reaction<EvtSentResHeader> reactions;	
+			typedef mpl::list<
+				sc::custom_reaction<EvtWriteComplete>
+			> reactions;
 
-			sc::result react(const EvtSentResHeader& evt);
+			StateSendResHeader(my_context ctx);
+			sc::result react(const EvtWriteComplete& evt);
 		};
 
-		struct StateSendResBodyChunk : sc::simple_state<StateSendResBodyChunk,StateSendRes>
+		struct StateSendResBodyChunk : sc::state<StateSendResBodyChunk,StateSendRes>
 		{
-			typedef sc::transition<EvtSentResChunk,StateSendResBodyChunk> reactions;			
+			typedef mpl::list<
+				sc::custom_reaction<EvtWriteComplete>
+			> reactions;
+
+			StateSendResBodyChunk(my_context ctx);
+			sc::result react(const EvtWriteComplete& evt);		
 		};
 
-		struct StateSendResBody : sc::simple_state<StateSendResBody,StateSendRes>
+		struct StateSendResBody : sc::state<StateSendResBody,StateSendRes>
 		{
+			typedef mpl::list<
+				sc::custom_reaction<EvtWriteComplete>
+			> reactions;
 
+			StateSendResBody(my_context ctx);
+			sc::result react(const EvtWriteComplete& evt);
 		};
 	}
 
@@ -126,6 +157,8 @@ namespace Musador
 		void accepted();
 
 		void operator<<(boost::shared_ptr<IOMsgReadComplete> msgRead);
+
+		void operator<<(boost::shared_ptr<IOMsgWriteComplete> msgRead);
 
 	private:
 

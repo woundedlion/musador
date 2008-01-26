@@ -76,6 +76,9 @@ namespace Musador
 			std::string toString();
 		};
 
+		typedef std::map<std::string,std::string> HeaderCollection;
+		typedef std::map<std::string,std::string> ParamCollection;
+
 		//////////////////////////////////////////////////////////////////////
 		/// Request
 		//////////////////////////////////////////////////////////////////////
@@ -95,9 +98,9 @@ namespace Musador
 			std::string protocol;
 			int status;
 			std::string reason;
-			std::string method;	
-			std::map<std::string,std::string> params;
-			std::map<std::string,std::string> headers;
+			std::string method;
+			ParamCollection params;
+			HeaderCollection headers;
 			std::string authString;
 			std::stringstream data;
 
