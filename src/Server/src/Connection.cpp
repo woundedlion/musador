@@ -16,7 +16,8 @@ using namespace Musador;
 // Connection
 //////////////////////////////////////////////////////////////////////////////////////
 
-Connection::Connection()
+Connection::Connection() :
+sock(NULL)
 {
 
 }
@@ -76,6 +77,30 @@ void Connection::setRemoteEP(sockaddr_in remoteEP)
 void Connection::setErrorHandler(ErrorHandler errorHandler)
 {
 	this->errorHandler = errorHandler;
+}
+
+void Connection::close()
+{
+	if (NULL != this->sock)
+	{
+		try
+		{
+			LOG(Debug) << " Closing socket " << this->sock;
+			Network::instance()->closeSocket(this->sock);
+			this->sock = NULL;
+		}
+		catch(const NetworkException& e)
+		{
+			LOG(Warning) << e.what() << " while closing client socket.";
+		}
+	}
+	
+	if (NULL != this->errorHandler)
+	{
+		boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+		msgErr->conn = shared_from_this();
+		this->errorHandler(msgErr);
+	}
 }
 
 std::string Connection::toString()
@@ -164,6 +189,7 @@ void Connection::onWrite(boost::shared_ptr<IOMsg> msg, boost::any tag)
 				boost::shared_ptr<IOMsgError> msgErr(boost::shared_static_cast<IOMsgError>(msg));
 				this->errorHandler(msgErr);
 			}
+			Network::instance()->closeSocket(this->getSocket());
 		}
 		break;
 	}

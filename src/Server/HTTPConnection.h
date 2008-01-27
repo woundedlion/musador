@@ -60,9 +60,10 @@ namespace Musador
 			HTTP::Response res;			
 		};
 
-		struct StateClosed : sc::simple_state<StateClosed,FSM>
+		struct StateClosed : sc::state<StateClosed,FSM>
 		{
 			typedef sc::transition<EvtOpen,StateRecvReq> reactions;
+			StateClosed(my_context ctx);
 		};
 
 		struct StateRecvReq : sc::simple_state<StateRecvReq,FSM,StateRecvReqHeader>

@@ -198,8 +198,8 @@ template void Server::acceptConnections<HTTPConnection>(const sockaddr_in& local
 														int socketType /* = SOCK_STREAM */, 
 														int socketProto /* = IPPROTO_TCP */);
 
-#include "../test/TestConnection.h"
-template void Server::acceptConnections<TestConnection>(const sockaddr_in& localEP, 
+#include "NullConnection.h"
+template void Server::acceptConnections<NullConnection>(const sockaddr_in& localEP, 
 														int socketType /* = SOCK_STREAM */, 
 														int socketProto /* = IPPROTO_TCP */);
 

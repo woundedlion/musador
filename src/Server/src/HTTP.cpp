@@ -142,18 +142,27 @@ void HTTP::genDigestResponse(std::string& response, std::map<std::string, std::s
 /// Request
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-HTTP::Request::Request() {
-	protocol = "HTTP/1.1";
+HTTP::Request::Request() 
+{
 }
 
 HTTP::Request::~Request() {
 }
 
+void HTTP::Request::clear()
+{
+	this->requestURI.clear();
+	this->queryString.clear();
+	this->protocol.clear();
+	this->method.clear();
+	this->params.clear();
+	this->headers.clear();
+	this->authString.clear();
+	this->data.str("");
+}
+
 void HTTP::Request::requestInfo(std::stringstream &info) {
 	info	<< "<table border=\"0\" cellspacing=\"2\">\r\n"
-				<< "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Request:</b></td><td valign=\"top\"><pre>" 
-				<< request 
-				<< "</pre></td></tr>"
 				<< "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Request URI:</b></td><td valign=\"top\"><pre>" 
 				<< requestURI 
 				<< "</pre></td></tr>"
@@ -194,8 +203,7 @@ void HTTP::Request::sendHeaders(Connection& conn) {
 	conn.beginWrite(reqData);
 }
 
-void HTTP::Request::sendRequest(Connection& conn) {
-	this->sendHeaders(conn);
+void HTTP::Request::sendBody(Connection& conn) {
 	conn.beginWrite(this->data);
 }
 
@@ -204,16 +212,21 @@ void HTTP::Request::sendRequest(Connection& conn) {
 //// Response
 ///////////////////////////////////////////////////////////////////////////////
 
-HTTP::Response::Response() {
-	protocol = "HTTP/1.1";
-	status = 200;
-	reason = "OK";
-	headers["Content-Type"] = "text/html";
-	headers["Content-Length"] = "0";
+HTTP::Response::Response() 
+{
 }
 
 HTTP::Response::~Response() {
 
+}
+
+void HTTP::Response::clear()
+{
+	this->protocol.clear();
+	int status = 0;
+	this->reason.clear();
+	this->headers.clear();
+	this->data.str("");
 }
 
 void HTTP::Response::sendHeaders(Connection& conn) 
@@ -229,8 +242,7 @@ void HTTP::Response::sendHeaders(Connection& conn)
 	conn.beginWrite(responseData);
 }
 
-void HTTP::Response::sendResponse(Connection& conn) {
-	this->sendHeaders(conn);
+void HTTP::Response::sendBody(Connection& conn) {
 	conn.beginWrite(this->data);
 }
 

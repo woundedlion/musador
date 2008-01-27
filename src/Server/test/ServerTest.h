@@ -9,15 +9,10 @@
 #include "boost/thread.hpp"
 #include "boost/bind.hpp"
 #include "Logger/Logger.h"
+#include "NullConnection.h"
+
 #define LOG_SENDER L"ServerTest"
 using namespace Musador;
-
-class TestConnection : public Connection
-{
-	void accepted() { this->beginRead(); }
-	void operator<<(boost::shared_ptr<IOMsgReadComplete> msgRead) { this->beginRead(); }
-	void operator<<(boost::shared_ptr<IOMsgWriteComplete> msgRead) { this->beginRead(); }
-};
 
 class ServerTest : public CxxTest::TestSuite 
 {
@@ -58,7 +53,7 @@ public:
 		localEP.sin_family = AF_INET;
 		localEP.sin_addr.s_addr = ::inet_addr("0.0.0.0");
 		localEP.sin_port = ::htons(5152);
-        s.acceptConnections<TestConnection>(localEP);
+        s.acceptConnections<NullConnection>(localEP);
 
 		const int BANK_COUNT = 10;
 		const int BANK_SIZE = 10;

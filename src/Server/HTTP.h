@@ -89,15 +89,13 @@ namespace Musador
 			Request();
 			~Request();
 
+			void clear();
 			void sendHeaders(Connection& conn);
-			void sendRequest(Connection& conn);
+			void sendBody(Connection& conn);
 
-			std::string request;
 			std::string requestURI;
 			std::string queryString;
 			std::string protocol;
-			int status;
-			std::string reason;
 			std::string method;
 			ParamCollection params;
 			HeaderCollection headers;
@@ -119,9 +117,9 @@ namespace Musador
 			Response();
 			~Response();
 
-			void receiveFrom(SOCKET remoteSocket);
+			void clear();
 			void sendHeaders(Connection& conn);
-			void sendResponse(Connection& conn);
+			void sendBody(Connection& conn);
 
 			std::string protocol;
 			int status;

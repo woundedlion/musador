@@ -4,8 +4,10 @@
 #include <queue>
 #include "boost/shared_ptr.hpp"
 #include "boost/thread/mutex.hpp"
+#include "boost/thread/condition.hpp"
 
 typedef boost::mutex Mutex;
+typedef boost::condition Condition;
 typedef boost::mutex::scoped_lock Guard;
 
 template <class T>
@@ -23,14 +25,13 @@ public:
 
 	boost::shared_ptr<T> popMsg();
 
-	boost::shared_ptr<T> getLastMsg();
-
 	size_t count();
 
 private:
 
 	std::queue<boost::shared_ptr<T>> msgs;
 	Mutex msgsMutex;
+	Condition msgPostedCV;
 };
 
 template <class T>
@@ -45,13 +46,6 @@ boost::shared_ptr<T> MessageSink<T>::getMsg()
 {
 	Guard guard(this->msgsMutex);
 	return this->msgs.front();
-}
-
-template <class T>
-boost::shared_ptr<T> MessageSink<T>::getLastMsg()
-{
-	Guard guard(this->msgsMutex);
-	return this->msgs.back();
 }
 
 template <class T>

@@ -39,6 +39,8 @@ namespace Musador
 
 		void setErrorHandler(ErrorHandler errorHandler);
 
+		void close();
+
 		std::string toString();
 
 		void beginRead();
@@ -62,7 +64,6 @@ namespace Musador
 		sockaddr_in localEP;
 		sockaddr_in remoteEP;
 		SOCKET sock;
-
 	};
 
 	typedef AbstractFactory<Connection> ConnectionFactory;
