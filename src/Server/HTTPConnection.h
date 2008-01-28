@@ -37,6 +37,7 @@ namespace Musador
 		struct StateSendResHeader;
 		struct StateSendResBody;
 		struct StateSendResBodyChunk;
+		struct StateReqProcess;
 
 		// Events
 		struct EvtOpen : sc::event<EvtOpen> {};
@@ -60,10 +61,9 @@ namespace Musador
 			HTTP::Response res;			
 		};
 
-		struct StateClosed : sc::state<StateClosed,FSM>
+		struct StateClosed : sc::simple_state<StateClosed,FSM>
 		{
 			typedef sc::transition<EvtOpen,StateRecvReq> reactions;
-			StateClosed(my_context ctx);
 		};
 
 		struct StateRecvReq : sc::simple_state<StateRecvReq,FSM,StateRecvReqHeader>
@@ -108,6 +108,11 @@ namespace Musador
 			sc::result react(const EvtReadComplete& evt);
 		};
 
+		struct StateReqProcess : sc::state<StateReqProcess,StateRecvReq>
+		{
+			StateReqProcess(my_context ctx);
+		};
+
 		struct StateSendRes : sc::simple_state<StateSendRes,FSM,StateSendResHeader>
 		{
 			typedef mpl::list<
@@ -145,6 +150,7 @@ namespace Musador
 			StateSendResBody(my_context ctx);
 			sc::result react(const EvtWriteComplete& evt);
 		};
+
 	}
 
 	class HTTPConnection : public Connection

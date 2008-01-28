@@ -45,11 +45,13 @@ conn(conn)
 
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
 // HTTP Protocol State machine logic
+/////////////////////////////////////////////////////////////////////////////////////
 
-HTTP::StateClosed::StateClosed(my_context ctx) : my_base(ctx)
-{
-}
+/////////////////////////////////////////////////////////////////////////////////////
+// Receive States
+/////////////////////////////////////////////////////////////////////////////////////
 
 HTTP::StateRecvReqHeader::StateRecvReqHeader(my_context ctx) : my_base(ctx)
 {
@@ -107,19 +109,13 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 
 		}
 
-		if (req.method == "GET")
+		if (req.method == "GET" || req.method == "HEAD")
 		{
-			res.status = 405;
-			res.reason = "Method Not Supported";
-			return transit<StateReqError>();
+			res.status = 200;
+			res.reason = "OK";
+			return transit<StateReqProcess>();
 		}
 		else if(matches[1] == "POST")
-		{
-			res.status = 405;
-			res.reason = "Method Not Supported";
-			return transit<StateReqError>();
-		}
-		else if (matches[1] == "HEAD")
 		{
 			res.status = 405;
 			res.reason = "Method Not Supported";
@@ -162,6 +158,12 @@ HTTP::StateReqError::StateReqError(my_context ctx) : my_base(ctx)
 	post_event(EvtReqDone());
 }
 
+sc::result 
+HTTP::StateRecvReqBody::react(const EvtReadComplete& evt)
+{
+	return discard_event();
+}
+
 HTTP::StateRecvReqBodyChunk::StateRecvReqBodyChunk(my_context ctx) : my_base(ctx)
 {
 
@@ -178,11 +180,20 @@ HTTP::StateRecvReqBody::StateRecvReqBody(my_context ctx) : my_base(ctx)
 
 }
 
-sc::result 
-HTTP::StateRecvReqBody::react(const EvtReadComplete& evt)
+
+HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
 {
-	return discard_event();
+	HTTP::Request& req = outermost_context().req;
+	HTTP::Response& res = outermost_context().res;
+	req.requestInfo(res.data);
+	res.headers["Content-Type"] = "text/html";
+	res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data.tellp());
+	post_event(EvtReqDone());
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Send States
+/////////////////////////////////////////////////////////////////////////////////////
 
 HTTP::StateSendResHeader::StateSendResHeader(my_context ctx) : my_base(ctx)
 {
@@ -198,17 +209,6 @@ HTTP::StateSendResHeader::react(const EvtWriteComplete& evt)
 	return transit<StateSendResBody>();
 }
 
-HTTP::StateSendResBodyChunk::StateSendResBodyChunk(my_context ctx) : my_base(ctx)
-{
-
-}
-
-sc::result 
-HTTP::StateSendResBodyChunk::react(const EvtWriteComplete& evt)
-{
-	return discard_event();
-}
-
 HTTP::StateSendResBody::StateSendResBody(my_context ctx) : my_base(ctx)
 {
 	outermost_context().res.sendBody(outermost_context().conn);
@@ -220,13 +220,25 @@ HTTP::StateSendResBody::react(const EvtWriteComplete& evt)
 	Request& req = outermost_context().req;
 	if (!boost::ilexicographical_compare(req.headers["Connection"],"close") && req.protocol != "HTTP/1.0")
 	{
-		return transit<StateRecvReqHeader>();
+		post_event(EvtKeepAlive());
 	}
 	else
 	{
 		outermost_context().conn.close();
-		return transit<StateClosed>();
+		post_event(EvtClose());
 	}
+	return discard_event();
+}
+
+HTTP::StateSendResBodyChunk::StateSendResBodyChunk(my_context ctx) : my_base(ctx)
+{
+
+}
+
+sc::result 
+HTTP::StateSendResBodyChunk::react(const EvtWriteComplete& evt)
+{
+	return discard_event();
 }
 
 
