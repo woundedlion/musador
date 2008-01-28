@@ -235,8 +235,9 @@ void Proactor::beginRead(boost::shared_ptr<Connection> conn,
 		DWORD err = ::GetLastError();
 		if (ERROR_IO_PENDING != err)
 		{
-			LOG(Critical) << "ReadFile() failed to initiate an asynchronous read operation on the socket: " << err;
-			return;
+			LOG(Error) << "ReadFile() failed to initiate an asynchronous read operation on the socket: " << err;
+                        conn->close();
+                        return;
 		}
 	}
 
@@ -316,8 +317,9 @@ void Proactor::beginWrite(boost::shared_ptr<Connection> conn,
 		DWORD err = ::GetLastError();
 		if (ERROR_IO_PENDING != err)
 		{
-			LOG(Critical) << "WriteFile() failed to initiate an asynchronous write operation on the socket: " << err;
-			return;
+			LOG(Error) << "WriteFile() failed to initiate an asynchronous write operation on the socket: " << err;
+                        conn->close();
+                        return;
 		}
 	}
 
