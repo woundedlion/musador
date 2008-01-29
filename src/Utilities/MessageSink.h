@@ -39,12 +39,17 @@ void MessageSink<T>::post(boost::shared_ptr<T> msg)
 {
 	Guard guard(this->msgsMutex);
 	this->msgs.push(msg);
+	this->msgPostedCV.notify_all();
 }
 
 template <class T>
 boost::shared_ptr<T> MessageSink<T>::getMsg()
 {
 	Guard guard(this->msgsMutex);
+	while (0 == this->msgs.size())
+	{
+		this->msgPostedCV.wait(guard);
+	}
 	return this->msgs.front();
 }
 
@@ -52,7 +57,11 @@ template <class T>
 boost::shared_ptr<T> MessageSink<T>::popMsg()
 {
 	Guard guard(this->msgsMutex);
-	boost::shared_ptr<T> r = this->msgs.front();
+	while (0 == this->msgs.size())
+	{
+		this->msgPostedCV.wait(guard);
+	}
+	boost::shared_ptr<T> r(this->msgs.front());
 	this->msgs.pop();
 	return r;
 }

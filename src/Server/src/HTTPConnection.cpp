@@ -2,7 +2,6 @@
 #include "HTTP.h"
 #include "boost/regex.hpp"
 #include "Logger/Logger.h"
-#include "Connection.h"
 #include "boost/algorithm/string.hpp"
 
 #define LOG_SENDER L"HTTPConnection"
@@ -28,13 +27,13 @@ HTTPConnection::accepted()
 }
 
 void 
-HTTPConnection::operator<<(boost::shared_ptr<IOMsgReadComplete> msgRead)
+HTTPConnection::post(boost::shared_ptr<IOMsgReadComplete> msgRead)
 {
 	this->fsm.process_event(HTTP::EvtReadComplete(msgRead));
 }
 
 void 
-HTTPConnection::operator<<(boost::shared_ptr<IOMsgWriteComplete> msgWrite)
+HTTPConnection::post(boost::shared_ptr<IOMsgWriteComplete> msgWrite)
 {
 	this->fsm.process_event(HTTP::EvtWriteComplete());
 }

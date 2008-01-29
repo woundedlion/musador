@@ -162,9 +162,9 @@ namespace Musador
 
 		void accepted();
 
-		void operator<<(boost::shared_ptr<IOMsgReadComplete> msgRead);
+		void post(boost::shared_ptr<IOMsgReadComplete> msgRead);
 
-		void operator<<(boost::shared_ptr<IOMsgWriteComplete> msgRead);
+		void post(boost::shared_ptr<IOMsgWriteComplete> msgRead);
 
 	private:
 

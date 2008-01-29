@@ -4,8 +4,8 @@
 class NullConnection : public Connection
 {
 	void accepted() { this->beginRead(); }
-	void operator<<(boost::shared_ptr<IOMsgReadComplete> msgRead) { this->beginRead(); }
-	void operator<<(boost::shared_ptr<IOMsgWriteComplete> msgRead) { this->beginRead(); }
+	void post(boost::shared_ptr<IOMsgReadComplete> msgRead) { this->beginRead(); }
+	void post(boost::shared_ptr<IOMsgWriteComplete> msgRead) { this->beginRead(); }
 };
 
 #endif

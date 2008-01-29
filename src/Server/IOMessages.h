@@ -8,7 +8,6 @@
 
 namespace Musador
 {
-
 	class Connection;
 
 	enum IOMsgType
@@ -16,7 +15,8 @@ namespace Musador
 		IO_WRITE_COMPLETE,
 		IO_READ_COMPLETE,
 		IO_ACCEPT_COMPLETE,
-		IO_ERROR
+		IO_ERROR,
+		IO_SHUTDOWN
 	};
 
 	class IOMsg
@@ -32,6 +32,12 @@ namespace Musador
 	private: 
 
 		IOMsgType type;
+	};
+
+	class IOMsgShutdown : public IOMsg
+	{
+	public:
+		inline IOMsgShutdown() : IOMsg(IO_SHUTDOWN) {}
 	};
 
 	class IOMsgWriteComplete : public IOMsg
@@ -99,4 +105,7 @@ namespace Musador
 	};
 
 }
+
+#include "Connection.h"
+
 #endif

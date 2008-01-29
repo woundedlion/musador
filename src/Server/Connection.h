@@ -51,13 +51,9 @@ namespace Musador
 		void beginWrite(const std::string& str);
 		void beginWrite(std::stringstream& dataStream);
 
-		void onRead(boost::shared_ptr<IOMsg> msg, boost::any tag);
-
-		void onWrite(boost::shared_ptr<IOMsg> msg, boost::any tag);
-
 		virtual void accepted() = 0;
-		virtual void operator<<(boost::shared_ptr<IOMsgReadComplete> msgRead) = 0;
-		virtual void operator<<(boost::shared_ptr<IOMsgWriteComplete> msgRead) = 0;
+		virtual void post(boost::shared_ptr<IOMsgReadComplete> msgRead) = 0;
+		virtual void post(boost::shared_ptr<IOMsgWriteComplete> msgRead) = 0;
 
 	private:
 

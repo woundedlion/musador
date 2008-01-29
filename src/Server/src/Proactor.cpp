@@ -215,7 +215,7 @@ void Proactor::completeAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned lon
 	msgAccept->conn->setRemoteEP(*remoteAddr);
 	msgAccept->len = nBytes;
 
-	LOG(Info) << "Connection accepted: " << msgAccept->conn->toString();
+	LOG(Debug) << "Accept completed: " << msgAccept->conn->toString();
 
 	// notify the handler
 	if (NULL != ctx->handler)

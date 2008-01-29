@@ -2,6 +2,7 @@
 #include "stdio.h"
 #include "Utilities/Util.h"
 #include "Utilities/md5.h"
+#include "ConnectionProcessor.h"
 #include "boost/bind.hpp"
 #include "Logger/Logger.h"
 
@@ -36,12 +37,14 @@ Server::~Server()
 {
 	this->net = NULL;
     Musador::Network::destroy();
+	Musador::ConnectionProcessor::destroy();
 }
 
 void Server::start() 
 {
 	LOG(Info) << "Server starting...";
 	boost::thread ioThread(boost::bind(&Server::runIO,this));
+	Musador::ConnectionProcessor::instance();
 }
 
 void Server::waitForStart()
@@ -179,6 +182,7 @@ void Server::onError(boost::shared_ptr<IOMsgError> msgErr)
 
 void Server::addConnection(boost::shared_ptr<Connection> conn)
 {
+	LOG(Info) << "Connected: " << conn->toString();
 	Guard guard(this->connsMutex);
 	this->conns.push_back(conn);
 }
@@ -191,12 +195,12 @@ void Server::removeConnection(boost::shared_ptr<Connection> conn)
 		this->conns.erase(iter);
 		break;
 	}
+	LOG(Info) << "Disconnected: " << conn->toString();
 }
 
 void Server::killConnection(boost::shared_ptr<Connection> conn)
 {
 	this->removeConnection(conn);
-	LOG(Info) << "Disconnected: " << conn->toString();
 }
 
 void Server::killConnections()
