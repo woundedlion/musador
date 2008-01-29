@@ -119,36 +119,52 @@ void Server::acceptConnections(
 							   int socketProto /* = IPPROTO_TCP */)
 {
 	// Set up server socket
+	SOCKET s;
 	try
 	{
-		SOCKET s = net->socket(localEP.sin_family,socketType,socketProto);
+		s = net->socket(localEP.sin_family,socketType,socketProto);
 		net->bind(s,const_cast<sockaddr_in *>(&localEP));
 		net->listen(s);
 		this->listeners[s] = boost::shared_ptr<ConnectionFactory>(new ConcreteFactory<Connection,ConnType>());
-		Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2));
+		Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),s);
 	}
 	catch (const NetworkException& e)
 	{
 		LOG(Error) << e.what();
 		return;
 	}
-	LOG(Debug) << "Accepting connections on " << ::inet_ntoa(localEP.sin_addr) << ":" << ::ntohs(localEP.sin_port);
+	LOG(Debug) << "Accepting connections on " << ::inet_ntoa(localEP.sin_addr) << ":" << ::ntohs(localEP.sin_port) << " [" << s << "]";
 }
 
 
 void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 {
 
-	boost::shared_ptr<IOMsgAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgAcceptComplete>(msg));
+	switch (msg->getType())
+	{
+	case IO_ACCEPT_COMPLETE:
+		{
+			boost::shared_ptr<IOMsgAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgAcceptComplete>(msg));
 
-	// Register for another accept notification
-	Proactor::instance()->beginAccept(msgAccept->listener,this->listeners[msgAccept->listener],boost::bind(&Server::onAccept,this,_1,_2));
-	
-	// Set up the new connection
-	msgAccept->conn->setErrorHandler(boost::bind(&Server::onError,this,_1));
-	this->addConnection(msgAccept->conn);
-	// Start reading on the connection
-	msgAccept->conn->accepted();
+			// Register for another accept notification
+			// Listening socket was passed in the tag
+			SOCKET s = boost::any_cast<SOCKET>(tag);
+			Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),s);
+
+			// Set up the new connection
+			msgAccept->conn->setErrorHandler(boost::bind(&Server::onError,this,_1));
+			this->addConnection(msgAccept->conn);
+			// Start the connection stat machine
+			msgAccept->conn->accepted();
+		}
+		break;
+	case IO_ERROR:
+		{
+			SOCKET s = boost::any_cast<SOCKET>(tag);
+			Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),s);
+		}
+		break;
+	}
 }
 
 void Server::onError(boost::shared_ptr<IOMsgError> msgErr)

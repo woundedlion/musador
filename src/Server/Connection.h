@@ -40,6 +40,7 @@ namespace Musador
 		void setErrorHandler(ErrorHandler errorHandler);
 
 		void close();
+		void close(boost::shared_ptr<IOMsgError> msgErr);
 
 		std::string toString();
 

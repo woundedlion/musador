@@ -134,11 +134,10 @@ namespace Musador
 		//////////////////////////////////////////////////////////////////////
 		struct Env 
 		{
-			boost::shared_ptr<Request> request;
-			boost::shared_ptr<Response> response;
-			boost::shared_ptr<StateStore> session;
-			boost::shared_ptr<CookieStore> cookies;
-			std::map<std::string,std::string> args;
+			Request req;
+			Response res;
+			StateStore session;
+//			CookieStore cookies;
 			std::string sessionName;
 		};
 

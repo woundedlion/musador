@@ -64,7 +64,26 @@ void Proactor::runIO()
 				DWORD err = ::GetLastError();
 				if (WAIT_TIMEOUT != err)
 				{
-					LOG(Error) << "Could not dequeue completion packet: " << err;
+					std::auto_ptr<CompletionCtx> ctx(ctxPtr);
+					DWORD flags = 0;
+					::WSAGetOverlappedResult(ctx->msg->conn->getSocket(),ctxPtr,&nBytes,FALSE,&flags);
+					DWORD err = ::WSAGetLastError();
+					if (WSAECONNRESET != err)
+					{
+						LOG(Error) << "GetQueuedCompletionStatus() failed: " << err;
+					}
+
+					// notify the handler
+					if (NULL != ctx->handler)
+					{
+						boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+						msgErr->conn = ctx->msg->conn;
+						msgErr->err = err;
+						ctx->handler(msgErr,ctx->tag);
+					}
+
+					ctx->msg->conn->close();
+
 				}
 			}
 
@@ -129,7 +148,7 @@ void Proactor::beginAccept(SOCKET listenSocket,
 	msgAccept->listener = listenSocket;
 	msgAccept->conn.reset(connFactory->create());
 	msgAccept->conn->setSocket(Network::instance()->socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
-	
+
 	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
 	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
 	ctx->msg = msgAccept;
@@ -150,8 +169,22 @@ void Proactor::beginAccept(SOCKET listenSocket,
 		DWORD err = ::WSAGetLastError();
 		if (ERROR_IO_PENDING != err)
 		{
-			LOG(Critical) << "AcceptEx failed to accept a connection: " << err;
-			Network::instance()->closeSocket(msgAccept->conn->getSocket());
+			if (WSAECONNRESET != err)
+			{
+				LOG(Error) << "AcceptEx() failed.: " << err;
+			}
+
+			// notify the handler
+			if (NULL != ctx->handler)
+			{
+				boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+				msgErr->conn = msgAccept->conn;
+				msgErr->err = err;
+				ctx->handler(msgErr,ctx->tag);
+			}
+
+			msgAccept->conn->close();
+
 			return;
 		}
 	}
@@ -232,12 +265,26 @@ void Proactor::beginRead(boost::shared_ptr<Connection> conn,
 						ctx.get(),
 						NULL)) 
 	{
-		DWORD err = ::GetLastError();
+		DWORD err = ::WSAGetLastError();
 		if (ERROR_IO_PENDING != err)
 		{
-			LOG(Error) << "ReadFile() failed to initiate an asynchronous read operation on the socket: " << err;
-                        conn->close();
-                        return;
+			if (WSAECONNRESET != err)
+			{
+				LOG(Error) << "WSARecv() failed on socket " << conn->getSocket() << " [" << err << "]";
+			}
+		
+			// notify the handler
+			if (NULL != ctx->handler)
+			{
+				boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+				msgErr->conn = conn;
+				msgErr->err = err;
+				ctx->handler(msgErr,ctx->tag);
+			}
+
+			conn->close();
+
+			return;
 		}
 	}
 
@@ -253,14 +300,18 @@ void Proactor::completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long 
 	if (0 == nBytes)
 	{
 		// 0 bytes received signals connection error
-		boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
-		msgErr->conn = ctx->msg->conn;
-		msgErr->err = static_cast<int>(::WSAGetLastError());
+
 		// notify the handler
 		if (NULL != ctx->handler)
 		{
+			boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+			msgErr->conn = msgRead->conn;
+			msgErr->err = static_cast<int>(::WSAGetLastError());
 			ctx->handler(msgErr,ctx->tag);
 		}
+
+		msgRead->conn->close();
+
 		return;
 	}
 
@@ -314,12 +365,26 @@ void Proactor::beginWrite(boost::shared_ptr<Connection> conn,
 						ctx.get(),
 						NULL))
 	{
-		DWORD err = ::GetLastError();
+		DWORD err = ::WSAGetLastError();
 		if (ERROR_IO_PENDING != err)
 		{
-			LOG(Error) << "WriteFile() failed to initiate an asynchronous write operation on the socket: " << err;
-                        conn->close();
-                        return;
+			if (WSAECONNRESET != err)
+			{
+				LOG(Error) << "WSASend() failed on socket " << conn->getSocket() << " [" << err << "]";
+			}
+
+			// notify the handler
+			if (NULL != ctx->handler)
+			{
+				boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+				msgErr->conn = conn;
+				msgErr->err = err;
+				ctx->handler(msgErr,ctx->tag);
+			}
+
+			conn->close();
+
+			return;
 		}
 	}
 

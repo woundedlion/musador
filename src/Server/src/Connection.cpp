@@ -36,6 +36,7 @@ Connection::~Connection()
 		{
 			LOG(Debug) << " Closing socket " << this->sock;
 			Network::instance()->closeSocket(this->sock);
+			this->sock = NULL;
 		}
 		catch(const NetworkException& e)
 		{
@@ -81,6 +82,18 @@ void Connection::setErrorHandler(ErrorHandler errorHandler)
 
 void Connection::close()
 {
+	boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+	msgErr->conn = shared_from_this();
+	this->close(msgErr);
+}
+
+void Connection::close(boost::shared_ptr<IOMsgError> msgErr)
+{
+	if (NULL != this->errorHandler && NULL != msgErr)
+	{
+		this->errorHandler(msgErr);
+	}
+
 	if (NULL != this->sock)
 	{
 		try
@@ -95,25 +108,15 @@ void Connection::close()
 		}
 	}
 	
-	if (NULL != this->errorHandler)
-	{
-		boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
-		msgErr->conn = shared_from_this();
-		this->errorHandler(msgErr);
-	}
 }
 
 std::string Connection::toString()
 {
-	std::string r;
-	r += ::inet_ntoa(this->remoteEP.sin_addr);
-	r += ":";
-	r += boost::lexical_cast<std::string>(::ntohs(this->remoteEP.sin_port));
-	r += " => ";
-	r += ::inet_ntoa(this->localEP.sin_addr);
-	r += ":";
-	r += boost::lexical_cast<std::string>(::ntohs(this->localEP.sin_port));
-	return r;
+	std::stringstream r;
+	r << ::inet_ntoa(this->remoteEP.sin_addr) << ":" << ::ntohs(this->remoteEP.sin_port) << " => " 
+	  << ::inet_ntoa(this->localEP.sin_addr) << ":" << ::ntohs(this->localEP.sin_port)
+	  << " [" << this->getSocket() << "]";
+	return r.str();
 }
 
 void Connection::beginRead()
@@ -162,11 +165,7 @@ void Connection::onRead(boost::shared_ptr<IOMsg> msg, boost::any tag)
 		break;
 	case IO_ERROR:
 		{
-			if (NULL != this->errorHandler)
-			{
-				boost::shared_ptr<IOMsgError> msgErr(boost::shared_static_cast<IOMsgError>(msg));
-				this->errorHandler(msgErr);
-			}
+
 		}
 		break;
 	}
@@ -184,12 +183,7 @@ void Connection::onWrite(boost::shared_ptr<IOMsg> msg, boost::any tag)
 		break;
 	case IO_ERROR:
 		{
-			if (NULL != this->errorHandler)
-			{
-				boost::shared_ptr<IOMsgError> msgErr(boost::shared_static_cast<IOMsgError>(msg));
-				this->errorHandler(msgErr);
-			}
-			Network::instance()->closeSocket(this->getSocket());
+
 		}
 		break;
 	}

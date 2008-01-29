@@ -55,8 +55,8 @@ conn(conn)
 
 HTTP::StateRecvReqHeader::StateRecvReqHeader(my_context ctx) : my_base(ctx)
 {
-	outermost_context().req.clear();
-	outermost_context().res.clear();
+	outermost_context().env.req.clear();
+	outermost_context().env.res.clear();
 	outermost_context().conn.beginRead();
 }
 
@@ -78,8 +78,8 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 	}
 	if (valid)
 	{
-		Request& req = outermost_context().req;
-		Response& res = outermost_context().res;
+		Request& req = outermost_context().env.req;
+		Response& res = outermost_context().env.res;
 		
 		// Fill the request object
 		req.method = matches[1];
@@ -151,7 +151,7 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 
 HTTP::StateReqError::StateReqError(my_context ctx) : my_base(ctx)
 {
-	HTTP::Response& res = outermost_context().res;
+	HTTP::Response& res = outermost_context().env.res;
 	res.data << "<h1>" << res.status << " " << res.reason << "</h1>";
 	res.headers["Content-Type"] = "text/html";
 	res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data.tellp());
@@ -183,8 +183,8 @@ HTTP::StateRecvReqBody::StateRecvReqBody(my_context ctx) : my_base(ctx)
 
 HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
 {
-	HTTP::Request& req = outermost_context().req;
-	HTTP::Response& res = outermost_context().res;
+	HTTP::Request& req = outermost_context().env.req;
+	HTTP::Response& res = outermost_context().env.res;
 	req.requestInfo(res.data);
 	res.headers["Content-Type"] = "text/html";
 	res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data.tellp());
@@ -197,7 +197,7 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
 
 HTTP::StateSendResHeader::StateSendResHeader(my_context ctx) : my_base(ctx)
 {
-	Response& res = outermost_context().res;
+	Response& res = outermost_context().env.res;
 	// Add p3p header
 	res.headers["P3P"] = "CP=\"NON NID TAIa OUR NOR NAV INT STA\"";
 	res.sendHeaders(outermost_context().conn);
@@ -211,13 +211,13 @@ HTTP::StateSendResHeader::react(const EvtWriteComplete& evt)
 
 HTTP::StateSendResBody::StateSendResBody(my_context ctx) : my_base(ctx)
 {
-	outermost_context().res.sendBody(outermost_context().conn);
+	outermost_context().env.res.sendBody(outermost_context().conn);
 }
 
 sc::result 
 HTTP::StateSendResBody::react(const EvtWriteComplete& evt)
 {
-	Request& req = outermost_context().req;
+	Request& req = outermost_context().env.req;
 	if (!boost::ilexicographical_compare(req.headers["Connection"],"close") && req.protocol != "HTTP/1.0")
 	{
 		post_event(EvtKeepAlive());

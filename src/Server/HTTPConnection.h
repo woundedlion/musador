@@ -57,8 +57,7 @@ namespace Musador
 			FSM(Connection& conn);
 
 			Connection& conn;
-			HTTP::Request req;
-			HTTP::Response res;			
+			HTTP::Env env;
 		};
 
 		struct StateClosed : sc::simple_state<StateClosed,FSM>
