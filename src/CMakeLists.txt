@@ -41,7 +41,7 @@ MACRO(cxxTestLink)
 	
 	ADD_EXECUTABLE(${testExe} ${testSrcs})
 	TARGET_LINK_LIBRARIES(${testExe} ${PROJECT_NAME} ${ARGV})
-	ADD_DEPENDENCIES(${testExe} ${ARGV})
+	ADD_DEPENDENCIES(${testExe} ${PROJECT_NAME} ${ARGV})
 	ADD_TEST(${testExe} ${EXECUTABLE_OUTPUT_PATH}/${testExe}) 
 ENDMACRO(cxxTestLink)
 
