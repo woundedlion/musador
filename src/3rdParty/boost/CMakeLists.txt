@@ -12,9 +12,13 @@ SOURCE_GROUP(thread FILES ${thread_srcs})
 FILE (GLOB regex_srcs boost/regex/*.hpp libs/regex/src/*.cpp )
 SOURCE_GROUP(regex FILES ${regex_srcs})
 
+FILE (GLOB serialization_srcs boost/serialization/*.hpp libs/serialization/src/*.cpp )
+SOURCE_GROUP(regex FILES ${regex_srcs})
+
 ADD_LIBRARY(Boost.Filesystem ${fs_srcs})
 ADD_LIBRARY(Boost.Signals ${signals_srcs})
 ADD_LIBRARY(Boost.Thread ${thread_srcs})
 ADD_LIBRARY(Boost.Regex ${regex_srcs})
+ADD_LIBRARY(Boost.Serialization ${serialization_srcs})
 
 ADD_DEFINITIONS(-DBOOST_THREAD_BUILD_LIB)
