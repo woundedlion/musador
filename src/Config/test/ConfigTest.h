@@ -20,19 +20,21 @@ public:
 	void testConfig()
 	{
 		Config cfg;
-		std::wfstream f(L"ConfigTest.xml");
-		boost::archive::xml_woarchive ar(f);
+		std::wofstream ofs(L"ConfigTest.xml");
+		boost::archive::xml_woarchive ar(ofs);
 		SiteConfig site;
 		site.addr = "127.0.0.1";
 		site.port = 5152;
 		cfg.server.sites.push_back(site);
 		ar << boost::serialization::make_nvp("Config",cfg);
-	
-		f.seekg(std::ios::beg);
-		while (!f.eof())
+		ofs.close();
+
+		std::wifstream ifs(L"ConfigTest.xml");
+		ifs.seekg(std::ios::beg);
+		while (!ifs.eof())
 		{
 			std::wstring line;
-			getline(f,line);
+			getline(ifs,line);
 			std::wcout << line << std::endl;
 		}
 
