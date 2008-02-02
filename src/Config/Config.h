@@ -1,6 +1,7 @@
 #ifndef CONFIG_H_24DF554B_8EF1_40c0_8056_F349BC8E3F45
 #define CONFIG_H_24DF554B_8EF1_40c0_8056_F349BC8E3F45
 
+#include "Utilities/Singleton.h"
 #include "boost/serialization/nvp.hpp"
 #include <boost/serialization/vector.hpp>
 
@@ -12,8 +13,10 @@ namespace Musador
 	public:
 		
 		SiteConfig() :
-		  documentRoot(L"html"),
-		  requireAuth(false)
+			documentRoot(L"html"),
+			addr("0.0.0.0"),
+			port(5152),
+			requireAuth(false)
 		{}
 	
 		template<class Archive>
@@ -35,27 +38,33 @@ namespace Musador
 	{
 	public:
 		
+		typedef std::vector<SiteConfig> SiteCollection;
+
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
 		{
 			ar & BOOST_SERIALIZATION_NVP(sites);
 		}
 
-		std::vector<SiteConfig> sites;
+		SiteCollection sites;
 	};
 
-	class Config
+	class Config : public Singleton<Config>
 	{
 	public:
+
+		void load(const std::wstring& path);
+		void save(const std::wstring& path);
 
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
 		{
 			ar & BOOST_SERIALIZATION_NVP(server);
 		}
-
+		
 		ServerConfig server;
 	};
+
 
 }
 

@@ -6,6 +6,7 @@
 #include "Server/Server.h"
 #include "Server/Server.h"
 #include "Utilities/Console.h"
+#include "Config/Config.h"
 
 using namespace Musador;
 namespace Musador
@@ -21,9 +22,10 @@ namespace Musador
 
 		int run(unsigned long argc, wchar_t * argv[]);
 
+		static void configDefaults(Config& cfg);
+
 	private:
 
-		Musador::Server::Config cfg;
 		Musador::Server server;
 
 	};

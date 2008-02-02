@@ -11,6 +11,7 @@ SET(libs
 		Network
 		Server
 		Utilities
+		Config
 )
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${hdrs} ${srcs})

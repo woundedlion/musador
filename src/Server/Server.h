@@ -22,30 +22,7 @@ namespace Musador
 	{
 	public:
 
-		class Config
-		{
-		public:
-			Config() :
-			  requireAuth(false),
-				  filterRemoteIps(false),
-				  allowIps(""),
-				  denyIps(""),
-				  maxConnections(100)
-			  {
-			  }
-
-			  bool requireAuth;
-			  bool filterRemoteIps;
-			  const char * allowIps;
-			  const char * denyIps;
-			  std::string documentRoot;
-			  int maxConnections;
-			  std::string authRealm;
-		};
-
 		Server();
-
-		Server(const Config& cfg);
 
 		virtual ~Server();
 
@@ -82,7 +59,6 @@ namespace Musador
 
 	private:
 
-		Config cfg;
 		Musador::Network * net;
 
 		// State collections

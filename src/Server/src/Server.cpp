@@ -15,15 +15,6 @@ using namespace Musador;
 //////////////////////////////////////////////////////////////////////////////////////
 
 // Constructor/Destructor
-Server::Server(const Config& cfg) :
-cfg(cfg),
-net(Musador::Network::instance()),
-doRecycle(false),
-doShutdown(false),
-running(false)
-{
-}
-
 Server::Server() :
 net(Musador::Network::instance()),
 doRecycle(false),
