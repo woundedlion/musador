@@ -5,6 +5,7 @@
 #include "Utilities/MIMEResolver.h"
 #include "boost/shared_ptr.hpp"
 #include "boost/thread.hpp"
+#include "ConnectionProcessor.h"
 #include "Connection.h"
 #include "Proactor.h"
 
@@ -18,7 +19,7 @@ namespace Musador
 {
 	using namespace Musador;
 
-	class Server
+	class Server : public ConnectionProcessor
 	{
 	public:
 

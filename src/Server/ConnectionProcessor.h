@@ -10,15 +10,19 @@
 namespace Musador
 {
 
-	class ConnectionProcessor : public MessageSink<IOMsg>, public Singleton<ConnectionProcessor>
+	class ConnectionProcessor : public MessageSink<IOMsg>
 	{
 	public:
+
 		ConnectionProcessor();
+		
 		~ConnectionProcessor();
 
 		void post(boost::shared_ptr<IOMsg> msg,boost::any tag);
 
-		void run();
+		void _run();
+
+		void start();
 
 		void shutdown();
 

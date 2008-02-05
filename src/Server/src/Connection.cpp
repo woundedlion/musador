@@ -9,6 +9,7 @@
 #include "ConnectionProcessor.h"
 #include "Logger/Logger.h"
 #include "Proactor.h"
+#include "Server.h"
 #define LOG_SENDER L"Proactor"
 
 using namespace Musador;
@@ -76,9 +77,9 @@ void Connection::setRemoteEP(sockaddr_in remoteEP)
 	this->remoteEP = remoteEP;
 }
 
-void Connection::setErrorHandler(ErrorHandler errorHandler)
+void Connection::setServer(Server * server)
 {
-	this->errorHandler = errorHandler;
+	this->server = server;
 }
 
 void Connection::close()
@@ -90,9 +91,9 @@ void Connection::close()
 
 void Connection::close(boost::shared_ptr<IOMsgError> msgErr)
 {
-	if (NULL != this->errorHandler && NULL != msgErr)
+	if (NULL != msgErr)
 	{
-		this->errorHandler(msgErr);
+		this->server->onError(msgErr);
 	}
 
 	if (NULL != this->sock)
@@ -122,17 +123,17 @@ std::string Connection::toString()
 
 void Connection::beginRead()
 {
-	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,ConnectionProcessor::instance(),_1,_2));
+	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->server,_1,_2));
 }
 
 void Connection::beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead)
 {
-	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,ConnectionProcessor::instance(),_1,_2), msgRead);
+	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->server,_1,_2), msgRead);
 }
 
 void Connection::beginWrite(boost::shared_array<char> data, unsigned int len)
 {
-	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,ConnectionProcessor::instance(),_1,_2), data, len);
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->server,_1,_2), data, len);
 }
 
 void Connection::beginWrite(const std::string& str)
@@ -140,7 +141,7 @@ void Connection::beginWrite(const std::string& str)
 	unsigned int len = str.size();
 	boost::shared_array<char> data(new char[len]);
 	str.copy(data.get(), len);
-	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,ConnectionProcessor::instance(),_1,_2), data, len);
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->server,_1,_2), data, len);
 }
 
 void Connection::beginWrite(std::stringstream& dataStream)
@@ -150,6 +151,6 @@ void Connection::beginWrite(std::stringstream& dataStream)
 	{
 		boost::shared_array<char> data(new char[len]);
 		dataStream.str().copy(data.get(),len);
-		Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,ConnectionProcessor::instance(),_1,_2), data, len);
+		Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->server,_1,_2), data, len);
 	}
 }

@@ -9,15 +9,18 @@
 #include "Network/Network.h"
 #include "Utilities/Factory.h"
 #include "IOMessages.h"
+#include "ConnectionProcessor.h"
 
 namespace Musador
 {
 
+	using namespace Musador;
+
+	class Server;
+
 	class Connection  : public boost::enable_shared_from_this<Connection>
 	{
 	public:
-
-		typedef boost::function<void (boost::shared_ptr<IOMsgError>) > ErrorHandler;
 
 		Connection();
 
@@ -37,7 +40,7 @@ namespace Musador
 
 		void setRemoteEP(sockaddr_in localEP);
 
-		void setErrorHandler(ErrorHandler errorHandler);
+		void setServer(Server *);
 
 		void close();
 		void close(boost::shared_ptr<IOMsgError> msgErr);
@@ -57,7 +60,8 @@ namespace Musador
 
 	private:
 
-		ErrorHandler errorHandler;
+		Server * server;
+
 		sockaddr_in localEP;
 		sockaddr_in remoteEP;
 		SOCKET sock;

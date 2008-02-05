@@ -28,14 +28,13 @@ Server::~Server()
 {
 	this->net = NULL;
     Musador::Network::destroy();
-	Musador::ConnectionProcessor::destroy();
 }
 
 void Server::start() 
 {
 	LOG(Info) << "Server starting...";
 	boost::thread ioThread(boost::bind(&Server::runIO,this));
-	Musador::ConnectionProcessor::instance();
+	ConnectionProcessor::start();
 }
 
 void Server::waitForStart()
@@ -50,6 +49,7 @@ void Server::waitForStart()
 void Server::stop() 
 {
 	LOG(Info) << "Server shutting down...";
+	ConnectionProcessor::shutdown();
 	Proactor::instance()->doShutdown = true;
 }
 
@@ -146,7 +146,7 @@ void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 			Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),s);
 
 			// Set up the new connection
-			msgAccept->conn->setErrorHandler(boost::bind(&Server::onError,this,_1));
+			msgAccept->conn->setServer(this);
 			this->addConnection(msgAccept->conn);
 			// Start the connection stat machine
 			msgAccept->conn->accepted();

@@ -1,18 +1,17 @@
 #include <boost/bind.hpp>
 #include "ConnectionProcessor.h"
+#include <assert.h>
 
 using namespace Musador;
 
-ConnectionProcessor::ConnectionProcessor()
+ConnectionProcessor::ConnectionProcessor() :
+processorThread(NULL)
 {
-	this->processorThread = new boost::thread(boost::bind(&ConnectionProcessor::run,this));
 }
 
 ConnectionProcessor::~ConnectionProcessor()
 {
 	this->shutdown();
-	this->processorThread->join();
-	delete this->processorThread;
 }
 
 void ConnectionProcessor::post(boost::shared_ptr<IOMsg> msg,boost::any tag)
@@ -20,7 +19,7 @@ void ConnectionProcessor::post(boost::shared_ptr<IOMsg> msg,boost::any tag)
 	MessageSink<IOMsg>::post(msg);
 }	
 
-void ConnectionProcessor::run()
+void ConnectionProcessor::_run()
 {
 	while (true)
 	{
@@ -51,8 +50,17 @@ void ConnectionProcessor::run()
 	}
 }
 
+void ConnectionProcessor::start()
+{
+	assert(NULL == this->processorThread);
+	this->processorThread = new boost::thread(boost::bind(&ConnectionProcessor::_run,this));
+}
+
 void ConnectionProcessor::shutdown()
 {
+	assert(NULL != this->processorThread);
 	MessageSink<IOMsg>::post(boost::shared_ptr<IOMsg>(new IOMsgShutdown()));
+	this->processorThread->join();
+	delete this->processorThread;
 }
 

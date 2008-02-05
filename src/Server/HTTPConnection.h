@@ -152,6 +152,7 @@ namespace Musador
 
 	}
 
+
 	class HTTPConnection : public Connection
 	{
 	public:
@@ -164,11 +165,13 @@ namespace Musador
 
 		void post(boost::shared_ptr<IOMsgReadComplete> msgRead);
 
-		void post(boost::shared_ptr<IOMsgWriteComplete> msgRead);
+		void post(boost::shared_ptr<IOMsgWriteComplete> msgWrite);
 
 	private:
 
 		HTTP::FSM fsm;
+
+		static ConnectionProcessor processor;
 	};
 
 	class HTTPConnectionFactory : public ConcreteFactory<Connection,HTTPConnection> { };
