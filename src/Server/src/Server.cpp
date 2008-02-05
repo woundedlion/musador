@@ -27,7 +27,6 @@ running(false)
 Server::~Server() 
 {
 	this->net = NULL;
-    Musador::Network::destroy();
 }
 
 void Server::start() 

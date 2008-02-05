@@ -65,6 +65,7 @@ namespace Musador
 		// State collections
         typedef std::vector<boost::shared_ptr<Connection> > ConnCollection;
 		typedef std::map<SOCKET,boost::shared_ptr<ConnectionFactory> > ListenerCollection;
+//		typedef std::map<std::string, boost::shared_ptr<StateStore> > SessionCollection;
 
 		ConnCollection conns;
 		Mutex connsMutex;

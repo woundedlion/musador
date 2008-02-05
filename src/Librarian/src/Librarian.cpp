@@ -37,6 +37,8 @@ Librarian::~Librarian()
 int Librarian::run(unsigned long argc, wchar_t * argv[])
 {
 
+	Musador::Network::instance();
+
 	ServerConfig& serverCfg = Config::instance()->server;
 
 	this->server.start();
@@ -54,6 +56,8 @@ int Librarian::run(unsigned long argc, wchar_t * argv[])
 	this->waitForStop();
 	this->server.stop();
 	this->server.waitForStop();
+
+	Musador::Network::destroy();
 
 	return 0;
 }

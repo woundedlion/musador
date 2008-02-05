@@ -58,9 +58,12 @@ void ConnectionProcessor::start()
 
 void ConnectionProcessor::shutdown()
 {
-	assert(NULL != this->processorThread);
-	MessageSink<IOMsg>::post(boost::shared_ptr<IOMsg>(new IOMsgShutdown()));
-	this->processorThread->join();
-	delete this->processorThread;
+	if (NULL != this->processorThread)
+	{
+		MessageSink<IOMsg>::post(boost::shared_ptr<IOMsg>(new IOMsgShutdown()));
+		this->processorThread->join();
+		delete this->processorThread;
+		this->processorThread = NULL;
+	}
 }
 
