@@ -50,13 +50,20 @@ std::string HTTP::getRFC1123(const time_t& timer) {
 	tm * ptm = gmtime(&timer);
 	char * days[] = { "Sun","Mon","Tue","Wed","Thu","Fri","Sat" };
 	char * months[] = { "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec" };
-	char year[5];
-	char day[3];
-	char hour[3];
-	char min[3];
-	char sec[3];
+
+	char s[32];
 	
-	return std::string(days[ptm->tm_wday]) + ", " + _itoa(ptm->tm_mday,day,10) + " " + months[ptm->tm_mon] + " " + _itoa(ptm->tm_year+1900,year,10) + " " + _itoa(ptm->tm_hour+1,hour,10) + ":" + _itoa(ptm->tm_min,min,10) + ":" + _itoa(ptm->tm_sec,sec,10) + " GMT";	
+	// Fri, 00 Feb 000000 00:00:00 GMT\0 // 32 bytes max
+	::sprintf(s,"%s, %d %s %d %d:%02d:%02d GMT",
+		days[ptm->tm_wday],
+		ptm->tm_mday, 
+		months[ptm->tm_mon], 
+		ptm->tm_year+1900, 
+		ptm->tm_hour+1, 
+		ptm->tm_min, 
+		ptm->tm_sec);	
+	s[31] = '\0';
+	return s;
 }
 
 void HTTP::genDigestOpaque(std::string& opaque) {
