@@ -46,8 +46,7 @@ std::string HTTP::urlEncode(const std::string& enc) {
 	return result;
 }
 
-std::string * HTTP::getRFC1123(time_t timer, std::string * out) {
-	time(&timer);
+std::string HTTP::getRFC1123(const time_t& timer) {
 	tm * ptm = gmtime(&timer);
 	char * days[] = { "Sun","Mon","Tue","Wed","Thu","Fri","Sat" };
 	char * months[] = { "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec" };
@@ -57,8 +56,7 @@ std::string * HTTP::getRFC1123(time_t timer, std::string * out) {
 	char min[3];
 	char sec[3];
 	
-	*out = std::string(days[ptm->tm_wday]) + ", " + _itoa(ptm->tm_mday,day,10) + " " + months[ptm->tm_mon] + " " + _itoa(ptm->tm_year+1900,year,10) + " " + _itoa(ptm->tm_hour+1,hour,10) + ":" + _itoa(ptm->tm_min,min,10) + ":" + _itoa(ptm->tm_sec,sec,10) + " GMT";	
-	return out;
+	return std::string(days[ptm->tm_wday]) + ", " + _itoa(ptm->tm_mday,day,10) + " " + months[ptm->tm_mon] + " " + _itoa(ptm->tm_year+1900,year,10) + " " + _itoa(ptm->tm_hour+1,hour,10) + ":" + _itoa(ptm->tm_min,min,10) + ":" + _itoa(ptm->tm_sec,sec,10) + " GMT";	
 }
 
 void HTTP::genDigestOpaque(std::string& opaque) {
@@ -246,26 +244,6 @@ void HTTP::Response::sendBody(Connection& conn) {
 	conn.beginWrite(this->data);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-/// StateStore
-///////////////////////////////////////////////////////////////////////////////////////////
-
-HTTP::StateStore::StateStore() {
-}
-
-HTTP::StateStore::~StateStore() {
-}
-
-std::string& HTTP::StateStore::operator[](const std::string& key) {	
-	Guard guard(this->lock);
-	std::string& rv = this->store[key];
-	return rv;
-}
-
-void HTTP::StateStore::clear() {
-	Guard(this->lock);
-	this->store.clear();
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// CookieStore
@@ -273,7 +251,7 @@ void HTTP::StateStore::clear() {
 
 
 // TODO: escape semicolons at least if not urlencode
-HTTP::CookieStore::CookieStore(const std::string& cookieStr) : StateStore() {
+HTTP::CookieStore::CookieStore(const std::string& cookieStr) : Session() {
 	std::vector<std::string> cookies;
 	Util::tokenize(cookieStr,cookies,"; ");
 	std::pair<std::string,std::string> pair;

@@ -47,6 +47,7 @@ namespace Musador
 			boost::shared_ptr<IOMsgReadComplete> msgRead;
 		};
 		struct EvtReqDone : sc::event<EvtReqDone> {};
+		struct EvtReqError : sc::event<EvtReqError> {};
 		struct EvtWriteComplete : sc::event<EvtWriteComplete> {};
 		struct EvtClose : sc::event<EvtClose> {};
 		struct EvtKeepAlive : sc::event<EvtKeepAlive> {};
@@ -57,7 +58,8 @@ namespace Musador
 			FSM(Connection& conn);
 
 			Connection& conn;
-			HTTP::Env env;
+			Request req;
+			Response res;
 		};
 
 		struct StateClosed : sc::simple_state<StateClosed,FSM>
@@ -67,8 +69,10 @@ namespace Musador
 
 		struct StateRecvReq : sc::simple_state<StateRecvReq,FSM,StateRecvReqHeader>
 		{
-			typedef sc::transition<EvtReqDone,StateSendRes> reactions;
-			
+			typedef mpl::list<
+				sc::transition<EvtReqDone,StateSendRes>,
+				sc::transition<EvtReqError,StateReqError>
+				> reactions;
 		};
 
 		struct StateRecvReqHeader : sc::state<StateRecvReqHeader,StateRecvReq>

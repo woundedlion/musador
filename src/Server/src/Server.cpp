@@ -10,6 +10,7 @@
 
 using namespace Musador;
 
+
 //////////////////////////////////////////////////////////////////////////////////////
 // Server
 //////////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +33,7 @@ Server::~Server()
 void Server::start() 
 {
 	LOG(Info) << "Server starting...";
-	boost::thread ioThread(boost::bind(&Server::runIO,this));
+	this->ioThread = new boost::thread(boost::bind(&Server::runIO,this));
 	ConnectionProcessor::start();
 }
 
@@ -48,8 +49,15 @@ void Server::waitForStart()
 void Server::stop() 
 {
 	LOG(Info) << "Server shutting down...";
-	ConnectionProcessor::shutdown();
 	Proactor::instance()->doShutdown = true;
+	this->ioThread->join();
+	delete this->ioThread;
+	ConnectionProcessor::shutdown();
+	{
+		Guard guard(this->runningMutex);
+		this->running = false;
+		this->runningCV.notify_all();
+	}
 }
 
 void Server::waitForStop()
@@ -79,9 +87,11 @@ void Server::runIO()
 	// start IO engine
 	Proactor::instance()->runIO();
 
+	Proactor::destroy();
+
 	// Shutting down...
 	this->killConnections();
-	
+
 	for (ListenerCollection::iterator iter = this->listeners.begin(); iter != this->listeners.end(); ++iter)
 	{
 		try
@@ -98,11 +108,6 @@ void Server::runIO()
 	}
 
 	LOG(Info) << "Server stopped...";
-	{
-		Guard guard(this->runningMutex);
-		this->running = false;
-		this->runningCV.notify_all();
-	}
 }
 
 template <class ConnType>

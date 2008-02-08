@@ -45,7 +45,6 @@ namespace Musador
 
 		void runIO();
 
-
 		void beginAccept(SOCKET listenSocket, 
 						 boost::shared_ptr<ConnectionFactory> connFactory, 
 						 EventHandler handler, 

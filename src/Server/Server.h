@@ -8,6 +8,7 @@
 #include "ConnectionProcessor.h"
 #include "Connection.h"
 #include "Proactor.h"
+#include "Session.h"
 
 
 typedef boost::mutex Mutex;
@@ -48,6 +49,8 @@ namespace Musador
 
 		void onError(boost::shared_ptr<IOMsgError> msgErr);
 
+		Session& getSession(const std::string& key);
+
 		/*
 		bool authReq(const Request& request, const StateStore& session);
 		bool authIp(const std::string& ip);
@@ -55,30 +58,29 @@ namespace Musador
 		int getConnectionCount();
 		virtual std::string getAuthRealm(const std::string& uri) = 0;
 		virtual bool isValidUser(const std::string& username) = 0;
-		StateStore * getSession(const std::string& key);
 		*/
 
 	private:
 
 		Musador::Network * net;
 
-		// State collections
+		// Collection types
         typedef std::vector<boost::shared_ptr<Connection> > ConnCollection;
 		typedef std::map<SOCKET,boost::shared_ptr<ConnectionFactory> > ListenerCollection;
-//		typedef std::map<std::string, boost::shared_ptr<StateStore> > SessionCollection;
+		typedef std::map<std::string, boost::shared_ptr<Session> > SessionCollection;
 
 		ConnCollection conns;
 		Mutex connsMutex;
 
-		// Start/Stop sync objects
 		volatile bool doRecycle;
         volatile bool doShutdown;
 		bool running;
 		Mutex runningMutex;
         Condition runningCV;
+		boost::thread * ioThread;
 
-		// Network
 		ListenerCollection listeners;
+		SessionCollection sessions;
 
 		void addConnection(boost::shared_ptr<Connection> conn);
 		void removeConnection(boost::shared_ptr<Connection> conn);

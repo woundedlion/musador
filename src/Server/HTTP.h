@@ -10,6 +10,7 @@
 #include "Utilities/MTRand.h"
 #include "boost/shared_ptr.hpp"
 #include "boost/thread/mutex.hpp"
+#include "Session.h"
 
 typedef boost::mutex Mutex;
 typedef boost::mutex::scoped_lock Guard;
@@ -50,26 +51,10 @@ namespace Musador
 
 		};
 
-
-		//////////////////////////////////////////////////////////////////////
-		/// StateStore
-		//////////////////////////////////////////////////////////////////////
-		class StateStore 
-		{
-		public:
-			StateStore();
-			virtual ~StateStore();
-			std::string& operator[](const std::string& key);
-			void clear();
-		protected:
-			Mutex lock;
-			std::map<std::string,std::string> store;
-		};
-
 		//////////////////////////////////////////////////////////////////////
 		/// CookieStore
 		//////////////////////////////////////////////////////////////////////
-		class CookieStore : public StateStore 
+		class CookieStore : public Session
 		{
 		public:
 			CookieStore(const std::string& cookieStr);
@@ -132,20 +117,25 @@ namespace Musador
 		//////////////////////////////////////////////////////////////////////
 		/// Env
 		//////////////////////////////////////////////////////////////////////
-		struct Env 
+		class Env 
 		{
-			Request req;
-			Response res;
-			StateStore session;
-//			CookieStore cookies;
-			std::string sessionName;
+		public:
+			Env(Request& req,
+				Response& res
+				) :
+				req(req),
+				res(res)
+			{ }
+
+			Request& req;
+			Response& res;
 		};
 
 		//////////////////////////////////////////////////////////////////////
 		/// Free functions
 		//////////////////////////////////////////////////////////////////////
 
-		std::string * getRFC1123(time_t timer,std::string * time);
+		std::string getRFC1123(const time_t& timer);
 
 		void urlDecode(std::string& enc);
 

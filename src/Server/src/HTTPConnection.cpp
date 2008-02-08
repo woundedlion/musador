@@ -3,6 +3,7 @@
 #include "boost/regex.hpp"
 #include "Logger/Logger.h"
 #include "boost/algorithm/string.hpp"
+#include <time.h>
 
 #define LOG_SENDER L"HTTPConnection"
 
@@ -54,8 +55,8 @@ conn(conn)
 
 HTTP::StateRecvReqHeader::StateRecvReqHeader(my_context ctx) : my_base(ctx)
 {
-	outermost_context().env.req.clear();
-	outermost_context().env.res.clear();
+	outermost_context().req.clear();
+	outermost_context().res.clear();
 	outermost_context().conn.beginRead();
 }
 
@@ -77,8 +78,8 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 	}
 	if (valid)
 	{
-		Request& req = outermost_context().env.req;
-		Response& res = outermost_context().env.res;
+		Request& req = outermost_context().req;
+		Response& res = outermost_context().res;
 		
 		// Fill the request object
 		req.method = matches[1];
@@ -150,8 +151,9 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 
 HTTP::StateReqError::StateReqError(my_context ctx) : my_base(ctx)
 {
-	HTTP::Response& res = outermost_context().env.res;
-	res.data << "<h1>" << res.status << " " << res.reason << "</h1>";
+	HTTP::Response& res = outermost_context().res;
+	res.data << "<h1>Error " << res.status << " " << res.reason << "</h1><br/>";
+	res.data << "<i>" << HTTP::getRFC1123(::time(NULL)) << "</i>";
 	res.headers["Content-Type"] = "text/html";
 	res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data.tellp());
 	post_event(EvtReqDone());
@@ -182,12 +184,32 @@ HTTP::StateRecvReqBody::StateRecvReqBody(my_context ctx) : my_base(ctx)
 
 HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
 {
-	HTTP::Request& req = outermost_context().env.req;
-	HTTP::Response& res = outermost_context().env.res;
-	req.requestInfo(res.data);
-	res.headers["Content-Type"] = "text/html";
-	res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data.tellp());
-	post_event(EvtReqDone());
+	Request& req = outermost_context().req;
+	Response& res = outermost_context().res;
+
+	// If the request corresponds to an existing file, serve that
+	if (false)
+	{
+
+	}
+	else if (false)
+	{
+		// otherwise try to map the request to a command
+
+		req.requestInfo(res.data);
+		res.headers["Content-Type"] = "text/html";
+		res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data.tellp());
+
+		// Set up environment and call handler;
+		//	Env env(outermost_context().req,outermost_context().res);
+		post_event(EvtReqDone());
+		return;
+	}
+
+	// otherwise 404
+	res.status = 404;
+	res.reason = "Not Found";
+	post_event(EvtReqError());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +218,7 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
 
 HTTP::StateSendResHeader::StateSendResHeader(my_context ctx) : my_base(ctx)
 {
-	Response& res = outermost_context().env.res;
+	Response& res = outermost_context().res;
 	// Add p3p header
 	res.headers["P3P"] = "CP=\"NON NID TAIa OUR NOR NAV INT STA\"";
 	res.sendHeaders(outermost_context().conn);
@@ -210,13 +232,13 @@ HTTP::StateSendResHeader::react(const EvtWriteComplete& evt)
 
 HTTP::StateSendResBody::StateSendResBody(my_context ctx) : my_base(ctx)
 {
-	outermost_context().env.res.sendBody(outermost_context().conn);
+	outermost_context().res.sendBody(outermost_context().conn);
 }
 
 sc::result 
 HTTP::StateSendResBody::react(const EvtWriteComplete& evt)
 {
-	Request& req = outermost_context().env.req;
+	Request& req = outermost_context().req;
 	if (!boost::ilexicographical_compare(req.headers["Connection"],"close") && req.protocol != "HTTP/1.0")
 	{
 		post_event(EvtKeepAlive());

@@ -91,7 +91,6 @@ void Proactor::runIO()
 	} while(this->doRecycle);
 }
 
-
 void Proactor::beginAccept(SOCKET listenSocket, 
 						   boost::shared_ptr<ConnectionFactory> connFactory, 
 						   EventHandler handler, 
@@ -217,6 +216,9 @@ void Proactor::completeAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned lon
 
 	LOG(Debug) << "Accept completed: " << msgAccept->conn->toString();
 
+	// Associate the socket with the IO completion port
+	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(msgAccept->conn->getSocket()), this->iocp, NULL, NULL);
+
 	// notify the handler
 	if (NULL != ctx->handler)
 	{
@@ -239,9 +241,6 @@ void Proactor::beginRead(boost::shared_ptr<Connection> conn,
 	{
 		throw IOException() << "Message overflow at " << msgRead->MAX << " bytes";
 	}
-
-	// Associate the socket with the IO completion port
-	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(conn->getSocket()), this->iocp, NULL, NULL);
 
 	// Create completion context to send off into asynchronous land
 	msgRead->conn = conn;
@@ -341,9 +340,6 @@ void Proactor::beginWrite(boost::shared_ptr<Connection> conn,
 						  boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
 						  boost::any tag /* = NULL */)
 {
-	// Associate the socket with the IO completion port
-	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(conn->getSocket()), this->iocp, NULL, NULL);
-
 	// Create completion context to send off into asynchronous land
 	msgWrite->conn = conn;
 	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
