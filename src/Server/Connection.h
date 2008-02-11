@@ -56,7 +56,7 @@ namespace Musador
 
 		virtual void accepted() = 0;
 		virtual void post(boost::shared_ptr<IOMsgReadComplete> msgRead) = 0;
-		virtual void post(boost::shared_ptr<IOMsgWriteComplete> msgRead) = 0;
+		virtual void post(boost::shared_ptr<IOMsgWriteComplete> msgWrite) = 0;
 
 	private:
 
