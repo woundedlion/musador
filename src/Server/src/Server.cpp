@@ -133,10 +133,17 @@ void Server::runIO()
 
 template <class ConnType>
 void Server::acceptConnections(const sockaddr_in& localEP, 
-							   boost::any tag,
+							   boost::shared_ptr<ConnectionCtx> ctx /* = NULL */,
 							   int socketType /* = SOCK_STREAM */, 
 							   int socketProto /* = IPPROTO_TCP */)
 {
+	// Set up ctx;
+	if (NULL == ctx)
+	{
+		ctx = boost::shared_ptr<ConnectionCtx>(new ConnectionCtx());
+		ctx->server = this;
+	}
+
 	// Set up server socket
 	SOCKET s;
 	try
@@ -145,7 +152,7 @@ void Server::acceptConnections(const sockaddr_in& localEP,
 		net->bind(s,const_cast<sockaddr_in *>(&localEP));
 		net->listen(s);
 		this->listeners[s] = boost::shared_ptr<ConnectionFactory>(new ConcreteFactory<Connection,ConnType>());
-		Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),tag);
+		Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),ctx);
 	}
 	catch (const NetworkException& e)
 	{
@@ -229,13 +236,13 @@ void Server::killConnections()
 
 #include "HTTPConnection.h"
 template void Server::acceptConnections<HTTPConnection>(const sockaddr_in& localEP, 
-														boost::any env,
+														boost::shared_ptr<ConnectionCtx> ctx /* = NULL */,
 														int socketType /* = SOCK_STREAM */, 
 														int socketProto /* = IPPROTO_TCP */);
 
 #include "NullConnection.h"
 template void Server::acceptConnections<NullConnection>(const sockaddr_in& localEP, 
-														boost::any env,
+														boost::shared_ptr<ConnectionCtx> ctx /* = NULL */,
 														int socketType /* = SOCK_STREAM */, 
 														int socketProto /* = IPPROTO_TCP */);
 

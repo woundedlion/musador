@@ -146,7 +146,7 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 	}
 	else // Haven't received the full header yet
 	{
-		if (evt.msgRead->off == evt.msgRead->len)
+		if (evt.msgRead->MAX == evt.msgRead->len)
 		{
 			LOG(Warning) << "Discarding " << evt.msgRead->len << " bytes receivied without a valid header.";
 			outermost_context().conn.beginRead(); // Discard overflowed message, keep reading into a new message buffer

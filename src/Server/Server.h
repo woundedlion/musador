@@ -33,6 +33,7 @@ namespace Musador
 
 		template <class ConnType>
 		void acceptConnections(	const sockaddr_in& localEP, 
+								boost::shared_ptr<ConnectionCtx> ctx = boost::shared_ptr<ConnectionCtx>(),
 								int socketType = SOCK_STREAM, 
 								int socketProto = IPPROTO_TCP);
 

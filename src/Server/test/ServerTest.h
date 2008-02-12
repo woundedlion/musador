@@ -45,15 +45,17 @@ public:
 	volatile long succeeded;
 	void testServerIO()
 	{
-		Musador::Server s;
+		ServerConfig cfg;
+		Musador::Server s(cfg);
+
 		s.start();
 		s.waitForStart();
-
+		
 		sockaddr_in localEP = {0};
 		localEP.sin_family = AF_INET;
 		localEP.sin_addr.s_addr = ::inet_addr("0.0.0.0");
 		localEP.sin_port = ::htons(5152);
-        s.acceptConnections<NullConnection>(localEP);
+		s.acceptConnections<NullConnection>(localEP);
 
 		const int BANK_COUNT = 10;
 		const int BANK_SIZE = 10;
