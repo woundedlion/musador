@@ -1,6 +1,5 @@
 #include "boost/filesystem.hpp"
 #include "Librarian.h"
-#include "Server/HTTPConnection.h"
 #include "Network/Network.h"
 #include "Logger/Logger.h"
 
@@ -37,25 +36,14 @@ Librarian::~Librarian()
 int Librarian::run(unsigned long argc, wchar_t * argv[])
 {
 
-	Musador::Network::instance();
+	Network::instance();
 
-	ServerConfig& serverCfg = Config::instance()->server;
-
-	this->server.start();
-
-	for (ServerConfig::SiteCollection::const_iterator iter = serverCfg.sites.begin(); 
-		iter != serverCfg.sites.end(); ++iter)
-	{
-		sockaddr_in ep = {0};
-		ep.sin_family = AF_INET;
-		ep.sin_addr.s_addr = ::inet_addr(iter->addr.c_str());
-		ep.sin_port = ::htons(iter->port);
-		this->server.acceptConnections<HTTPConnection>(ep);
-	}
+	std::auto_ptr<Server> server(new Server(Config::instance()->server));
+	server->start();
 
 	this->waitForStop();
-	this->server.stop();
-	this->server.waitForStop();
+	server->stop();
+	server->waitForStop();
 
 	Musador::Network::destroy();
 

@@ -101,6 +101,7 @@ namespace Musador
 		}
 
 		int err;
+		boost::any data;
 		
 	};
 

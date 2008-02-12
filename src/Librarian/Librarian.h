@@ -24,10 +24,6 @@ namespace Musador
 
 		static void configDefaults(Config& cfg);
 
-	private:
-
-		Musador::Server server;
-
 	};
 }
 

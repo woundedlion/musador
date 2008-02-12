@@ -7,6 +7,7 @@
 #include "Connection.h"
 
 #include "boost/weak_ptr.hpp"
+#include "boost/shared_ptr.hpp"
 #include "boost/statechart/state_machine.hpp"
 #include "boost/statechart/event.hpp"
 #include "boost/statechart/simple_state.hpp"
@@ -171,11 +172,12 @@ namespace Musador
 
 		void post(boost::shared_ptr<IOMsgWriteComplete> msgWrite);
 
+		boost::shared_ptr<HTTP::Env> getEnv();
+
 	private:
 
 		HTTP::FSM fsm;
 
-		static ConnectionProcessor processor;
 	};
 
 	class HTTPConnectionFactory : public ConcreteFactory<Connection,HTTPConnection> { };

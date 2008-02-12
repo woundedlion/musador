@@ -9,6 +9,7 @@
 #include "Connection.h"
 #include "Proactor.h"
 #include "Session.h"
+#include "Config/Config.h"
 
 
 typedef boost::mutex Mutex;
@@ -24,7 +25,7 @@ namespace Musador
 	{
 	public:
 
-		Server();
+		Server(const ServerConfig& cfg);
 
 		virtual ~Server();
 
@@ -63,6 +64,8 @@ namespace Musador
 	private:
 
 		Musador::Network * net;
+
+		const ServerConfig& cfg;
 
 		// Collection types
         typedef std::vector<boost::shared_ptr<Connection> > ConnCollection;

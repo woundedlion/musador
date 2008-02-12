@@ -47,39 +47,46 @@ Connection::~Connection()
 	}
 }
 
-SOCKET Connection::getSocket()
+SOCKET 
+Connection::getSocket()
 {
 	return this->sock;
 }
 
-void Connection::setSocket(SOCKET s)
+void 
+Connection::setSocket(SOCKET s)
 {
 	this->sock = s;
 }
 
-sockaddr_in Connection::getLocalEP()
+sockaddr_in 
+Connection::getLocalEP()
 {
 	return this->localEP;
 }
 
-void Connection::setLocalEP(sockaddr_in localEP)
+void 
+Connection::setLocalEP(sockaddr_in localEP)
 {
 	this->localEP = localEP;
 }
 
-sockaddr_in Connection::getRemoteEP()
+sockaddr_in 
+Connection::getRemoteEP()
 {
 	return this->remoteEP;
 }
 
-void Connection::setRemoteEP(sockaddr_in remoteEP)
+void 
+Connection::setRemoteEP(sockaddr_in remoteEP)
 {
 	this->remoteEP = remoteEP;
 }
 
-void Connection::setServer(Server * server)
+void 
+Connection::setCtx(boost::shared_ptr<ConnectionCtx> ctx)
 {
-	this->server = server;
+	this->ctx = ctx;
 }
 
 void Connection::close()
@@ -93,7 +100,7 @@ void Connection::close(boost::shared_ptr<IOMsgError> msgErr)
 {
 	if (NULL != msgErr)
 	{
-		this->server->onError(msgErr);
+		this->ctx->server->onError(msgErr);
 	}
 
 	if (NULL != this->sock)
@@ -123,17 +130,17 @@ std::string Connection::toString()
 
 void Connection::beginRead()
 {
-	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->server,_1,_2));
+	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->server,_1,_2));
 }
 
 void Connection::beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead)
 {
-	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->server,_1,_2), msgRead);
+	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->server,_1,_2), msgRead);
 }
 
 void Connection::beginWrite(boost::shared_array<char> data, unsigned int len)
 {
-	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->server,_1,_2), data, len);
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->server,_1,_2), data, len);
 }
 
 void Connection::beginWrite(const std::string& str)
@@ -141,7 +148,7 @@ void Connection::beginWrite(const std::string& str)
 	unsigned int len = str.size();
 	boost::shared_array<char> data(new char[len]);
 	str.copy(data.get(), len);
-	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->server,_1,_2), data, len);
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->server,_1,_2), data, len);
 }
 
 void Connection::beginWrite(std::stringstream& dataStream)
@@ -151,6 +158,6 @@ void Connection::beginWrite(std::stringstream& dataStream)
 	{
 		boost::shared_array<char> data(new char[len]);
 		dataStream.str().copy(data.get(),len);
-		Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->server,_1,_2), data, len);
+		Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->server,_1,_2), data, len);
 	}
 }

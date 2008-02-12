@@ -5,6 +5,7 @@
 #include "ConnectionProcessor.h"
 #include "boost/bind.hpp"
 #include "Logger/Logger.h"
+#include "HTTPConnection.h"
 
 #define LOG_SENDER L"Server"
 
@@ -16,11 +17,12 @@ using namespace Musador;
 //////////////////////////////////////////////////////////////////////////////////////
 
 // Constructor/Destructor
-Server::Server() :
+Server::Server(const ServerConfig& cfg) :
 net(Musador::Network::instance()),
 doRecycle(false),
 doShutdown(false),
-running(false)
+running(false),
+cfg(cfg)
 {
 }
 
@@ -33,8 +35,27 @@ Server::~Server()
 void Server::start() 
 {
 	LOG(Info) << "Server starting...";
+	
+	// Start worker threads
 	this->ioThread = new boost::thread(boost::bind(&Server::runIO,this));
 	ConnectionProcessor::start();
+
+	// Start listeners
+	for (ServerConfig::SiteCollection::const_iterator iter = this->cfg.sites.begin(); 
+		iter != this->cfg.sites.end(); ++iter)
+	{
+		sockaddr_in ep = {0};
+		ep.sin_family = AF_INET;
+		ep.sin_addr.s_addr = ::inet_addr(iter->addr.c_str());
+		ep.sin_port = ::htons(iter->port);
+
+		boost::shared_ptr<HTTP::Env> env(new HTTP::Env());
+		env->cfg = &*iter;
+		env->server = this;
+
+		this->acceptConnections<HTTPConnection>(ep,boost::static_pointer_cast<ConnectionCtx>(env));
+	}
+
 }
 
 void Server::waitForStart()
@@ -111,8 +132,8 @@ void Server::runIO()
 }
 
 template <class ConnType>
-void Server::acceptConnections(
-							   const sockaddr_in& localEP, 
+void Server::acceptConnections(const sockaddr_in& localEP, 
+							   boost::any tag,
 							   int socketType /* = SOCK_STREAM */, 
 							   int socketProto /* = IPPROTO_TCP */)
 {
@@ -124,7 +145,7 @@ void Server::acceptConnections(
 		net->bind(s,const_cast<sockaddr_in *>(&localEP));
 		net->listen(s);
 		this->listeners[s] = boost::shared_ptr<ConnectionFactory>(new ConcreteFactory<Connection,ConnType>());
-		Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),s);
+		Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),tag);
 	}
 	catch (const NetworkException& e)
 	{
@@ -145,12 +166,11 @@ void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 			boost::shared_ptr<IOMsgAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgAcceptComplete>(msg));
 
 			// Register for another accept notification
-			// Listening socket was passed in the tag
-			SOCKET s = boost::any_cast<SOCKET>(tag);
-			Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),s);
+			SOCKET s = msgAccept->listener;
+			Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),tag);
 
 			// Set up the new connection
-			msgAccept->conn->setServer(this);
+			msgAccept->conn->setCtx(boost::any_cast<boost::shared_ptr<ConnectionCtx> >(tag));
 			this->addConnection(msgAccept->conn);
 			// Start the connection stat machine
 			msgAccept->conn->accepted();
@@ -158,8 +178,7 @@ void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 		break;
 	case IO_ERROR:
 		{
-			SOCKET s = boost::any_cast<SOCKET>(tag);
-			Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),s);
+
 		}
 		break;
 	}
@@ -210,11 +229,13 @@ void Server::killConnections()
 
 #include "HTTPConnection.h"
 template void Server::acceptConnections<HTTPConnection>(const sockaddr_in& localEP, 
+														boost::any env,
 														int socketType /* = SOCK_STREAM */, 
 														int socketProto /* = IPPROTO_TCP */);
 
 #include "NullConnection.h"
 template void Server::acceptConnections<NullConnection>(const sockaddr_in& localEP, 
+														boost::any env,
 														int socketType /* = SOCK_STREAM */, 
 														int socketProto /* = IPPROTO_TCP */);
 

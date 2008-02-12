@@ -11,7 +11,10 @@
 using namespace Musador;
 
 HTTPConnection::HTTPConnection() :
+#pragma warning(push)
+#pragma warning(disable:4355)
 fsm(*this)
+#pragma warning(pop)
 {
 	this->fsm.initiate();
 }
@@ -37,6 +40,13 @@ void
 HTTPConnection::post(boost::shared_ptr<IOMsgWriteComplete> msgWrite)
 {
 	this->fsm.process_event(HTTP::EvtWriteComplete());
+}
+
+inline
+boost::shared_ptr<HTTP::Env>
+HTTPConnection::getEnv()
+{
+	return boost::static_pointer_cast<HTTP::Env>(this->ctx);
 }
 
 HTTP::FSM::FSM(Connection& conn) :
@@ -77,7 +87,7 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 		LOG(Error) << e.what();
 	}
 	if (valid)
-	{
+	{	
 		Request& req = outermost_context().req;
 		Response& res = outermost_context().res;
 		

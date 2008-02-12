@@ -18,6 +18,17 @@ namespace Musador
 
 	class Server;
 
+	class ConnectionCtx
+	{
+	public:
+		
+		ConnectionCtx() :
+		server(NULL)
+		{}
+
+		Server * server;
+	};
+
 	class Connection  : public boost::enable_shared_from_this<Connection>
 	{
 	public:
@@ -40,7 +51,7 @@ namespace Musador
 
 		void setRemoteEP(sockaddr_in localEP);
 
-		void setServer(Server *);
+		virtual void setCtx(boost::shared_ptr<ConnectionCtx>);
 
 		void close();
 		void close(boost::shared_ptr<IOMsgError> msgErr);
@@ -58,10 +69,9 @@ namespace Musador
 		virtual void post(boost::shared_ptr<IOMsgReadComplete> msgRead) = 0;
 		virtual void post(boost::shared_ptr<IOMsgWriteComplete> msgWrite) = 0;
 
-	private:
+	protected:
 
-		Server * server;
-
+		boost::shared_ptr<ConnectionCtx> ctx;
 		sockaddr_in localEP;
 		sockaddr_in remoteEP;
 		SOCKET sock;

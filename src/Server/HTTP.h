@@ -11,6 +11,7 @@
 #include "boost/shared_ptr.hpp"
 #include "boost/thread/mutex.hpp"
 #include "Session.h"
+#include "Config/Config.h"
 
 typedef boost::mutex Mutex;
 typedef boost::mutex::scoped_lock Guard;
@@ -117,18 +118,19 @@ namespace Musador
 		//////////////////////////////////////////////////////////////////////
 		/// Env
 		//////////////////////////////////////////////////////////////////////
-		class Env 
+		class Env : public ConnectionCtx
 		{
 		public:
-			Env(Request& req,
-				Response& res
-				) :
-				req(req),
-				res(res)
-			{ }
 
-			Request& req;
-			Response& res;
+			Env() :
+			req(NULL),
+			res(NULL),
+			cfg(NULL)
+			{
+			}
+			Request * req;
+			Response * res;
+			const SiteConfig * cfg;
 		};
 
 		//////////////////////////////////////////////////////////////////////
@@ -150,7 +152,6 @@ namespace Musador
 		void genDigestOpaque(std::string& opaque);
 
 		void genDigestResponse(std::string& response, std::map<std::string, std::string>& authInfo, const std::string& method, const std::string& password);
-
 
 	}	
 
