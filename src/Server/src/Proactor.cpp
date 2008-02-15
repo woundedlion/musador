@@ -38,13 +38,18 @@ void Proactor::runIO()
 		}
 
 		this->doRecycle = false;
-		while (!this->doShutdown && !this->doRecycle) 
+		while (!this->doRecycle) 
 		{
 			DWORD nBytes = 0;
 			CompletionCtx * ctxPtr = 0;
 			ULONG_PTR completionKey;
 			if (::GetQueuedCompletionStatus(this->iocp, &nBytes, &completionKey, reinterpret_cast<OVERLAPPED **>(&ctxPtr),500))
 			{
+				if (0 == completionKey)
+				{
+					break;
+				}
+
 				boost::shared_ptr<CompletionCtx> ctx(ctxPtr);
 				switch(ctx->msg->getType())
 				{
@@ -57,7 +62,7 @@ void Proactor::runIO()
 					case IO_WRITE_COMPLETE:
 						this->completeWrite(ctx, nBytes);
 						break;
-				}		
+				}
 			}
 			else 
 			{
@@ -86,8 +91,7 @@ void Proactor::runIO()
 
 				}
 			}
-
-		} // end while(!shutdwown)
+		} 
 	} while(this->doRecycle);
 }
 
@@ -140,7 +144,7 @@ void Proactor::beginAccept(SOCKET listenSocket,
 	}
 	
 	// Associate the listening socket with the IO completion port
-	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(listenSocket), this->iocp, NULL, NULL);
+	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(listenSocket), this->iocp, listenSocket, NULL);
 
 	// Create the completion data
 	boost::shared_ptr<IOMsgAcceptComplete> msgAccept(new IOMsgAcceptComplete());
@@ -217,7 +221,7 @@ void Proactor::completeAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned lon
 	LOG(Debug) << "Accept completed: " << msgAccept->conn->toString();
 
 	// Associate the socket with the IO completion port
-	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(msgAccept->conn->getSocket()), this->iocp, NULL, NULL);
+	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(msgAccept->conn->getSocket()), this->iocp, msgAccept->conn->getSocket(), NULL);
 
 	// notify the handler
 	if (NULL != ctx->handler)
@@ -406,6 +410,12 @@ void Proactor::completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long
 	{
 		ctx->handler(msgWrite,ctx->tag);
 	}
+}
+
+void Proactor::stop()
+{
+	::PostQueuedCompletionStatus(this->iocp,0,0,NULL);
+
 }
 
 #endif

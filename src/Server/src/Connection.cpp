@@ -98,7 +98,7 @@ void Connection::close()
 
 void Connection::close(boost::shared_ptr<IOMsgError> msgErr)
 {
-	if (NULL != msgErr)
+	if (NULL != msgErr && NULL != this->ctx)
 	{
 		this->ctx->server->onError(msgErr);
 	}

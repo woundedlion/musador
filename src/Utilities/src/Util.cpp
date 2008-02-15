@@ -21,6 +21,7 @@ namespace Util
 
 void Util::cleanupUtf8Locale(std::locale * /* loc */)
 {
+	delete Util::loc.get();	
 }
 
 std::string Util::unicodeToUtf8(const std::wstring& in)

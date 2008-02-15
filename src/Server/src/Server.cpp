@@ -70,15 +70,36 @@ void Server::waitForStart()
 void Server::stop() 
 {
 	LOG(Info) << "Server shutting down...";
-	Proactor::instance()->doShutdown = true;
-	this->ioThread->join();
-	delete this->ioThread;
+
+	// Shutting down...
+	this->killConnections();
+
+	for (ListenerCollection::iterator iter = this->listeners.begin(); iter != this->listeners.end(); ++iter)
+	{
+		try
+		{	
+			net->closeSocket(iter->first);
+			LOG(Info) << "Closing server socket " << iter->first;
+		}
+		catch (const NetworkException& e)
+		{
+			LOG(Warning) << e.what();
+		}
+	}
+
 	ConnectionProcessor::shutdown();
+
 	{
 		Guard guard(this->runningMutex);
 		this->running = false;
 		this->runningCV.notify_all();
 	}
+
+	Proactor::instance()->stop();
+	this->ioThread->join();
+	delete this->ioThread;
+
+	LOG(Info) << "Server stopped...";
 }
 
 void Server::waitForStop()
@@ -109,26 +130,6 @@ void Server::runIO()
 	Proactor::instance()->runIO();
 
 	Proactor::destroy();
-
-	// Shutting down...
-	this->killConnections();
-
-	for (ListenerCollection::iterator iter = this->listeners.begin(); iter != this->listeners.end(); ++iter)
-	{
-		try
-		{	
-			net->closeSocket(iter->first);
-
-			LOG(Info) << "Closing server socket " << iter->first;
-		}
-		catch (const NetworkException& e)
-		{
-			LOG(Warning) << e.what();
-		}
-
-	}
-
-	LOG(Info) << "Server stopped...";
 }
 
 template <class ConnType>

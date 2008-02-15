@@ -70,10 +70,13 @@ namespace Musador
 						boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
 						boost::any tag = NULL);
 
-		volatile bool doRecycle;
-		volatile bool doShutdown;
+
+		void stop(); 
 
 	private:
+
+		bool doRecycle;
+		bool doShutdown;
 
 		void completeAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
 		void completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
