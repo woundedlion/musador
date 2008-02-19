@@ -86,9 +86,6 @@ void Proactor::runIO()
 						msgErr->err = err;
 						ctx->handler(msgErr,ctx->tag);
 					}
-
-					ctx->msg->conn->close();
-
 				}
 			}
 		} 
@@ -172,7 +169,10 @@ void Proactor::beginAccept(SOCKET listenSocket,
 		DWORD err = ::WSAGetLastError();
 		if (ERROR_IO_PENDING != err)
 		{
-			if (WSAECONNRESET != err)
+			if (WSAECONNRESET != err && 
+				WSAECONNABORTED != err && 
+				WSAEINVAL != err &&
+				WSAENOTSOCK != err)
 			{
 				LOG(Error) << "AcceptEx() failed.: " << err;
 			}
@@ -185,8 +185,6 @@ void Proactor::beginAccept(SOCKET listenSocket,
 				msgErr->err = err;
 				ctx->handler(msgErr,ctx->tag);
 			}
-
-			msgAccept->conn->close();
 
 			return;
 		}
@@ -285,8 +283,6 @@ void Proactor::beginRead(boost::shared_ptr<Connection> conn,
 				ctx->handler(msgErr,ctx->tag);
 			}
 
-			conn->close();
-
 			return;
 		}
 	}
@@ -312,8 +308,6 @@ void Proactor::completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long 
 			msgErr->err = static_cast<int>(::WSAGetLastError());
 			ctx->handler(msgErr,ctx->tag);
 		}
-
-		msgRead->conn->close();
 
 		return;
 	}
@@ -382,8 +376,6 @@ void Proactor::beginWrite(boost::shared_ptr<Connection> conn,
 				ctx->handler(msgErr,ctx->tag);
 			}
 
-			conn->close();
-
 			return;
 		}
 	}
@@ -412,10 +404,23 @@ void Proactor::completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long
 	}
 }
 
+void Proactor::start(int numWorkers /* = 0 */)
+{
+	for (int i = 0; i < numWorkers; ++i)
+	{
+		this->workers.push_back(new boost::thread(boost::bind(&Proactor::runIO,this)));
+	}
+}
+
 void Proactor::stop()
 {
 	::PostQueuedCompletionStatus(this->iocp,0,0,NULL);
-
+	for (std::vector<boost::thread *>::iterator iter = this->workers.begin(); iter != this->workers.end(); ++iter)
+	{
+		(*iter)->join();
+		delete *iter;
+		*iter = NULL;
+	}
 }
 
 #endif

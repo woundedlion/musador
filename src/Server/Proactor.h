@@ -27,7 +27,6 @@ namespace Musador
 	class Connection;
 	class CompletionCtx;
 
-
 	//////////////////////////////////////////////////////////////////////////
 	/// Proactor 
 	/// Provides an asynchronous IO interface
@@ -42,8 +41,6 @@ namespace Musador
 		
 		/// Destructor
 		~Proactor();
-
-		void runIO();
 
 		void beginAccept(SOCKET listenSocket, 
 						 boost::shared_ptr<ConnectionFactory> connFactory, 
@@ -71,12 +68,18 @@ namespace Musador
 						boost::any tag = NULL);
 
 
+		void start(int numWorkers = 1);
+
 		void stop(); 
 
 	private:
 
+		void runIO();
+
 		bool doRecycle;
 		bool doShutdown;
+
+		std::vector<boost::thread *> workers;
 
 		void completeAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
 		void completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);

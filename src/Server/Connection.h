@@ -37,7 +37,7 @@ namespace Musador
 
 		Connection(SOCKET socket);
 
-		~Connection();
+		virtual ~Connection();
 
 		SOCKET getSocket();
 		
@@ -51,10 +51,10 @@ namespace Musador
 
 		void setRemoteEP(sockaddr_in localEP);
 
+		boost::shared_ptr<ConnectionCtx> getCtx();
 		virtual void setCtx(boost::shared_ptr<ConnectionCtx>);
 
 		void close();
-		void close(boost::shared_ptr<IOMsgError> msgErr);
 
 		std::string toString();
 

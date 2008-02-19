@@ -21,7 +21,7 @@ fsm(*this)
 
 HTTPConnection::~HTTPConnection()
 {
-
+	this->fsm.terminate();
 }
 
 void 

@@ -37,7 +37,8 @@ void Server::start()
 	LOG(Info) << "Server starting...";
 	
 	// Start worker threads
-	this->ioThread = new boost::thread(boost::bind(&Server::runIO,this));
+	
+	Proactor::instance()->start();
 	ConnectionProcessor::start();
 
 	// Start listeners
@@ -54,6 +55,14 @@ void Server::start()
 		env->server = this;
 
 		this->acceptConnections<HTTPConnection>(ep,boost::static_pointer_cast<ConnectionCtx>(env));
+	}
+
+	// We're officially started now
+	LOG(Info) << "Server started...";
+	{
+		Guard guard(this->runningMutex);
+		this->running = true;
+		this->runningCV.notify_all();
 	}
 
 }
@@ -96,8 +105,7 @@ void Server::stop()
 	}
 
 	Proactor::instance()->stop();
-	this->ioThread->join();
-	delete this->ioThread;
+	Proactor::destroy();
 
 	LOG(Info) << "Server stopped...";
 }
@@ -114,22 +122,6 @@ void Server::waitForStop()
 void Server::restart() 
 {
     this->doRecycle = true;
-}
-
-void Server::runIO()
-{
-	// We're officially started now
-	LOG(Info) << "Server started...";
-	{
-		Guard guard(this->runningMutex);
-		this->running = true;
-		this->runningCV.notify_all();
-	}
-
-	// start IO engine
-	Proactor::instance()->runIO();
-
-	Proactor::destroy();
 }
 
 template <class ConnType>
@@ -186,7 +178,7 @@ void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 		break;
 	case IO_ERROR:
 		{
-
+// TODO: reschedule the accept on an error?
 		}
 		break;
 	}

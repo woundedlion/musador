@@ -45,8 +45,6 @@ namespace Musador
 
 		void restart();
 
-		void runIO();
-
 		void onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag);
 
 		void onError(boost::shared_ptr<IOMsgError> msgErr);

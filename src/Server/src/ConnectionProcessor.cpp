@@ -1,5 +1,6 @@
 #include <boost/bind.hpp>
 #include "ConnectionProcessor.h"
+#include "Server.h"
 #include <assert.h>
 
 using namespace Musador;
@@ -42,7 +43,8 @@ void ConnectionProcessor::_run()
 			break;
 		case IO_ERROR:
 			{
-
+				boost::shared_ptr<IOMsgError> msgErr(boost::shared_static_cast<IOMsgError>(msg));
+				msgErr->conn->getCtx()->server->onError(msgErr);
 			}
 			break;
 		}

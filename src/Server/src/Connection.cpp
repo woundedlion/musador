@@ -32,19 +32,7 @@ sock(clientSocket)
 
 Connection::~Connection()
 {
-	if (NULL != this->sock)
-	{
-		try
-		{
-			LOG(Debug) << " Closing socket " << this->sock;
-			Network::instance()->closeSocket(this->sock);
-			this->sock = NULL;
-		}
-		catch(const NetworkException& e)
-		{
-			LOG(Warning) << e.what() << " while closing client socket.";
-		}
-	}
+	this->close();
 }
 
 SOCKET 
@@ -83,6 +71,12 @@ Connection::setRemoteEP(sockaddr_in remoteEP)
 	this->remoteEP = remoteEP;
 }
 
+boost::shared_ptr<ConnectionCtx>
+Connection::getCtx()
+{
+	return this->ctx;
+}
+
 void 
 Connection::setCtx(boost::shared_ptr<ConnectionCtx> ctx)
 {
@@ -91,18 +85,6 @@ Connection::setCtx(boost::shared_ptr<ConnectionCtx> ctx)
 
 void Connection::close()
 {
-	boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
-	msgErr->conn = shared_from_this();
-	this->close(msgErr);
-}
-
-void Connection::close(boost::shared_ptr<IOMsgError> msgErr)
-{
-	if (NULL != msgErr && NULL != this->ctx)
-	{
-		this->ctx->server->onError(msgErr);
-	}
-
 	if (NULL != this->sock)
 	{
 		try
@@ -116,7 +98,6 @@ void Connection::close(boost::shared_ptr<IOMsgError> msgErr)
 			LOG(Warning) << e.what() << " while closing client socket.";
 		}
 	}
-	
 }
 
 std::string Connection::toString()

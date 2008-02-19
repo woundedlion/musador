@@ -38,12 +38,13 @@ int Librarian::run(unsigned long argc, wchar_t * argv[])
 
 	Network::instance();
 
-	std::auto_ptr<Server> server(new Server(Config::instance()->server));
-	server->start();
-
-	this->waitForStop();
-	server->stop();
-	server->waitForStop();
+	{
+		std::auto_ptr<Server> server(new Server(Config::instance()->server));
+		server->start();
+		this->waitForStop();
+		server->stop();
+		server->waitForStop();
+	}
 
 	Musador::Network::destroy();
 
