@@ -6,6 +6,7 @@ FILE(GLOB srcs src/*.cpp)
 FILE(GLOB hdrs *.h)
 SET(libs 
 		Boost.Thread
+		Boost.DateTime
 		Utilities
 )
 

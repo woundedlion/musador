@@ -1,6 +1,7 @@
 #include "Logger.h"
 
-#include <time.h>
+#include "boost/date_time/posix_time/posix_time.hpp"
+
 #include <boost/bind.hpp>
 #include <iostream>
 
@@ -93,12 +94,9 @@ lvl(lvl)
 	}
 
 	// Timestamp 
-	wchar_t timeBuf[20];
-	time_t rawTime;
-	::time(&rawTime);
-	struct tm * locTime = ::localtime(&rawTime);
-	::wcsftime(timeBuf,20,L"%y.%m.%d|%H:%M:%S",locTime);
-	this->logStream << L"[" << static_cast<char>(lvl & 0xff) << L"] " << timeBuf << L" <" << sender.c_str() << L"> ";
+	boost::posix_time::ptime t(boost::posix_time::microsec_clock::local_time());
+
+	this->logStream << L"[" << static_cast<char>(lvl & 0xff) << L"] " << boost::posix_time::to_simple_wstring(t) << L" <" << sender.c_str() << L"> ";
 }
 
 LogWriter::~LogWriter()

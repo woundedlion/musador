@@ -3,13 +3,19 @@
 
 #include "Connection.h"
 
-using namespace Musador;
-
-class NullConnection : public Connection
+namespace Musador
 {
-	void accepted() { this->beginRead(); }
-	void post(boost::shared_ptr<IOMsgReadComplete> msgRead) { this->beginRead(); }
-	void post(boost::shared_ptr<IOMsgWriteComplete> msgRead) { this->beginRead(); }
-};
+	class NullConnection : public Connection
+	{
+
+	public:
+
+		void accepted() { this->beginRead(); }
+
+		void post(boost::shared_ptr<IOMsgReadComplete> msgRead) { this->beginRead(); }
+
+		void post(boost::shared_ptr<IOMsgWriteComplete> msgWrite) { }
+	};
+}
 
 #endif

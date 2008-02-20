@@ -239,6 +239,12 @@ template void Server::acceptConnections<NullConnection>(const sockaddr_in& local
 														int socketType /* = SOCK_STREAM */, 
 														int socketProto /* = IPPROTO_TCP */);
 
+#include "EchoConnection.h"
+template void Server::acceptConnections<EchoConnection>(const sockaddr_in& localEP, 
+														boost::shared_ptr<ConnectionCtx> ctx /* = NULL */,
+														int socketType /* = SOCK_STREAM */, 
+														int socketProto /* = IPPROTO_TCP */);
+
 /*
 bool Server::serveFile(Request * request, string path,stringMap args, Response * response) {
 	UNREFERENCED_PARAMETER(request);

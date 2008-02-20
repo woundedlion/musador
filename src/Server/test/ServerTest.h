@@ -9,7 +9,7 @@
 #include "boost/thread.hpp"
 #include "boost/bind.hpp"
 #include "Logger/Logger.h"
-#include "NullConnection.h"
+#include "EchoConnection.h"
 
 #define LOG_SENDER L"ServerTest"
 using namespace Musador;
@@ -55,7 +55,7 @@ public:
 		localEP.sin_family = AF_INET;
 		localEP.sin_addr.s_addr = ::inet_addr("0.0.0.0");
 		localEP.sin_port = ::htons(5152);
-		s.acceptConnections<NullConnection>(localEP);
+		s.acceptConnections<EchoConnection>(localEP);
 
 		const int BANK_COUNT = 10;
 		const int BANK_SIZE = 10;
@@ -86,6 +86,22 @@ public:
 
 	}
 
+	/*
+	class EchoClient
+	{
+	public:
+		void onRead(boost::shared_ptr<IOMsgReadComplete> msgRead)
+		{
+
+		}
+
+		void onWrite(boost::shared_ptr<IOMsgWriteComplete> msgWrite)
+		{
+
+		}
+	};
+	*/
+
 	void runServerIO()
 	{
 		SOCKET c = net->socket(AF_INET,SOCK_STREAM,IPPROTO_TCP,false);
@@ -106,17 +122,53 @@ public:
 			return;
 		}
 
+		// Fill Data
 		MTRand r;
-		int nBytes = static_cast<int>(r.rand(4096) + 4096);
-		std::vector<char> data(nBytes);
-		for (int i = 0; i < nBytes; ++i)
+		const int MAX = 4096;
+		std::vector<char> data(MAX);
+		for (int i = 0; i < MAX; ++i)
 		{
 			data[i] = static_cast<char>(r.rand(255));
 		}
-		for (int i = 0; i < 1 + r.rand(100); ++i)
+
+		// Send and receive data in random chunks
+	
+		int recvd = 0;
+		int sent = 0;
+		std::vector<char> echo(MAX);
+		while (sent < MAX)
 		{
-			net->send(c, &data[0], data.size(), NULL);
+			int nBytes = 1 + r.rand(MAX - sent - 1);
+			
+			try
+			{
+				sent += net->send(c, &data[sent], nBytes);
+			}
+			catch(const NetworkException& e)
+			{
+				LOG(Error) << e.what();
+			}
+
+			while (recvd < sent)
+			{
+				try
+				{
+					recvd += net->recv(c, &echo[recvd], nBytes);
+				}
+				catch(const NetworkException& e)
+				{
+					LOG(Error) << e.what();
+				}
+			}
+			TS_ASSERT(sent == recvd);
 		}
+
+		for (int i = 0; i < MAX; ++i)
+		{
+			TS_ASSERT(data[i] == echo[i]);
+		}
+
+		// Clean up
 		net->closeSocket(c);
 		::InterlockedIncrement(&succeeded);
 	}
