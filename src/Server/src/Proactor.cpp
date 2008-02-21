@@ -73,7 +73,7 @@ void Proactor::runIO()
 					DWORD flags = 0;
 					::WSAGetOverlappedResult(ctx->msg->conn->getSocket(),ctxPtr,&nBytes,FALSE,&flags);
 					DWORD err = ::WSAGetLastError();
-					if (WSAECONNRESET != err)
+					if (WSAECONNRESET != err && WSA_OPERATION_ABORTED != err)
 					{
 						LOG(Error) << "GetQueuedCompletionStatus() failed: " << err;
 					}

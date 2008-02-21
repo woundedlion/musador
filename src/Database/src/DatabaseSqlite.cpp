@@ -74,6 +74,8 @@ void DatabaseSqlite::tssCleanup(sqlite3 * dbPtr)
 	{
 		DatabaseSqlite::err(err);
 	}
+
+	delete dbPtr;
 }
 
 std::auto_ptr<ResultSet> DatabaseSqlite::select(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions)	

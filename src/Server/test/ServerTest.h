@@ -138,7 +138,7 @@ public:
 		std::vector<char> echo(MAX);
 		while (sent < MAX)
 		{
-			int nBytes = 1 + r.rand(MAX - sent - 1);
+			int nBytes = 1 + static_cast<int>(r.rand(MAX - sent - 1));
 			
 			try
 			{

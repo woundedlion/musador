@@ -78,6 +78,9 @@ extern "C" void cleanup_slots(void* p)
         (*(*tss_data_cleanup_handlers)[i])((*slots)[i]);
         (*slots)[i] = 0;
     }
+#if defined(BOOST_HAS_WINTHREADS)
+	TlsSetValue(tss_data_native_key,0);
+#endif
     tss_data_dec_use(lock);
     delete slots;
 }
