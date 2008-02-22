@@ -44,7 +44,7 @@ namespace Musador
 
 		boost::signal<void (const IndexerProgress& p)> sigDone;
 
-		Indexer(std::wstring databaseName);
+		Indexer(std::wstring dbFilename);
 		~Indexer();
 
 		void clearRootTargets();

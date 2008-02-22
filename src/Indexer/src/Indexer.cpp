@@ -15,9 +15,10 @@
 
 using namespace Musador;
 
-Indexer::Indexer(std::wstring databaseName) :
+Indexer::Indexer(std::wstring dbFilename) :
 indexThread(NULL),
-canceled(false)
+canceled(false),
+dbFilename(dbFilename)
 {
 	MIMEResolver::init();
 }
