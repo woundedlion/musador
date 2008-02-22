@@ -8,6 +8,7 @@
 #include "taglib/FileRef.h"
 #include "taglib/Tag.h"
 #include "Utilities/MIMEResolver.h"
+#include "boost/bind.hpp"
 
 #include "Logger/Logger.h"
 #define LOG_SENDER L"Indexer"
@@ -15,16 +16,10 @@
 using namespace Musador;
 
 Indexer::Indexer(std::wstring databaseName) :
-done(false)
+indexThread(NULL),
+canceled(false)
 {
 	MIMEResolver::init();
-	try {
-		this->db.reset(new DatabaseSqlite(databaseName));
-	}
-	catch (DatabaseException e)
-	{
-		LOG(Critical) << "Error acquiring database " << databaseName << ": " << e.what();
-	}
 }
 
 Indexer::~Indexer()
@@ -48,26 +43,34 @@ bool Indexer::addRootTarget(const std::wstring& target)
 	return true;
 }
 
-bool Indexer::reindex()
+void Indexer::runIndexer()
 {
 	LOG(Info) << "Reindexing " << this->targets.size() << " Targets";
 
-	this->done = false;
+	try 
+	{
+		this->db.reset(new DatabaseSqlite(this->dbFilename));
+	}
+	catch (DatabaseException e)
+	{
+		LOG(Critical) << "Error acquiring database " << this->dbFilename << ": " << e.what();
+	}
+
+	this->initDB();
 
 	time_t startTime;
 	::time(&startTime);
 
-	{
-		Guard progressGuard(this->progressMutex);
-		this->p.setNumDirs(static_cast<unsigned int>(this->targets.size()));
-		this->p.setNumFiles(0);
-		this->p.setBytes(0);
-	}
-
 	this->db->txnBegin();
 
+	this->canceled = false;
 	for (TargetsIter targIter = this->targets.begin(); targIter != this->targets.end(); targIter++)
 	{
+		if (canceled)
+		{
+			break;
+		}
+
 		unsigned long parentId = NULL;
 		unsigned long newId = Indexer::INVALID_ID;
 
@@ -114,13 +117,46 @@ bool Indexer::reindex()
 
 	{
 		// Finalize progress counts
-		Guard progressGuard(this->progressMutex);
-		this->p.setDuration(static_cast<time_t>(::difftime(::time(NULL),startTime)));
-		this->done = true;
+		Guard lock(this->progressMutex);
+		this->p.duration = static_cast<time_t>(::difftime(::time(NULL),startTime));
+		this->p.done = true;
 	}
 
+	this->db.reset();
+
 	this->sigDone(this->p);
-	return true;
+}
+
+void Indexer::reindex()
+{
+	this->cancel();
+	this->waitDone();
+
+	{
+		Guard lock(this->progressMutex);
+		this->p.numDirs = static_cast<unsigned int>(this->targets.size());
+		this->p.numFiles = 0;
+		this->p.bytes = 0;
+	}
+
+	Guard lock(this->indexThreadMutex);
+	this->indexThread = new boost::thread(boost::bind(&Indexer::runIndexer,this));
+}
+
+void Indexer::waitDone()
+{
+	Guard lock(this->indexThreadMutex);
+	if (NULL != this->indexThread)
+	{
+		this->indexThread->join();
+		delete this->indexThread;
+		this->indexThread = NULL;
+	}
+}
+
+void Indexer::cancel()
+{
+	this->canceled = true;
 }
 
 unsigned long Indexer::addDirectory(const fs::wdirectory_entry& dir)
@@ -144,8 +180,8 @@ unsigned long Indexer::addDirectory(const fs::wdirectory_entry& dir)
 
 	{
 		// Update progress counts
-		Guard progressGuard(this->progressMutex);
-		this->p.setNumDirs(this->p.numDirs() + 1);
+		Guard lock(this->progressMutex);
+		++this->p.numDirs;
 	}
 
 	return d.getId();
@@ -203,8 +239,8 @@ unsigned long Indexer::addFile(const fs::wdirectory_entry& file, unsigned long p
 	{
 		// Update progress counts
 		Guard progressGuard(this->progressMutex);
-		this->p.setNumFiles(this->p.numFiles() + 1);
-		this->p.setBytes(this->p.bytes() + f.size);
+		++this->p.numFiles;
+		this->p.bytes += f.size;
 	}
 
 	return f.getId();
@@ -247,11 +283,11 @@ bool Indexer::initDB()
 	return true;
 }
 
-bool Indexer::progress(IndexerProgress * p) const
+IndexerProgress Indexer::progress() const
 {
 	Guard progressGuard(this->progressMutex);
-	*p = this->p;
-	return !this->done;
+	IndexerProgress r(this->p);
+	return r;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -259,69 +295,11 @@ bool Indexer::progress(IndexerProgress * p) const
 ///////////////////////////////////////////////////////////////////////
 
 IndexerProgress::IndexerProgress() :
-m_numFiles(0),
-m_numDirs(0),
-m_bytes(0),
-m_duration(0),
-m_lastPath(L"")
+numFiles(0),
+numDirs(0),
+bytes(0),
+duration(0),
+lastPath(L""),
+done(false)
 {
-}
-
-IndexerProgress::IndexerProgress(const IndexerProgress& p) :
-m_numFiles(p.m_numFiles),
-m_numDirs(p.m_numDirs),
-m_bytes(p.m_bytes),
-m_duration(p.m_duration),
-m_lastPath(p.m_lastPath)
-{
-}
-
-unsigned int IndexerProgress::numFiles() const
-{
-	return this->m_numFiles;
-}
-
-unsigned int IndexerProgress::numDirs() const
-{
-	return this->m_numDirs;
-}
-
-long long IndexerProgress::bytes() const
-{
-	return this->m_bytes;
-}
-
-time_t IndexerProgress::duration() const
-{
-	return this->m_duration;
-}
-
-std::wstring IndexerProgress::lastPath() const
-{
-	return this->m_lastPath;
-}
-
-void IndexerProgress::setNumFiles(unsigned int v)
-{
-	this->m_numFiles = v;
-}
-
-void IndexerProgress::setNumDirs(unsigned int v)
-{
-	this->m_numDirs = v;
-}
-
-void IndexerProgress::setBytes(long long v)
-{
-	this->m_bytes = v;
-}
-
-void IndexerProgress::setDuration(time_t v)
-{
-	this->m_duration = v;
-}
-
-void IndexerProgress::setLastPath(const std::wstring& v)
-{
-	this->m_lastPath = v;
 }

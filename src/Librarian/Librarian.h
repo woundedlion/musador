@@ -22,6 +22,8 @@ namespace Musador
 
 		int run(unsigned long argc, wchar_t * argv[]);
 
+		void index(const std::wstring& outfile,const std::vector<std::wstring>& paths);
+
 		static void configDefaults(Config& cfg);
 
 	};
