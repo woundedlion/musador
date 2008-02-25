@@ -17,16 +17,19 @@ namespace Musador
 	using namespace Musador;
 
 	class Server;
+	class ConnectionProcessor;
 
 	class ConnectionCtx
 	{
 	public:
 		
 		ConnectionCtx() :
-		server(NULL)
+			server(NULL),
+			processor(NULL)
 		{}
 
 		Server * server;
+		ConnectionProcessor * processor;
 	};
 
 	class Connection  : public boost::enable_shared_from_this<Connection>

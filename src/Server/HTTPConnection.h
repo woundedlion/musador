@@ -21,6 +21,7 @@ namespace sc = boost::statechart;
 
 namespace Musador
 {
+	class HTTPConnection;
 
 	namespace HTTP
 	{
@@ -56,9 +57,12 @@ namespace Musador
 		// State definitions, transitions
 		struct FSM : sc::state_machine<FSM,StateClosed>
 		{
-			FSM(Connection& conn);
+			FSM(HTTPConnection& conn);
 
-			Connection& conn;
+			static void sendFile(HTTP::Env& env, const std::wstring& path);
+			static void dirIndex(HTTP::Env& env, const std::wstring& path);
+
+			HTTPConnection& conn;
 			Request req;
 			Response res;
 		};
@@ -158,7 +162,7 @@ namespace Musador
 	}
 
 
-	class HTTPConnection : public Connection
+	class HTTPConnection : public Connection, public boost::enable_shared_from_this<HTTPConnection>
 	{
 	public:
 
@@ -172,12 +176,13 @@ namespace Musador
 
 		void post(boost::shared_ptr<IOMsgWriteComplete> msgWrite);
 
+		void setCtx(boost::shared_ptr<ConnectionCtx>);
+
 		boost::shared_ptr<HTTP::Env> getEnv();
 
 	private:
 
 		HTTP::FSM fsm;
-
 	};
 
 	class HTTPConnectionFactory : public ConcreteFactory<Connection,HTTPConnection> { };

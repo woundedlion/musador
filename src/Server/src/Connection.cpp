@@ -111,17 +111,17 @@ std::string Connection::toString()
 
 void Connection::beginRead()
 {
-	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->server,_1,_2));
+	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2));
 }
 
 void Connection::beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead)
 {
-	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->server,_1,_2), msgRead);
+	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2), msgRead);
 }
 
 void Connection::beginWrite(boost::shared_array<char> data, unsigned int len)
 {
-	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->server,_1,_2), data, len);
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2), data, len);
 }
 
 void Connection::beginWrite(const std::string& str)
@@ -129,7 +129,7 @@ void Connection::beginWrite(const std::string& str)
 	unsigned int len = str.size();
 	boost::shared_array<char> data(new char[len]);
 	str.copy(data.get(), len);
-	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->server,_1,_2), data, len);
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2), data, len);
 }
 
 void Connection::beginWrite(std::stringstream& dataStream)
@@ -139,6 +139,6 @@ void Connection::beginWrite(std::stringstream& dataStream)
 	{
 		boost::shared_array<char> data(new char[len]);
 		dataStream.str().copy(data.get(),len);
-		Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->server,_1,_2), data, len);
+		Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2), data, len);
 	}
 }

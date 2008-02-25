@@ -3,12 +3,15 @@
 #include "boost/regex.hpp"
 #include "Logger/Logger.h"
 #include "boost/algorithm/string.hpp"
+#include <boost/filesystem.hpp>
 #include <time.h>
+#include "Controller.h"
 
 #define LOG_SENDER L"HTTPConnection"
 
 
 using namespace Musador;
+namespace fs = boost::filesystem;
 
 HTTPConnection::HTTPConnection() :
 #pragma warning(push)
@@ -42,17 +45,21 @@ HTTPConnection::post(boost::shared_ptr<IOMsgWriteComplete> msgWrite)
 	this->fsm.process_event(HTTP::EvtWriteComplete());
 }
 
+void
+HTTPConnection::setCtx(boost::shared_ptr<ConnectionCtx> ctx)
+{
+	// Clone the context so we can add per-connection stuff (default is shared ctx)
+	HTTP::Env * env = new HTTP::Env(*(boost::static_pointer_cast<HTTP::Env>(ctx)));
+	this->ctx.reset(env);
+	env->req = &this->fsm.req;
+	env->res = &this->fsm.res;
+}
+
 inline
 boost::shared_ptr<HTTP::Env>
 HTTPConnection::getEnv()
 {
 	return boost::static_pointer_cast<HTTP::Env>(this->ctx);
-}
-
-HTTP::FSM::FSM(Connection& conn) :
-conn(conn)
-{
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -196,22 +203,36 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
 {
 	Request& req = outermost_context().req;
 	Response& res = outermost_context().res;
+	Env& env = *(outermost_context().conn.getEnv());
 
-	// If the request corresponds to an existing file, serve that
-	if (false)
+	fs::wpath fname(env.cfg->documentRoot);
+	fname /= Util::utf8ToUnicode(req.requestURI);
+	if (fs::exists(fname))
 	{
+		if(fs::is_directory(fname))
+		{
+			if (fs::exists(fname / L"index.html"))
+			{
+				fname /= L"index.html";
+				outermost_context().sendFile(env,fname.file_string());
+			}
+			else
+			{
+				outermost_context().dirIndex(env,fname.directory_string());
+			}
+		}
+		else if(fs::is_regular(fname))
+		{
+			outermost_context().sendFile(env,fname.file_string());
+		}
 
+		post_event(EvtReqDone());
+		return;		
 	}
-	else if (false)
+
+	// otherwise try to map the request to a command
+	if (env.controller && env.controller->exec(env))
 	{
-		// otherwise try to map the request to a command
-
-		req.requestInfo(res.data);
-		res.headers["Content-Type"] = "text/html";
-		res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data.tellp());
-
-		// Set up environment and call handler;
-		//	Env env(outermost_context().req,outermost_context().res);
 		post_event(EvtReqDone());
 		return;
 	}
@@ -270,6 +291,28 @@ sc::result
 HTTP::StateSendResBodyChunk::react(const EvtWriteComplete& evt)
 {
 	return discard_event();
+}
+
+///////////////////////////////////////////////////////////////////////////
+// HTTP FSM logic
+///////////////////////////////////////////////////////////////////////////
+
+HTTP::FSM::FSM(HTTPConnection& conn) :
+conn(conn)
+{
+
+}
+
+void 
+HTTP::FSM::sendFile(HTTP::Env& env, const std::wstring& path)
+{
+
+}
+
+void
+HTTP::FSM::dirIndex(HTTP::Env& env, const std::wstring& path)
+{
+
 }
 
 

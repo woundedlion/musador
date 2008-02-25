@@ -41,7 +41,9 @@ int Librarian::run(unsigned long argc, wchar_t * argv[])
 	Network::instance();
 
 	{
-		std::auto_ptr<Server> server(new Server(Config::instance()->server));
+		ServerConfig& cfg = Config::instance()->server;
+		cfg.controller = &this->controller;
+		std::auto_ptr<Server> server(new Server(cfg));
 		server->start();
 		this->waitForStop();
 

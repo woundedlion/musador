@@ -166,7 +166,7 @@ void HTTP::Request::clear()
 	this->data.str("");
 }
 
-void HTTP::Request::requestInfo(std::stringstream &info) {
+void HTTP::Request::dump(std::ostream &info) {
 	info	<< "<table border=\"0\" cellspacing=\"2\">\r\n"
 				<< "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Request URI:</b></td><td valign=\"top\"><pre>" 
 				<< requestURI 

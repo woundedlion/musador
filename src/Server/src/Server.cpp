@@ -3,14 +3,17 @@
 #include "Utilities/Util.h"
 #include "Utilities/md5.h"
 #include "ConnectionProcessor.h"
+#include "Controller.h"
 #include "boost/bind.hpp"
 #include "Logger/Logger.h"
 #include "HTTPConnection.h"
+#include <boost/filesystem.hpp>
+
 
 #define LOG_SENDER L"Server"
 
 using namespace Musador;
-
+namespace fs = boost::filesystem;
 
 //////////////////////////////////////////////////////////////////////////////////////
 // Server
@@ -39,12 +42,17 @@ void Server::start()
 	// Start worker threads
 	
 	Proactor::instance()->start();
-	ConnectionProcessor::start();
+	this->processor.start();
 
 	// Start listeners
 	for (ServerConfig::SiteCollection::const_iterator iter = this->cfg.sites.begin(); 
 		iter != this->cfg.sites.end(); ++iter)
 	{
+		if (!fs::exists(iter->documentRoot))
+		{
+			LOG(Error) << "Document Root does not exist: " << iter->documentRoot;
+		}
+
 		sockaddr_in ep = {0};
 		ep.sin_family = AF_INET;
 		ep.sin_addr.s_addr = ::inet_addr(iter->addr.c_str());
@@ -52,7 +60,7 @@ void Server::start()
 
 		boost::shared_ptr<HTTP::Env> env(new HTTP::Env());
 		env->cfg = &*iter;
-		env->server = this;
+		env->controller = this->cfg.controller;
 
 		this->acceptConnections<HTTPConnection>(ep,boost::static_pointer_cast<ConnectionCtx>(env));
 	}
@@ -96,7 +104,7 @@ void Server::stop()
 		}
 	}
 
-	ConnectionProcessor::shutdown();
+	this->processor.shutdown();
 
 	{
 		Guard guard(this->runningMutex);
@@ -134,8 +142,9 @@ void Server::acceptConnections(const sockaddr_in& localEP,
 	if (NULL == ctx)
 	{
 		ctx = boost::shared_ptr<ConnectionCtx>(new ConnectionCtx());
-		ctx->server = this;
 	}
+	ctx->server = this;
+	ctx->processor = &this->processor;
 
 	// Set up server socket
 	SOCKET s;
@@ -172,7 +181,8 @@ void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 			// Set up the new connection
 			msgAccept->conn->setCtx(boost::any_cast<boost::shared_ptr<ConnectionCtx> >(tag));
 			this->addConnection(msgAccept->conn);
-			// Start the connection stat machine
+
+			// Start the connection state machine
 			msgAccept->conn->accepted();
 		}
 		break;

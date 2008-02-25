@@ -299,7 +299,6 @@ void Proactor::completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long 
 	if (0 == nBytes)
 	{
 		// 0 bytes received signals connection error
-
 		// notify the handler
 		if (NULL != ctx->handler)
 		{

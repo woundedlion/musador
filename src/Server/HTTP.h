@@ -88,7 +88,7 @@ namespace Musador
 			std::string authString;
 			std::stringstream data;
 
-			void requestInfo(std::stringstream& info);
+			void dump(std::ostream& info);
 
 		private:
 
@@ -125,12 +125,15 @@ namespace Musador
 			Env() :
 			req(NULL),
 			res(NULL),
-			cfg(NULL)
+			cfg(NULL),
+			controller(NULL)
 			{
 			}
+
 			Request * req;
 			Response * res;
 			const SiteConfig * cfg;
+			Controller * controller;
 		};
 
 		//////////////////////////////////////////////////////////////////////

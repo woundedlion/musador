@@ -4,13 +4,14 @@
 #include "Utilities/WindowsService.h"
 #include "Indexer/Indexer.h"
 #include "Server/Server.h"
-#include "Server/Server.h"
 #include "Utilities/Console.h"
 #include "Config/Config.h"
+#include "LibrarianController.h"
 
 using namespace Musador;
 namespace Musador
 {
+
 	class Librarian : public WindowsService<Librarian>
 	{
 	friend class WindowsService<Librarian>;
@@ -26,6 +27,9 @@ namespace Musador
 
 		static void configDefaults(Config& cfg);
 
+	private:
+
+		LibrarianController controller;
 	};
 }
 

@@ -7,6 +7,7 @@ FILE(GLOB hdrs *.h)
 SET(libs
 	Boost.Thread
 	Boost.Regex
+	Boost.Filesystem
 	Utilities
 	Logger
 	Network

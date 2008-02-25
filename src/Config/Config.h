@@ -34,6 +34,8 @@ namespace Musador
 		bool requireAuth;
 	};
 
+	class Controller;
+
 	class ServerConfig
 	{
 	public:
@@ -47,6 +49,9 @@ namespace Musador
 		}
 
 		SiteCollection sites;
+
+		/************************/
+		Controller * controller;
 	};
 
 	class Config : public Singleton<Config>

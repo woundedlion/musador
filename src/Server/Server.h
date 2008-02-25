@@ -11,7 +11,6 @@
 #include "Session.h"
 #include "Config/Config.h"
 
-
 typedef boost::mutex Mutex;
 typedef boost::mutex::scoped_lock Guard;
 typedef boost::condition Condition;
@@ -21,7 +20,7 @@ namespace Musador
 {
 	using namespace Musador;
 
-	class Server : public ConnectionProcessor
+	class Server
 	{
 	public:
 
@@ -62,9 +61,16 @@ namespace Musador
 
 	private:
 
+		void addConnection(boost::shared_ptr<Connection> conn);
+		void removeConnection(boost::shared_ptr<Connection> conn);
+		void killConnection(boost::shared_ptr<Connection> conn);
+		void killConnections();
+
 		Musador::Network * net;
 
 		const ServerConfig& cfg;
+
+		ConnectionProcessor processor;
 
 		// Collection types
         typedef std::vector<boost::shared_ptr<Connection> > ConnCollection;
@@ -76,6 +82,7 @@ namespace Musador
 
 		volatile bool doRecycle;
         volatile bool doShutdown;
+
 		bool running;
 		Mutex runningMutex;
         Condition runningCV;
@@ -83,12 +90,6 @@ namespace Musador
 
 		ListenerCollection listeners;
 		SessionCollection sessions;
-
-		void addConnection(boost::shared_ptr<Connection> conn);
-		void removeConnection(boost::shared_ptr<Connection> conn);
-		void killConnection(boost::shared_ptr<Connection> conn);
-		void killConnections();
-
 	};
 }
 
