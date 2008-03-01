@@ -1,20 +1,21 @@
 #include "MIMEResolver.h"
 
 MIMEResolver::TypeMap MIMEResolver::types;
-bool MIMEResolver::inited = false;
 
-void MIMEResolver::init()
+MIMEResolver::MIMEResolver()
 {
-	if (MIMEResolver::inited)
-		return;
-
-	MIMEResolver::types.find(L"JDHSKHDAS");
-	MIMEResolver::types [L"jpg"] = L"image/jpeg";
-	MIMEResolver::types[L"gif"] = L"image/gif";
+	// text
+	MIMEResolver::types[L"html"] = L"text/html";
+	MIMEResolver::types[L"htm"] = L"text/html";
 	MIMEResolver::types[L"css"] = L"text/css";
 	MIMEResolver::types[L"xml"] = L"text/xml";
 	MIMEResolver::types[L"js"] = L"text/javascript";
+	MIMEResolver::types[L"txt"] = L"text/plain";
+	// images
+	MIMEResolver::types[L"jpg"] = L"image/jpeg";
+	MIMEResolver::types[L"gif"] = L"image/gif";
 	MIMEResolver::types[L"ico"] = L"image/x-icon";
+	MIMEResolver::types[L"png"] = L"image/png";
 	// audio
 	MIMEResolver::types[L"mp3"] = L"audio/mpeg";
 	MIMEResolver::types[L"mp2"] = L"audio/mpeg";
@@ -50,7 +51,7 @@ std::wstring MIMEResolver::MIMEType(const std::wstring& path)
 	MIMEResolver::TypeMap::iterator iter;
 	if (( iter = MIMEResolver::types.find(MIMEResolver::parseExtension(path))) != MIMEResolver::types.end())
 		return iter->second;
-	return L"";
+	return L"application/octet-stream";
 }
 
 std::wstring MIMEResolver::parseExtension(const std::wstring& filename) 

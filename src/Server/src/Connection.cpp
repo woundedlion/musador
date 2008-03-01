@@ -124,6 +124,14 @@ void Connection::beginWrite(boost::shared_array<char> data, unsigned int len)
 	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2), data, len);
 }
 
+void Connection::beginWrite(std::istream& dataStream)
+{
+	boost::shared_array<char> data(new char[IOMsgWriteComplete::MAX]);
+	dataStream.read(data.get(),IOMsgWriteComplete::MAX);
+	int len = dataStream.gcount();
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2), data, len);
+}
+
 void Connection::beginWrite(const std::string& str)
 {
 	unsigned int len = str.size();
@@ -132,13 +140,5 @@ void Connection::beginWrite(const std::string& str)
 	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2), data, len);
 }
 
-void Connection::beginWrite(std::stringstream& dataStream)
-{
-	unsigned int len = dataStream.tellp();
-	if (-1 != static_cast<std::stringstream::pos_type>(len))
-	{
-		boost::shared_array<char> data(new char[len]);
-		dataStream.str().copy(data.get(),len);
-		Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2), data, len);
-	}
-}
+
+

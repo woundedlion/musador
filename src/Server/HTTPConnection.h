@@ -50,7 +50,11 @@ namespace Musador
 		};
 		struct EvtReqDone : sc::event<EvtReqDone> {};
 		struct EvtReqError : sc::event<EvtReqError> {};
-		struct EvtWriteComplete : sc::event<EvtWriteComplete> {};
+		struct EvtWriteComplete : sc::event<EvtWriteComplete> 
+		{
+			EvtWriteComplete(boost::shared_ptr<IOMsgWriteComplete> msgWrite) : msgWrite(msgWrite) {}
+			boost::shared_ptr<IOMsgWriteComplete> msgWrite;
+		};
 		struct EvtClose : sc::event<EvtClose> {};
 		struct EvtKeepAlive : sc::event<EvtKeepAlive> {};
 
@@ -58,9 +62,6 @@ namespace Musador
 		struct FSM : sc::state_machine<FSM,StateClosed>
 		{
 			FSM(HTTPConnection& conn);
-
-			static void sendFile(HTTP::Env& env, const std::wstring& path);
-			static void dirIndex(HTTP::Env& env, const std::wstring& path);
 
 			HTTPConnection& conn;
 			Request req;
@@ -119,6 +120,8 @@ namespace Musador
 		struct StateReqProcess : sc::state<StateReqProcess,StateRecvReq>
 		{
 			StateReqProcess(my_context ctx);
+			bool sendFile(HTTP::Env& env, const std::wstring& path);
+			bool dirIndex(HTTP::Env& env, const std::wstring& path);
 		};
 
 		struct StateSendRes : sc::simple_state<StateSendRes,FSM,StateSendResHeader>

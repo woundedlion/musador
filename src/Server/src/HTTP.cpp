@@ -163,7 +163,7 @@ void HTTP::Request::clear()
 	this->params.clear();
 	this->headers.clear();
 	this->authString.clear();
-	this->data.str("");
+	this->data.reset();
 }
 
 void HTTP::Request::dump(std::ostream &info) {
@@ -209,7 +209,7 @@ void HTTP::Request::sendHeaders(Connection& conn) {
 }
 
 void HTTP::Request::sendBody(Connection& conn) {
-	conn.beginWrite(this->data);
+	conn.beginWrite(*(this->data));
 }
 
 
@@ -231,7 +231,7 @@ void HTTP::Response::clear()
 	int status = 0;
 	this->reason.clear();
 	this->headers.clear();
-	this->data.str("");
+	this->data.reset();
 }
 
 void HTTP::Response::sendHeaders(Connection& conn) 
@@ -248,7 +248,7 @@ void HTTP::Response::sendHeaders(Connection& conn)
 }
 
 void HTTP::Response::sendBody(Connection& conn) {
-	conn.beginWrite(this->data);
+	conn.beginWrite(*this->data);
 }
 
 

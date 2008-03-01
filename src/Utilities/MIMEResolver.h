@@ -3,23 +3,23 @@
 
 #include <map>
 #include <string>
+#include "Singleton.h"
 
-class MIMEResolver
+class MIMEResolver : public Singleton<MIMEResolver>
 {
+	friend class Singleton<MIMEResolver>;
+
 public:
 
 	typedef std::map<std::wstring,std::wstring> TypeMap;
-
-	static void init();
 	
-	static bool valid(const std::wstring& path);
-
-	static std::wstring MIMEType(const std::wstring& path);
+	bool valid(const std::wstring& path);
+	
+	std::wstring MIMEType(const std::wstring& path);
 
 private:
 
-	MIMEResolver() {};
-	~MIMEResolver() {};
+	MIMEResolver();
 
 	static bool inited;
 	static TypeMap types;

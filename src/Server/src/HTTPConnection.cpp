@@ -6,6 +6,7 @@
 #include <boost/filesystem.hpp>
 #include <time.h>
 #include "Controller.h"
+#include "Utilities/MIMEResolver.h"
 
 #define LOG_SENDER L"HTTPConnection"
 
@@ -42,7 +43,7 @@ HTTPConnection::post(boost::shared_ptr<IOMsgReadComplete> msgRead)
 void 
 HTTPConnection::post(boost::shared_ptr<IOMsgWriteComplete> msgWrite)
 {
-	this->fsm.process_event(HTTP::EvtWriteComplete());
+	this->fsm.process_event(HTTP::EvtWriteComplete(msgWrite));
 }
 
 void
@@ -169,10 +170,11 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 HTTP::StateReqError::StateReqError(my_context ctx) : my_base(ctx)
 {
 	HTTP::Response& res = outermost_context().res;
-	res.data << "<h1>Error " << res.status << " " << res.reason << "</h1><br/>";
-	res.data << "<i>" << HTTP::getRFC1123(::time(NULL)) << "</i>";
+	res.data.reset(new std::stringstream());
+	*res.data << "<h1>Error " << res.status << " " << res.reason << "</h1><br/>";
+	*res.data << "<i>" << HTTP::getRFC1123(::time(NULL)) << "</i>";
 	res.headers["Content-Type"] = "text/html";
-	res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data.tellp());
+	res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data->tellp());
 	post_event(EvtReqDone());
 }
 
@@ -205,6 +207,7 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
 	Response& res = outermost_context().res;
 	Env& env = *(outermost_context().conn.getEnv());
 
+	// If the request exists in the file system, serve that
 	fs::wpath fname(env.cfg->documentRoot);
 	fname /= Util::utf8ToUnicode(req.requestURI);
 	if (fs::exists(fname))
@@ -214,16 +217,28 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
 			if (fs::exists(fname / L"index.html"))
 			{
 				fname /= L"index.html";
-				outermost_context().sendFile(env,fname.file_string());
+				if (!this->sendFile(env,fname.file_string()))
+				{
+					post_event(EvtReqError());
+					return;		
+				}
 			}
 			else
 			{
-				outermost_context().dirIndex(env,fname.directory_string());
+				if (!this->dirIndex(env,fname.directory_string()))
+				{
+					post_event(EvtReqError());
+					return;		
+				}
 			}
 		}
 		else if(fs::is_regular(fname))
 		{
-			outermost_context().sendFile(env,fname.file_string());
+			if (!this->sendFile(env,fname.file_string()))
+			{
+				post_event(EvtReqError());
+				return;		
+			}
 		}
 
 		post_event(EvtReqDone());
@@ -241,6 +256,32 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
 	res.status = 404;
 	res.reason = "Not Found";
 	post_event(EvtReqError());
+}
+
+bool 
+HTTP::StateReqProcess::sendFile(HTTP::Env& env, const std::wstring& path)
+{
+	Response& res = outermost_context().res;
+
+	env.res->data.reset(new std::fstream(path.c_str(), std::ios::in | std::ios::binary));
+	if (env.res->data->fail())
+	{
+		res.status = 500;
+		res.reason = "Internal Server Error";
+		return false;
+	}
+
+	res.status = 200;
+	res.reason = "OK";
+	res.headers["Content-Length"] = boost::lexical_cast<std::string>(fs::file_size(path));
+	res.headers["Content-Type"] = Util::unicodeToUtf8(MIMEResolver::instance()->MIMEType(path));
+	return true;
+}
+
+bool
+HTTP::StateReqProcess::dirIndex(HTTP::Env& env, const std::wstring& path)
+{
+	return true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -263,13 +304,38 @@ HTTP::StateSendResHeader::react(const EvtWriteComplete& evt)
 
 HTTP::StateSendResBody::StateSendResBody(my_context ctx) : my_base(ctx)
 {
-	outermost_context().res.sendBody(outermost_context().conn);
+	Request& req = outermost_context().req;
+	Response& res = outermost_context().res;
+	if (NULL != res.data)
+	{
+		outermost_context().res.sendBody(outermost_context().conn);
+	}
+	else
+	{
+		// Done writing the response, move on
+		if (!boost::ilexicographical_compare(req.headers["Connection"],"close") && req.protocol != "HTTP/1.0")
+		{
+			post_event(EvtKeepAlive());
+		}
+		else
+		{
+			outermost_context().conn.close();
+			post_event(EvtClose());
+		}
+	}
 }
 
 sc::result 
 HTTP::StateSendResBody::react(const EvtWriteComplete& evt)
 {
 	Request& req = outermost_context().req;
+	Response& res = outermost_context().res;
+	if (!res.data->eof() && res.data->good())
+	{
+		return transit<StateSendResBody>();
+	}
+
+	// Done writing the response, move on
 	if (!boost::ilexicographical_compare(req.headers["Connection"],"close") && req.protocol != "HTTP/1.0")
 	{
 		post_event(EvtKeepAlive());
@@ -281,6 +347,8 @@ HTTP::StateSendResBody::react(const EvtWriteComplete& evt)
 	}
 	return discard_event();
 }
+
+
 
 HTTP::StateSendResBodyChunk::StateSendResBodyChunk(my_context ctx) : my_base(ctx)
 {
@@ -303,17 +371,6 @@ conn(conn)
 
 }
 
-void 
-HTTP::FSM::sendFile(HTTP::Env& env, const std::wstring& path)
-{
-
-}
-
-void
-HTTP::FSM::dirIndex(HTTP::Env& env, const std::wstring& path)
-{
-
-}
 
 
 

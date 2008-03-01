@@ -20,7 +20,6 @@ indexThread(NULL),
 canceled(false),
 dbFilename(dbFilename)
 {
-	MIMEResolver::init();
 }
 
 Indexer::~Indexer()
@@ -105,7 +104,7 @@ void Indexer::runIndexer()
 			}
 			else if (fs::is_regular(*iter))
 			{
-				if (!MIMEResolver::valid(iter->path().leaf()))
+				if (!MIMEResolver::instance()->valid(iter->path().leaf()))
 					continue;
 				// Add file to database
 				if (Indexer::INVALID_ID == this->addFile(*iter,parentId))

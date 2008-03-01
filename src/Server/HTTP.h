@@ -78,6 +78,7 @@ namespace Musador
 			void clear();
 			void sendHeaders(Connection& conn);
 			void sendBody(Connection& conn);
+			void dump(std::ostream& info);
 
 			std::string requestURI;
 			std::string queryString;
@@ -86,11 +87,7 @@ namespace Musador
 			ParamCollection params;
 			HeaderCollection headers;
 			std::string authString;
-			std::stringstream data;
-
-			void dump(std::ostream& info);
-
-		private:
+			boost::shared_ptr<std::iostream> data;
 
 		};
 
@@ -100,6 +97,7 @@ namespace Musador
 		class Response 
 		{
 		public:
+
 			Response();
 			~Response();
 
@@ -111,8 +109,7 @@ namespace Musador
 			int status;
 			std::string reason;
 			std::map<std::string,std::string> headers;
-			std::stringstream data;
-
+			boost::shared_ptr<std::iostream> data;
 		};
 
 		//////////////////////////////////////////////////////////////////////

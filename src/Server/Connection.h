@@ -65,8 +65,8 @@ namespace Musador
 		void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead);
 
 		void beginWrite(boost::shared_array<char> data, unsigned int len);
+		void beginWrite(std::istream& dataStream);
 		void beginWrite(const std::string& str);
-		void beginWrite(std::stringstream& dataStream);
 
 		virtual void accepted() = 0;
 		virtual void post(boost::shared_ptr<IOMsgReadComplete> msgRead) = 0;

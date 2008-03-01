@@ -321,29 +321,8 @@ bool Server::serveFile(Request * request, string path,stringMap args, Response *
 	return true;
 }
 
-CB_RET Server::disposeRequest(CB_ARGS) {
-	this->removeConnection((RequestThread *)args);
-	delete (RequestThread *)args;
-	this->notifyConnectionListeners();
-	if (this->getConnectionCount() == 0)
-		::SetEvent(this->allRequestsDone);
-	return NULL;
-}
 
 
-/*
-
-StateStore * Server::getSession(const string& key) {
-	::EnterCriticalSection(&this->sessionsLock);
-	StateStore * rv = this->sessions[key];
-	if (rv == NULL) {
-		rv = this->sessions[key] = new StateStore();
-	}
-	::LeaveCriticalSection(&this->sessionsLock);
-	return rv;
-}
-*/
-/*
 bool Server::authorize(Request * request, StateStore * session) {
 string& authString = request->headers["Authorization"];
 // Authorize from session
@@ -509,24 +488,6 @@ RequestThread::RequestThread(SOCKET clientSocket, Server * server) {
 
 }
 
-RequestThread::~RequestThread() {
-	closesocket(clientSocket);
-	::DeleteCriticalSection(&this->lock);
-}
-
-string RequestThread::getRemoteEP() {
-	::EnterCriticalSection(&this->lock);
-	string ep = this->remoteEP;
-	::LeaveCriticalSection(&this->lock);
-	return ep;
-}
-
-void RequestThread::setRemoteEP(const string& ep) {
-	::EnterCriticalSection(&this->lock);
-	this->remoteEP = ep;
-	::LeaveCriticalSection(&this->lock);
-}
-
 int RequestThread::run() {
 	this->request = new Request();
 	do {
@@ -596,21 +557,4 @@ int RequestThread::run() {
 	return 0;
 }
 
-string RequestThread::getLastRequestURI() {
-	::EnterCriticalSection(&this->lock);
-	string uri = this->lastRequestURI;
-	::LeaveCriticalSection(&this->lock);
-	return uri;
-}
-
-void RequestThread::setLastRequestURI(const string& uri) {
-	::EnterCriticalSection(&this->lock);
-	this->lastRequestURI = uri;
-	::LeaveCriticalSection(&this->lock);	
-}
-
-bool RequestThread::stop(){
-	::shutdown(this->clientSocket,SD_SEND);
-	return true;
-}
 */
