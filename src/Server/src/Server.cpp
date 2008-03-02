@@ -256,213 +256,147 @@ template void Server::acceptConnections<EchoConnection>(const sockaddr_in& local
 														int socketProto /* = IPPROTO_TCP */);
 
 /*
-bool Server::serveFile(Request * request, string path,stringMap args, Response * response) {
-	UNREFERENCED_PARAMETER(request);
-	Util::replaceChar(path,'/','\\');
-	path = this->documentRoot + '\\' + path;
-	WIN32_FIND_DATA found;
-	if (this->isValidPath(path)) {
-		HANDLE hFind = FindFirstFile(path.c_str(),&found);
-		if (hFind == INVALID_HANDLE_VALUE) {
-			return false;
-		}
-		::FindClose(hFind);
- 	} else {
-		return false;
-	}
-	// Stream file
-	size_t pos;
-	if ((pos = path.rfind('.')) != string::npos) { 
-		string ext = path.substr(pos+1);
-		// set MIMEType automaticaly if file extension is recognized
-		if (Server::MIMETypes.find(ext) != Server::MIMETypes.end()) {
-			string * MIMEType = &Server::MIMETypes[ext];
-			response->headers["Content-Type"] = *MIMEType;
-		} else { // Unknown MIMEType
-		}
-	}
-	ifstream file;
-	file.open(path.c_str(),ios::in | ios::binary);
-	if (!file.is_open()) {
-		response->status = 500;
-		response->reason = "Internal Server Error";
-		response->setData("<h1>500 Internal Server Error</h1>");
-		response->sendResponse();
-		return true;
-	}
-	response->headers["Accept_ranges"] = "bytes";
-	response->headers["Content-transfer-encoding"] = "binary";
-	response->headers["Content-Disposition"] = string("inline; filename=\"") + found.cFileName + "\"";
-	char contLen[sizeof(int)*8+1];
-	response->headers["Content-Length"] = _itoa( (found.nFileSizeHigh * MAXDWORD) + found.nFileSizeLow,contLen,10);
-
-	// handle seek
-	if (!request->headers["Range"].empty()) {
-		stringPair unitRange;
-		stringPair offsetEnd;
-		Util::parseNameValuePair(request->headers["Range"],'=',unitRange);
-		Util::parseNameValuePair(unitRange.second,'-',offsetEnd);
-		
-		file.seekg(atoi(offsetEnd.first.c_str()));
-		response->status = 206;
-		response->reason = "Partial Content";
-		response->headers["Content-Range"] = string("bytes ") + offsetEnd.first + "-/" + _itoa((found.nFileSizeHigh * MAXDWORD) + found.nFileSizeLow,contLen,10);
-		response->headers["Content-Length"] = _itoa( ((found.nFileSizeHigh * MAXDWORD) + found.nFileSizeLow) - atoi(offsetEnd.first.c_str()),contLen,10) ;
-	} 
-
-	response->sendHeaders();
-	char buf[1024];
-	while(!file.eof()) {
-		file.read(buf,1024);
-		response->sendRaw(buf,1024);
-	}
-
-	file.close();
-	return true;
-}
-
-
 
 bool Server::authorize(Request * request, StateStore * session) {
-string& authString = request->headers["Authorization"];
-// Authorize from session
-if ((*session)["authorized"] == "true") {
-return true;
-}
-// Handle Basic HTTP Authentication
-else if (authString.substr(0,6) == "Basic ") { // Check auth in headers
-string authInfo = authString.substr(6,string::npos);
-// TODO: Handle multiple usernames
-// Must base64Decode and parse username then call:
-//if (!this->isValidUser(PARSED_USERNAME)
-//	return false;
-//string challenge = PARSED_USERNAME + ":" + this->getPassword(PARSED_USERNAME);
-string challenge = this->username + ":" + this->getPassword(this->username);
-Util::base64Encode(challenge);
-return (authInfo == challenge);
-}
-// Handle Digest HTTP Authentication
-else if (authString.substr(0,7) == "Digest ") {
-// Parse Auth Info
-vector<string> authTokens;
-Util::tokenize(authString.substr(7,string::npos),authTokens,", ");
-map<string,string> authInfo;
-for (vector<string>::iterator iter = authTokens.begin(); iter != authTokens.end(); iter++) {
-stringPair nameValuePair;
-if (Util::parseNameValuePair(*iter,'=',nameValuePair)) {
-if (nameValuePair.second.at(0) == '"')
-nameValuePair.second.erase(0,1);
-if (nameValuePair.second.at(nameValuePair.second.size()-1) == '"')
-nameValuePair.second.erase(nameValuePair.second.size()-1,1);
-authInfo[nameValuePair.first] = nameValuePair.second;
-}
-}
+	string& authString = request->headers["Authorization"];
+	// Authorize from session
+	if ((*session)["authorized"] == "true") {
+		return true;
+	}
+	// Handle Basic HTTP Authentication
+	else if (authString.substr(0,6) == "Basic ") { // Check auth in headers
+		string authInfo = authString.substr(6,string::npos);
+		// TODO: Handle multiple usernames
+		// Must base64Decode and parse username then call:
+		//if (!this->isValidUser(PARSED_USERNAME)
+		//	return false;
+		//string challenge = PARSED_USERNAME + ":" + this->getPassword(PARSED_USERNAME);
+		string challenge = this->username + ":" + this->getPassword(this->username);
+		Util::base64Encode(challenge);
+		return (authInfo == challenge);
+	}
+	// Handle Digest HTTP Authentication
+	else if (authString.substr(0,7) == "Digest ") {
+		// Parse Auth Info
+		vector<string> authTokens;
+		Util::tokenize(authString.substr(7,string::npos),authTokens,", ");
+		map<string,string> authInfo;
+		for (vector<string>::iterator iter = authTokens.begin(); iter != authTokens.end(); iter++) {
+			stringPair nameValuePair;
+			if (Util::parseNameValuePair(*iter,'=',nameValuePair)) {
+				if (nameValuePair.second.at(0) == '"')
+					nameValuePair.second.erase(0,1);
+				if (nameValuePair.second.at(nameValuePair.second.size()-1) == '"')
+					nameValuePair.second.erase(nameValuePair.second.size()-1,1);
+				authInfo[nameValuePair.first] = nameValuePair.second;
+			}
+		}
 
-// check opaque
-if (authInfo["opaque"] != (*session)["opaque"]) {
-return false;
-}
+		// check opaque
+		if (authInfo["opaque"] != (*session)["opaque"]) {
+			return false;
+		}
 
-// check uri
-unsigned int qs; 
-if (authInfo["uri"].substr(0,authInfo["uri"].find("?")) != request->requestURI.substr(0,request->requestURI.find("?")))
-return false;
+		// check uri
+		unsigned int qs; 
+		if (authInfo["uri"].substr(0,authInfo["uri"].find("?")) != request->requestURI.substr(0,request->requestURI.find("?")))
+			return false;
 
-// check nonce
-string& nonce = authInfo["nonce"];
-string timestampStr = nonce.substr(0,16);
-char * timeStampStrEnd;
-time_t timestamp = ::_strtoi64(timestampStr.c_str(),&timeStampStrEnd,16);
-string challenge;
-HTTP::Util::genDigestNonce(challenge,timestamp);
-if (nonce != challenge)
-return false;
+		// check nonce
+		string& nonce = authInfo["nonce"];
+		string timestampStr = nonce.substr(0,16);
+		char * timeStampStrEnd;
+		time_t timestamp = ::_strtoi64(timestampStr.c_str(),&timeStampStrEnd,16);
+		string challenge;
+		HTTP::Util::genDigestNonce(challenge,timestamp);
+		if (nonce != challenge)
+			return false;
 
-// check cnonce
+		// check cnonce
 
-// check nc
+		// check nc
 
-// check username
-if (!this->isValidUser(authInfo["username"]))
-return false;
+		// check username
+		if (!this->isValidUser(authInfo["username"]))
+			return false;
 
-// check response
-string& response = authInfo["response"];
-string methodStr;
-if (request->method == Request::GET) 
-methodStr = "GET";
-else
-methodStr = "POST";
-HTTP::Util::genDigestResponse(challenge,authInfo, methodStr, this->getPassword(authInfo["username"]));
-if (authInfo["response"] != challenge)
-return false;
+		// check response
+		string& response = authInfo["response"];
+		string methodStr;
+		if (request->method == Request::GET) 
+			methodStr = "GET";
+		else
+			methodStr = "POST";
+		HTTP::Util::genDigestResponse(challenge,authInfo, methodStr, this->getPassword(authInfo["username"]));
+		if (authInfo["response"] != challenge)
+			return false;
 
-// authorized
-(*session)["authorized"] = "true";
-return true;
-} 
-return false;
+		// authorized
+		(*session)["authorized"] = "true";
+		return true;
+	} 
+	return false;
 }
 
 int CALLBACK Server::authorizeIPWrapper(
-IN LPWSABUF lpCallerId,
-IN LPWSABUF ,
-IN OUT LPQOS ,
-IN OUT LPQOS ,
-IN LPWSABUF ,
-OUT LPWSABUF ,
-OUT GROUP FAR *,
-IN DWORD_PTR dwCallbackData ) 
+										IN LPWSABUF lpCallerId,
+										IN LPWSABUF ,
+										IN OUT LPQOS ,
+										IN OUT LPQOS ,
+										IN LPWSABUF ,
+										OUT LPWSABUF ,
+										OUT GROUP FAR *,
+										IN DWORD_PTR dwCallbackData ) 
 {
-Server * server = (Server *)dwCallbackData;
-if (server->authorizeIP(inet_ntoa(((SOCKADDR_IN *)(lpCallerId->buf))->sin_addr)))
-return CF_ACCEPT;
-else
-return CF_REJECT;
+	Server * server = (Server *)dwCallbackData;
+	if (server->authorizeIP(inet_ntoa(((SOCKADDR_IN *)(lpCallerId->buf))->sin_addr)))
+		return CF_ACCEPT;
+	else
+		return CF_REJECT;
 }
 
 bool Server::authorizeIP(char * ip) {
-bool allowed = false;
-bool denied = false;
-vector<string>::iterator iter;
-vector<string> ipOctets, iterOctets;
-Util::tokenize(ip,ipOctets,".");
-int i;
-if (ipOctets.size() != 4) // bad ip 
-return false; //deny
+	bool allowed = false;
+	bool denied = false;
+	vector<string>::iterator iter;
+	vector<string> ipOctets, iterOctets;
+	Util::tokenize(ip,ipOctets,".");
+	int i;
+	if (ipOctets.size() != 4) // bad ip 
+		return false; //deny
 
-// Check against Allow
-for (iter = this->IPAllow.begin(); iter < this->IPAllow.end() && !allowed; iter++) {
-iterOctets.clear();
-Util::tokenize(*iter,iterOctets,".");
-if (iterOctets.size() < 4) // bad ip 
-continue;
-denied = false;
-for (i = 0; i < 4 && !denied; i++) {
-if (ipOctets[i] == iterOctets[i] || iterOctets[i] == "*") 
-continue;	// octet passed
-else
-denied = true;
-}
-allowed = !denied;
-}
+	// Check against Allow
+	for (iter = this->IPAllow.begin(); iter < this->IPAllow.end() && !allowed; iter++) {
+		iterOctets.clear();
+		Util::tokenize(*iter,iterOctets,".");
+		if (iterOctets.size() < 4) // bad ip 
+			continue;
+		denied = false;
+		for (i = 0; i < 4 && !denied; i++) {
+			if (ipOctets[i] == iterOctets[i] || iterOctets[i] == "*") 
+				continue;	// octet passed
+			else
+				denied = true;
+		}
+		allowed = !denied;
+	}
 
-// Check Against Deny
-denied = false;
-for (iter = this->IPDeny.begin(); iter < this->IPDeny.end() && !denied; iter++) {
-iterOctets.clear();
-Util::tokenize(*iter,iterOctets,".");
-if (iterOctets.size() < 4) // bad ip 
-continue;
-denied = true;
-for (i = 0; i < 4; i++) {
-if (ipOctets[i] == iterOctets[i] || iterOctets[i] == "*") 
-continue;	// octet passed
-else
-denied = false;
-}
-}
-return allowed && !denied;
+	// Check Against Deny
+	denied = false;
+	for (iter = this->IPDeny.begin(); iter < this->IPDeny.end() && !denied; iter++) {
+		iterOctets.clear();
+		Util::tokenize(*iter,iterOctets,".");
+		if (iterOctets.size() < 4) // bad ip 
+			continue;
+		denied = true;
+		for (i = 0; i < 4; i++) {
+			if (ipOctets[i] == iterOctets[i] || iterOctets[i] == "*") 
+				continue;	// octet passed
+			else
+				denied = false;
+		}
+	}
+	return allowed && !denied;
 }
 */
 

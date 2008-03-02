@@ -271,9 +271,37 @@ HTTP::StateReqProcess::sendFile(HTTP::Env& env, const std::wstring& path)
 		return false;
 	}
 
-	res.status = 200;
-	res.reason = "OK";
-	res.headers["Content-Length"] = boost::lexical_cast<std::string>(fs::file_size(path));
+	env.res->headers["Accept_ranges"] = "bytes";
+	env.res->headers["Content-transfer-encoding"] = "binary";
+	env.res->headers["Content-Disposition"] = "inline; filename=\"";
+	env.res->headers["Content-Disposition"] += Util::unicodeToUtf8(fs::wpath(path).leaf());
+	env.res->headers["Content-Disposition"] += "\"";
+
+	boost::uintmax_t fsize = fs::file_size(path);
+
+	// handle seek
+	if (!env.req->headers["Range"].empty()) {
+		std::pair<std::string,std::string> unitRange;
+		std::pair<std::string,std::string> offsetEnd;
+		Util::parseNameValuePair(env.req->headers["Range"],'=',unitRange);
+		Util::parseNameValuePair(unitRange.second,'-',offsetEnd);
+
+		env.res->data->seekg(boost::lexical_cast<int>(offsetEnd.first));
+		env.res->status = 206;
+		env.res->reason = "Partial Content";
+		env.res->headers["Content-Range"] = "bytes ";
+		env.res->headers["Content-Range"] += offsetEnd.first;
+		env.res->headers["Content-Range"] += "-/";
+		env.res->headers["Content-Range"] += fsize;
+		env.res->headers["Content-Length"] = boost::lexical_cast<std::string>(fsize - boost::lexical_cast<int>(offsetEnd.first));
+	}
+	else
+	{
+		res.status = 200;
+		res.reason = "OK";
+		res.headers["Content-Length"] = boost::lexical_cast<std::string>(fs::file_size(path));
+	}
+
 	res.headers["Content-Type"] = Util::unicodeToUtf8(MIMEResolver::instance()->MIMEType(path));
 	return true;
 }
@@ -281,7 +309,9 @@ HTTP::StateReqProcess::sendFile(HTTP::Env& env, const std::wstring& path)
 bool
 HTTP::StateReqProcess::dirIndex(HTTP::Env& env, const std::wstring& path)
 {
-	return true;
+	env.res->status = 403;
+	env.res->reason = "Forbidden";
+	return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
