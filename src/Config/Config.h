@@ -61,8 +61,8 @@ namespace Musador
 	{
 	public:
 
-		void load(const std::wstring& path);
-		void save(const std::wstring& path);
+		bool load(const std::wstring& path);
+		bool save(const std::wstring& path);
 
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)

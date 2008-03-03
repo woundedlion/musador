@@ -18,14 +18,13 @@ WindowsService(L"Musador Librarian")
 	// load config or generate defaults
 	std::wstring cfgPath = L"Librarian.xml";
 	Config * cfg = Config::instance();
-	if (fs::exists(cfgPath))
-	{
-		cfg->load(cfgPath);
-	}
-	else
+	if (!fs::exists(cfgPath) || !cfg->load(cfgPath))
 	{
 		this->configDefaults(*cfg);
-		cfg->save(cfgPath);
+		if (!cfg->save(cfgPath))
+		{
+			LOG(Error) << "Could not save configuration to " << cfgPath;
+		}
 	}
 }
 
