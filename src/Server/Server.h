@@ -48,7 +48,7 @@ namespace Musador
 
 		void onError(boost::shared_ptr<IOMsgError> msgErr);
 
-		Session& getSession(const std::string& key);
+		Session & getSession(const std::string& key);
 
 		/*
 		bool authReq(const Request& request, const StateStore& session);
@@ -74,7 +74,7 @@ namespace Musador
 
 		// Collection types
         typedef std::vector<boost::shared_ptr<Connection> > ConnCollection;
-		typedef std::map<SOCKET,boost::shared_ptr<ConnectionFactory> > ListenerCollection;
+		typedef std::map<SOCKET, boost::shared_ptr<ConnectionFactory> > ListenerCollection;
 		typedef std::map<std::string, boost::shared_ptr<Session> > SessionCollection;
 
 		ConnCollection conns;
@@ -83,13 +83,14 @@ namespace Musador
 		volatile bool doRecycle;
         volatile bool doShutdown;
 
+		ListenerCollection listeners;
+
+		SessionCollection sessions;
+		Mutex sessionsMutex;
+
 		bool running;
 		Mutex runningMutex;
         Condition runningCV;
-		boost::thread * ioThread;
-
-		ListenerCollection listeners;
-		SessionCollection sessions;
 	};
 }
 

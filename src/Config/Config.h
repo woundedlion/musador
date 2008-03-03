@@ -16,7 +16,8 @@ namespace Musador
 			documentRoot(L"html"),
 			addr("0.0.0.0"),
 			port(5152),
-			requireAuth(false)
+			requireAuth(false),
+			realm(L"")
 		{}
 	
 		template<class Archive>
@@ -26,12 +27,14 @@ namespace Musador
 			ar & BOOST_SERIALIZATION_NVP(port);
 			ar & BOOST_SERIALIZATION_NVP(documentRoot);
 			ar & BOOST_SERIALIZATION_NVP(requireAuth);
+			ar & BOOST_SERIALIZATION_NVP(realm);
 		}
 
 		std::wstring documentRoot;
 		std::string addr;
 		unsigned short port;
 		bool requireAuth;
+		std::wstring realm;
 	};
 
 	class Controller;

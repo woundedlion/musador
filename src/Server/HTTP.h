@@ -52,18 +52,15 @@ namespace Musador
 
 		};
 
-		//////////////////////////////////////////////////////////////////////
-		/// CookieStore
-		//////////////////////////////////////////////////////////////////////
-		class CookieStore : public Session
-		{
-		public:
-			CookieStore(const std::string& cookieStr);
-			std::string toString();
-		};
-
+	
 		typedef std::map<std::string,std::string> HeaderCollection;
 		typedef std::map<std::string,std::string> ParamCollection;
+		typedef std::map<std::string,std::string> CookieCollection;	
+
+		//////////////////////////////////////////////////////////////////////
+		/// Cookie free functions
+		//////////////////////////////////////////////////////////////////////
+		void parseCookie(const std::string& cookieStr, CookieCollection& cookies);
 
 		//////////////////////////////////////////////////////////////////////
 		/// Request
@@ -86,7 +83,7 @@ namespace Musador
 			std::string method;
 			ParamCollection params;
 			HeaderCollection headers;
-			std::string authString;
+			CookieCollection cookies;
 			boost::shared_ptr<std::iostream> data;
 
 		};
@@ -123,7 +120,8 @@ namespace Musador
 			req(NULL),
 			res(NULL),
 			cfg(NULL),
-			controller(NULL)
+			controller(NULL),
+			session(NULL)
 			{
 			}
 
@@ -131,6 +129,7 @@ namespace Musador
 			Response * res;
 			const SiteConfig * cfg;
 			Controller * controller;
+			Session * session;
 		};
 
 		//////////////////////////////////////////////////////////////////////
@@ -145,14 +144,15 @@ namespace Musador
 
 		std::string urlEncode(const std::string& enc);
 
-		void genDigestNonce(std::string& nonce, time_t timestamp);
+		std::string genDigestNonce(time_t timestamp);
 
-		void genDigestNonce(std::string& nonce);
+		std::string genDigestNonce();
 
-		void genDigestOpaque(std::string& opaque);
+		std::string genDigestOpaque();
 
-		void genDigestResponse(std::string& response, std::map<std::string, std::string>& authInfo, const std::string& method, const std::string& password);
+		std::string genDigestResponse(std::map<std::string, std::string>& authInfo, const std::string& method, const std::string& password);
 
+		bool auth(const Env& env);
 	}	
 
 }

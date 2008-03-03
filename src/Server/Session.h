@@ -3,7 +3,9 @@
 
 #include <map>
 #include <string>
-#include <boost/thread/mutex.hpp>
+#include "boost/thread/mutex.hpp"
+#include "boost/noncopyable.hpp"
+#include "boost/any.hpp"
 
 namespace Musador
 {
@@ -14,7 +16,7 @@ namespace Musador
 	/// Session
 	//////////////////////////////////////////////////////////////////////
 
-	class Session 
+	class Session : public boost::noncopyable
 	{
 	public:
 
@@ -22,19 +24,37 @@ namespace Musador
 
 		virtual ~Session();
 
-		std::string& operator[](const std::string& key);
+		template <typename T>
+		T get(const std::string& key)
+		{
+			Guard lock(this->lock);
+			StoreType::iterator iter = this->store.find(key);
+			if (iter != this->store.end())
+			{
+				return boost::any_cast<T>(iter->second);
+			}
+			else
+			{
+				return T();
+			}
+		}
+
+		template <typename T>
+		void set(const std::string& key, T value)
+		{
+			Guard lock(this->lock);
+			this->store[key] = value;
+		}
 
 		void clear();
 
-		std::string getName();
-
-		void setName(const std::string& name);
 
 	protected:
 
+		typedef std::map<std::string,boost::any> StoreType;
+
 		Mutex lock;
-		std::map<std::string,std::string> store;
-		std::string name;
+		StoreType store;
 
 	};
 

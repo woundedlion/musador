@@ -43,8 +43,5 @@ bool
 LibrarianController::index(HTTP::Env & env)
 {
 	std::string& path = env.req->params["path"];
-
-
-
 	return false;
 }

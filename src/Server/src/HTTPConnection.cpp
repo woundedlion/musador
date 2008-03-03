@@ -6,6 +6,7 @@
 #include <boost/filesystem.hpp>
 #include <time.h>
 #include "Controller.h"
+#include "Server.h"
 #include "Utilities/MIMEResolver.h"
 
 #define LOG_SENDER L"HTTPConnection"
@@ -98,7 +99,8 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 	{	
 		Request& req = outermost_context().req;
 		Response& res = outermost_context().res;
-		
+		Env& env = *(outermost_context().conn.getEnv());
+
 		// Fill the request object
 		req.method = matches[1];
 		req.requestURI = matches[2];
@@ -110,6 +112,9 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 			req.headers[matches.captures(5)[i]] = matches.captures(6)[i];
 		}
 
+		// Fill Cookies
+		HTTP::parseCookie(req.headers["Cookie"],req.cookies);
+		
 		// Fill Params
 		if (matches[3].matched)
 		{
@@ -124,9 +129,42 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 					req.params[m.captures(1)[i]] = m.captures(2)[i];
 				}
 			}
-
 		}
 
+		// Set up Session
+		std::string sessionName = Util::unicodeToUtf8(env.cfg->realm);
+		if (sessionName.empty())
+		{
+			// TODO: generate unique sessionName?
+			sessionName = "Restricted";
+		}
+		std::string sessionKey(req.cookies[sessionName]);
+		if (sessionKey.empty())
+		{
+			Util::genGUID(sessionKey);
+		}
+		res.headers["Set-Cookie"] = sessionName + "=" + sessionKey + ";";
+		env.session = &env.server->getSession(sessionKey);
+
+		// Handle Auth
+		if (env.cfg->requireAuth) 
+		{
+			if (!HTTP::auth(env)) 
+			{	
+				env.session->set("nonce",HTTP::genDigestNonce());
+				if (env.session->get<std::string>("opaque").empty())
+				{
+					env.session->set("opaque",HTTP::genDigestOpaque());
+				}
+				res.headers["WWW-Authenticate"] = "Digest realm=\"" + sessionName + "\" , qop=\"auth\" , nonce=\"" + 
+					env.session->get<std::string>("nonce") + "\" , opaque=\"" + env.session->get<std::string>("opaque") + "\"\r\n";
+				res.status = 401;
+				res.reason = "Unauthorized";
+				return transit<StateReqError>();
+			}
+		} 		
+
+		// dispatch
 		if (req.method == "GET" || req.method == "HEAD")
 		{
 			res.status = 200;
@@ -292,7 +330,7 @@ HTTP::StateReqProcess::sendFile(HTTP::Env& env, const std::wstring& path)
 		env.res->headers["Content-Range"] = "bytes ";
 		env.res->headers["Content-Range"] += offsetEnd.first;
 		env.res->headers["Content-Range"] += "-/";
-		env.res->headers["Content-Range"] += fsize;
+		env.res->headers["Content-Range"] += boost::lexical_cast<std::string>(fsize);
 		env.res->headers["Content-Length"] = boost::lexical_cast<std::string>(fsize - boost::lexical_cast<int>(offsetEnd.first));
 	}
 	else

@@ -63,7 +63,8 @@ void Librarian::configDefaults(Config& cfg)
 	site.addr = "0.0.0.0";
 	site.port = 5152;
 	site.documentRoot = L"html";
-	site.requireAuth = false;
+	site.requireAuth = true;
+	site.realm = L"Musador";
 	cfg.server.sites.push_back(site);
 }
 

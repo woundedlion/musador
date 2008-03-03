@@ -204,16 +204,27 @@ void Server::onError(boost::shared_ptr<IOMsgError> msgErr)
 	this->killConnection(msgErr->conn);
 }
 
+
+Session & Server::getSession(const std::string& key)
+{
+	Guard lock(this->sessionsMutex);
+	if (NULL == this->sessions[key])
+	{
+		this->sessions[key].reset(new Session());
+	}
+	return *this->sessions[key];
+}
+
 void Server::addConnection(boost::shared_ptr<Connection> conn)
 {
 	LOG(Info) << "Connected: " << conn->toString();
-	Guard guard(this->connsMutex);
+	Guard lock(this->connsMutex);
 	this->conns.push_back(conn);
 }
 
 void Server::removeConnection(boost::shared_ptr<Connection> conn)
 {
-	Guard guard(this->connsMutex);
+	Guard lock(this->connsMutex);
 	for (ConnCollection::iterator iter = this->conns.begin(); iter!= this->conns.end(); ++iter)
 	{
 		this->conns.erase(iter);
@@ -229,7 +240,7 @@ void Server::killConnection(boost::shared_ptr<Connection> conn)
 
 void Server::killConnections()
 {
-	Guard guard(this->connsMutex);
+	Guard lock(this->connsMutex);
 	ConnCollection::iterator iter;
 	this->conns.clear();
 }
@@ -404,23 +415,6 @@ bool Server::authorizeIP(char * ip) {
 // RequestThread
 //////////////////////////////////////////////////////////////////////////////////////
 /*
-RequestThread::RequestThread(SOCKET clientSocket, Server * server) {
-	this->clientSocket = clientSocket;	
-	this->server = server;
-	::InitializeCriticalSection(&this->lock);
-	sockaddr_in addr;
-	int addrSize = sizeof(sockaddr_in);
-	stringstream ep;
-	if (SOCKET_ERROR == ::getpeername(this->clientSocket,(sockaddr *)&addr,&addrSize))
-		ep << "?.?.?.?:???";
-	else
-		ep << ::inet_ntoa(addr.sin_addr) << ":" << ::ntohs(addr.sin_port);
-	this->setRemoteEP(ep.str());
-
-	this->server->addConnection(this);
-	server->notifyConnectionListeners();
-
-}
 
 int RequestThread::run() {
 	this->request = new Request();
