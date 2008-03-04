@@ -4,6 +4,8 @@
 #include "Logger/Logger.h"
 #define LOG_SENDER "Librarian"
 #include "Indexer/ConsoleProgressReporter.h"
+#include "Utilities/WindowsShellIcon.h"
+#include "res/resource.h"
 
 using namespace Musador;
 namespace fs = boost::filesystem;
@@ -14,6 +16,8 @@ WindowsService(L"Musador Librarian")
 #if _DEBUG
 	Logger::instance()->setLevel(Debug);
 #endif
+
+	Network::instance();
 
 	// load config or generate defaults
 	std::wstring cfgPath = L"Librarian.xml";
@@ -30,32 +34,35 @@ WindowsService(L"Musador Librarian")
 
 Librarian::~Librarian()
 {
-	Logger::destroy();
 	Config::destroy();
+	Musador::Network::destroy();
+	Logger::destroy();
 }
 
-int Librarian::run(unsigned long argc, wchar_t * argv[])
+int 
+Librarian::run(unsigned long argc, wchar_t * argv[])
 {
 
-	Network::instance();
-
+	WindowsShellIcon trayIcon(this->gui);
+	trayIcon.setIcon(MAKEINTRESOURCE(IDI_ACTIVE));
+	trayIcon.setToolTip(L"Musador Librarian");
+	trayIcon.show();
 	{
 		ServerConfig& cfg = Config::instance()->server;
 		cfg.controller = &this->controller;
 		std::auto_ptr<Server> server(new Server(cfg));
 		server->start();
 		this->waitForStop();
-
 		server->stop();
 		server->waitForStop();
 	}
-
-	Musador::Network::destroy();
+	trayIcon.hide();
 
 	return 0;
 }
 
-void Librarian::configDefaults(Config& cfg)
+void 
+Librarian::configDefaults(Config& cfg)
 {
 	cfg.server.sites.clear();
 	SiteConfig site;
@@ -67,7 +74,8 @@ void Librarian::configDefaults(Config& cfg)
 	cfg.server.sites.push_back(site);
 }
 
-void Librarian::index(const std::wstring& outfile,const std::vector<std::wstring>& paths)
+void 
+Librarian::index(const std::wstring& outfile,const std::vector<std::wstring>& paths)
 {
 	Indexer indexer(outfile);
 
