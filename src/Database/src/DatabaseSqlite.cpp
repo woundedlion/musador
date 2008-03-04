@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "Utilities/Util.h"
 #include "DatabaseSqlite.h"
+#include "sqlite/sqlite3.h"
 
 DatabaseSqlite::DatabaseSqlite(std::wstring databaseName) : 
 	dbName(Util::unicodeToUtf8(databaseName.c_str())),

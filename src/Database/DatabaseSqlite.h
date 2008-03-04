@@ -4,9 +4,10 @@
 #include <string>
 #include <map>
 #include <boost/thread/tss.hpp>
-#include "sqlite/sqlite3.h"
 #include "Database.h"
 #include "ResultSetSqlite.h"
+
+struct sqlite3;
 
 class DatabaseSqlite : public Database
 {

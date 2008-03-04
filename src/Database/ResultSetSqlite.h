@@ -3,6 +3,8 @@
 
 #include "ResultSet.h"
 
+struct sqlite3_stmt;
+
 class ResultSetSqlite : public ResultSet
 {
 public:

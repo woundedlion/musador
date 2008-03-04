@@ -1,4 +1,5 @@
 #include "DatabaseSqlite.h"
+#include "sqlite/sqlite3.h"
 
 ResultSetSqlite::ResultSetSqlite(boost::shared_ptr<Database> db, sqlite3_stmt * stmt) :
 ResultSet(db),
