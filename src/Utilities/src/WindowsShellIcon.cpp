@@ -8,7 +8,7 @@ using namespace Musador;
 
 volatile LONG WindowsShellIcon::counter = 0;
 
-WindowsShellIcon::WindowsShellIcon(HWND hWnd) :
+WindowsShellIcon::WindowsShellIcon(HWND hWnd, UINT uCallbackMsg) :
 visible(false),
 hWnd(hWnd)
 {
@@ -38,7 +38,7 @@ hWnd(hWnd)
 					this->nid.cbSize = sizeof(NOTIFYICONDATAW_V2_SIZE); // 5.0 < version < 6.0					
 				}
 #endif
-                                else
+				else
 				{
 					this->nid.cbSize = sizeof(NOTIFYICONDATAW); //  6.0 < version
 				}
@@ -62,6 +62,7 @@ hWnd(hWnd)
 	this->nid.hWnd = hWnd;
 	this->nid.uID = ::InterlockedIncrement(&WindowsShellIcon::counter);
 	this->nid.hIcon = ::LoadIcon(NULL,IDI_APPLICATION);
+	this->nid.uCallbackMessage = uCallbackMsg;
 }
 
 void WindowsShellIcon::setIcon(const Icon& icon)
@@ -90,7 +91,8 @@ void WindowsShellIcon::setToolTip(const std::wstring& toolTip)
 
 void WindowsShellIcon::show()
 {
-	this->nid.uFlags = 0;
+	this->nid.uFlags = NIF_MESSAGE;
+
 	if (NULL != this->nid.hIcon)
 	{
 		this->nid.uFlags |= NIF_ICON;

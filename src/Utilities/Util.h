@@ -42,10 +42,6 @@ namespace Util
 
 	bool parseNameValuePair(const std::string& pairString, char delim, std::pair<std::string,std::string>& resultPair);
 
-	void hexStr(const __int32 i, std::string& out);
-
-	void hexStr(const __int64 i, std::string& out);
-
 	void replaceChar(std::string& str, char from, char to);
 
 	void genGUID(GUID& uuid);

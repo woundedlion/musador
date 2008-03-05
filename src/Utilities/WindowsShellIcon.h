@@ -12,7 +12,7 @@ class WindowsShellIcon
 {
 public:
 
-    WindowsShellIcon(HWND hWnd);
+    WindowsShellIcon(HWND hWnd, UINT uCallbackMsg);
     
     void setIcon(const Icon& icon);
     void setToolTip(const std::wstring& toolTip);

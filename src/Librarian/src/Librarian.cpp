@@ -1,13 +1,11 @@
 #include "boost/filesystem.hpp"
 #include "Librarian.h"
 #include "Network/Network.h"
-#include "Logger/Logger.h"
-#define LOG_SENDER "Librarian"
 #include "Indexer/ConsoleProgressReporter.h"
-#include "Utilities/WinApp.h"
-#include "Utilities/WindowsShellIcon.h"
 #include "res/resource.h"
 
+#include "Logger/Logger.h"
+#define LOG_SENDER "Librarian"
 using namespace Musador;
 namespace fs = boost::filesystem;
 
@@ -43,21 +41,21 @@ Librarian::~Librarian()
 int 
 Librarian::run(unsigned long argc, wchar_t * argv[])
 {
-        WinApp app(L"Librarian");
-	WindowsShellIcon trayIcon(app);
-	trayIcon.setIcon(MAKEINTRESOURCE(IDI_ACTIVE));
-	trayIcon.setToolTip(L"Musador Librarian");
-	trayIcon.show();
 	{
 		ServerConfig& cfg = Config::instance()->server;
 		cfg.controller = &this->controller;
 		std::auto_ptr<Server> server(new Server(cfg));
 		server->start();
-		this->waitForStop();
+
+		this->gui.postMessage(WM_APP_SERVERUP);
+
+		this->waitForStop(); // Wait until SCM or ctrl-c shuts us down
+
 		server->stop();
 		server->waitForStop();
+
+		this->gui.postMessage(WM_APP_SERVERDOWN);
 	}
-	trayIcon.hide();
 
 	return 0;
 }

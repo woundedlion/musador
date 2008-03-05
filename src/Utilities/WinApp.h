@@ -4,27 +4,51 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <string>
+#include "boost/thread.hpp"
+#include "boost/thread/mutex.hpp"
+#include "boost/thread/condition.hpp"
 
-
-class WinApp
+namespace Musador
 {
-public:
+	typedef boost::mutex Mutex;
+	typedef boost::condition Condition;
+	typedef boost::mutex::scoped_lock Guard;
 
-	WinApp(const std::wstring& appName);
+	class WinApp
+	{
+	public:
 
-	~WinApp();
+		WinApp(const std::wstring& appName);
 
-	static HRESULT CALLBACK _wndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		virtual ~WinApp();
 
-	virtual HRESULT wndProcMain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		void run();
 
-	operator HWND() { return this->hWndMain; }
+		BOOL postMessage(UINT uMsg, WPARAM wParam = NULL, LPARAM lParam = NULL);
 
-private:
+		static HRESULT CALLBACK _wndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	std::wstring appName;
-	HWND hWndMain;
-	HINSTANCE hInst;
-};
+		virtual HRESULT wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+		operator HWND() { return this->hWndMain; }
+
+	protected:
+
+		std::wstring appName;
+		HWND hWndMain;
+		HINSTANCE hInst;
+
+		boost::thread * mainThread;
+		bool started;
+		Mutex startedMutex;
+		Condition startedCV;
+	};
+
+	inline BOOL WinApp::postMessage(UINT uMsg, WPARAM wParam /* = NULL */, LPARAM lParam /* = NULL */)
+	{
+		return ::PostMessage(this->hWndMain, uMsg, wParam, lParam);
+	}
+}
+
 
 #endif

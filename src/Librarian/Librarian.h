@@ -2,16 +2,18 @@
 #define LIBRARIAN_F34BA23D_EBB0_4871_89C1_20AB9FDC155D
 
 #include "Utilities/WindowsService.h"
-#include "Utilities/WinApp.h"
 #include "Indexer/Indexer.h"
 #include "Server/Server.h"
 #include "Utilities/Console.h"
 #include "Config/Config.h"
 #include "LibrarianController.h"
+#include "LibrarianGUI.h"
+
 
 using namespace Musador;
 namespace Musador
 {
+	class LibrarianGUI;
 
 	class Librarian : public WindowsService<Librarian>
 	{
@@ -31,6 +33,7 @@ namespace Musador
 	private:
 
 		LibrarianController controller;
+		LibrarianGUI gui;
 
 	};
 
