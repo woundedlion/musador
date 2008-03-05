@@ -16,7 +16,7 @@ public:
 
 	static HRESULT CALLBACK _wndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	virtual HRESULT wndProcMain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
+	virtual HRESULT wndProcMain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	operator HWND() { return this->hWndMain; }
 

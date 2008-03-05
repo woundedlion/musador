@@ -32,11 +32,13 @@ hWnd(hWnd)
 				{
 					// default is OK
 				}
+#if _WIN32_IE >= 0x0600
 				else if (dvi.dwMajorVersion < 6)
 				{
 					this->nid.cbSize = sizeof(NOTIFYICONDATAW_V2_SIZE); // 5.0 < version < 6.0					
 				}
-				else
+#endif
+                                else
 				{
 					this->nid.cbSize = sizeof(NOTIFYICONDATAW); //  6.0 < version
 				}

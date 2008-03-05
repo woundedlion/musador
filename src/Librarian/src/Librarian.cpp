@@ -4,6 +4,7 @@
 #include "Logger/Logger.h"
 #define LOG_SENDER "Librarian"
 #include "Indexer/ConsoleProgressReporter.h"
+#include "Utilities/WinApp.h"
 #include "Utilities/WindowsShellIcon.h"
 #include "res/resource.h"
 
@@ -42,8 +43,8 @@ Librarian::~Librarian()
 int 
 Librarian::run(unsigned long argc, wchar_t * argv[])
 {
-
-	WindowsShellIcon trayIcon(this->gui);
+        WinApp app(L"Librarian");
+	WindowsShellIcon trayIcon(app);
 	trayIcon.setIcon(MAKEINTRESOURCE(IDI_ACTIVE));
 	trayIcon.setToolTip(L"Musador Librarian");
 	trayIcon.show();

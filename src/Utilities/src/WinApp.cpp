@@ -10,12 +10,11 @@ hInst(::GetModuleHandle(NULL))
 {
 	WNDCLASSEX wndClass = {0};
 	wndClass.cbSize = sizeof(WNDCLASSEX);
-	wndClass.style = WS_POPUP;
+	wndClass.style = NULL;
 	wndClass.lpfnWndProc = &WinApp::_wndProc;
 	wndClass.hInstance = this->hInst;
-	wndClass.hIcon = NULL;
 	wndClass.lpszClassName = this->appName.c_str();
-	ATOM atom = ::RegisterClassExW(&wndClass);
+	ATOM atom = ::RegisterClassEx(&wndClass);
 
 	if (0 == atom)
 	{
@@ -23,7 +22,7 @@ hInst(::GetModuleHandle(NULL))
 		return;
 	}
 
-	this->hWndMain = ::CreateWindowExW(	NULL,
+	this->hWndMain = ::CreateWindowEx(	NULL,
 										this->appName.c_str(),
 										this->appName.c_str(),
 										WS_POPUP,
@@ -33,12 +32,13 @@ hInst(::GetModuleHandle(NULL))
 										0,
 										NULL,
 										NULL,
-										this->hInst,NULL
+										this->hInst,
+                                                                                this
 									  );
 
 	if (NULL == this->hWndMain)
 	{
-		LOG(Error) << "Could not create main window class [" << ::GetLastError() << "]";
+		LOG(Error) << "Could not create main window instance [" << ::GetLastError() << "]";
 		return;
 	}
 }
@@ -49,19 +49,25 @@ WinApp::~WinApp()
 	::UnregisterClass(this->appName.c_str(),this->hInst);
 }
 
-HRESULT WinApp::_wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT WinApp::_wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch(uMsg) 
 	{
-	case WM_INITDIALOG:
-		SetWindowLong(hWnd, GWL_USERDATA, (long)lParam);
+        case WM_NCCREATE:
+                ::SetWindowLongPtr(hWnd,GWL_USERDATA, (LONG)reinterpret_cast<CREATESTRUCT *>(lParam)->lpCreateParams);
 	default:
-		WinApp * app = reinterpret_cast<WinApp *>(GetWindowLongPtr(hWnd, GWL_USERDATA));
+                WinApp * app = reinterpret_cast<WinApp *>(::GetWindowLongPtr(hWnd,GWL_USERDATA));
 		if (NULL != app)
 		{
 			return app->wndProcMain(hWnd,uMsg,wParam,lParam);
 		}
-		return -1;
+                return ::DefWindowProc(hWnd,uMsg,wParam,lParam);
 	}
 	return 1;
+}
+
+LRESULT WinApp::wndProcMain(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    LOG(Debug) << "wndProcMain received msg: " << uMsg << " [wParam=" << wParam << "],[lParam=" << lParam << "]";
+    return 1;
 }
