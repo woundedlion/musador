@@ -43,6 +43,7 @@ namespace Musador
 		BOOL ctrlHandler(DWORD ctrlType);
 
 	private:
+
 		HANDLE hCon;
 		WORD oldColor;
 		SignalHandler signalHandler;		

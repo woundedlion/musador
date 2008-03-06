@@ -15,9 +15,14 @@ public:
     WindowsShellIcon(HWND hWnd, UINT uCallbackMsg);
     
     void setIcon(const Icon& icon);
-    void setToolTip(const std::wstring& toolTip);
-    void show();
-    void hide();
+
+	void setToolTip(const std::wstring& toolTip);
+
+	void show();
+
+	void hide();
+
+	UINT getID();
 
 private:
 

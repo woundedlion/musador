@@ -55,6 +55,20 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_ACTIVE              ICON                    "active.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_TRAY MENU 
+BEGIN
+    POPUP "IDM_TRAY_POPUP"
+    BEGIN
+        MENUITEM "Exit",                        ID_IDM_EXIT
+    END
+END
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

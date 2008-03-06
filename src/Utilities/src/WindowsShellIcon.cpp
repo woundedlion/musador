@@ -114,3 +114,10 @@ void WindowsShellIcon::hide()
 		this->visible = false;
 	}
 }
+
+
+UINT
+WindowsShellIcon::getID()
+{
+	return this->nid.uID;
+}

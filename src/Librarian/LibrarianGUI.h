@@ -23,6 +23,8 @@ namespace Musador
 
 	private:
 
+		void onTrayMenu();
+
 		WindowsShellIcon trayIcon;
 	};
 }
