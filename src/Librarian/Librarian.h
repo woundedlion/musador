@@ -28,10 +28,15 @@ namespace Musador
 
 		void index(const std::wstring& outfile,const std::vector<std::wstring>& paths);
 
-		static void configDefaults(Config& cfg);
+		void configDefaults(Config& cfg);
+
+		void enable();
+
+		void disable();
 
 	private:
 
+		std::auto_ptr<Server> server;
 		LibrarianController controller;
 		LibrarianGUI gui;
 

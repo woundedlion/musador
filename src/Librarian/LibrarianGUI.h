@@ -4,6 +4,7 @@
 #include "Utilities/WinApp.h"
 #include "Utilities/MessageSink.h"
 #include "Utilities/WindowsShellIcon.h"
+#include "Utilities/WinMenu.h"
 
 #define WM_APP_SERVERUP WM_APP
 #define WM_APP_SERVERDOWN WM_APP + 1
@@ -23,9 +24,18 @@ namespace Musador
 
 	private:
 
+		enum MenuItem
+		{
+			EXIT,
+			EXIT_SEP,
+			ENABLE,
+			DISABLE
+		};
+
 		void onTrayMenu();
 
 		WindowsShellIcon trayIcon;
+		WinMenu trayMenu;
 	};
 }
 

@@ -8,10 +8,15 @@
 
 using namespace Musador;
 
+
+
 LibrarianGUI::LibrarianGUI() :
 WinApp(L"Musador Librarian"),
 trayIcon(this->hWndMain, WM_APP_TRAYICON)
 {
+	this->trayMenu.insertItem(0,ENABLE,L"Enable");
+	this->trayMenu.insertSep(1,EXIT_SEP);
+	this->trayMenu.insertItem(2,EXIT,L"Exit");
 }
 
 LibrarianGUI::~LibrarianGUI()
@@ -30,13 +35,17 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		break;
 	
 	case WM_APP_SERVERUP:
-		this->trayIcon.setToolTip(L"Musador Librarian : Active");
+		this->trayIcon.setToolTip(L"Musador Librarian : Running");
 		this->trayIcon.setIcon(MAKEINTRESOURCE(IDI_ACTIVE));
 		this->trayIcon.show();
+		this->trayMenu.updateItem(ENABLE,DISABLE,L"Disable");
 		break;
 	
 	case WM_APP_SERVERDOWN:
-		this->trayIcon.hide();
+		this->trayIcon.setToolTip(L"Musador Librarian : Disabled");
+		this->trayIcon.setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
+		this->trayIcon.show();
+		this->trayMenu.updateItem(DISABLE,ENABLE,L"Enable");
 		break;
 	
 	case WM_APP_TRAYICON:
@@ -55,7 +64,13 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
-		case ID_IDM_EXIT:
+		case DISABLE:
+			Librarian::instance()->disable();
+			break;
+		case ENABLE:
+			Librarian::instance()->enable();
+			break;
+		case EXIT:
 			Librarian::instance()->stop();
 			break;
 		}
@@ -71,11 +86,5 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 void
 LibrarianGUI::onTrayMenu()
 {
-	HMENU hMenu = ::LoadMenu(this->hInst, MAKEINTRESOURCE(IDM_TRAY));
-	HMENU popup = ::GetSubMenu(hMenu,0);
-	POINT p;
-	::GetCursorPos(&p);
-	::SetForegroundWindow(this->hWndMain);
-	::TrackPopupMenu(popup, TPM_LEFTALIGN | TPM_BOTTOMALIGN, p.x, p.y, 0, this->hWndMain, NULL);
-	::DestroyMenu(hMenu);
+	this->trayMenu.popupAtCursor(this->hWndMain);
 }

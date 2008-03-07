@@ -13,6 +13,8 @@ class WindowsShellIcon
 public:
 
     WindowsShellIcon(HWND hWnd, UINT uCallbackMsg);
+
+	~WindowsShellIcon();
     
     void setIcon(const Icon& icon);
 

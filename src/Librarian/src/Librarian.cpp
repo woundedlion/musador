@@ -29,6 +29,8 @@ WindowsService(L"Musador Librarian")
 			LOG(Error) << "Could not save configuration to " << cfgPath;
 		}
 	}
+
+	cfg->server.controller = &this->controller;
 }
 
 Librarian::~Librarian()
@@ -41,21 +43,9 @@ Librarian::~Librarian()
 int 
 Librarian::run(unsigned long argc, wchar_t * argv[])
 {
-	{
-		ServerConfig& cfg = Config::instance()->server;
-		cfg.controller = &this->controller;
-		std::auto_ptr<Server> server(new Server(cfg));
-		server->start();
-
-		this->gui.postMessage(WM_APP_SERVERUP);
-
-		this->waitForStop(); // Wait until SCM or ctrl-c shuts us down
-
-		server->stop();
-		server->waitForStop();
-
-		this->gui.postMessage(WM_APP_SERVERDOWN);
-	}
+	this->enable();
+	this->waitForStop(); // Wait until SCM or ctrl-c shuts us down
+	this->disable();
 
 	return 0;
 }
@@ -94,4 +84,27 @@ Librarian::index(const std::wstring& outfile,const std::vector<std::wstring>& pa
 
 	IndexerProgress p = indexer.progress();
 	LOG(Info) << "Indexing of " << p.numFiles << " files in " << p.numDirs << " directories (" << Util::bytesToString(p.bytes) << ") completed in " << p.duration << " seconds";
+}
+
+void
+Librarian::enable()
+{
+	if (NULL == this->server.get())
+	{
+		this->server.reset(new Server(Config::instance()->server));
+		this->server->start();
+		this->gui.postMessage(WM_APP_SERVERUP);
+	}
+}
+
+void Librarian::disable()
+{
+	if (NULL != this->server.get())
+	{
+		this->server->stop();
+		server->waitForStop();
+		this->server.reset();
+		this->gui.postMessage(WM_APP_SERVERDOWN);
+	}
+
 }

@@ -3,7 +3,7 @@
 #include "boost/format.hpp"
 
 #include "Logger/Logger.h"
-#define LOG_SENDER L"WinApp"
+#define LOG_SENDER L"GUI"
 using namespace Musador;
 
 #include <assert.h>
@@ -120,10 +120,6 @@ WinApp::_wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 LRESULT 
 WinApp::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	switch(uMsg) 
-	{
-	default:
-		LOG(Debug) << "wndProcMain received msg: " << (boost::wformat(L"%|#02x|") % uMsg) << " [wParam=" << wParam << "],[lParam=" << lParam << "]";
-	}
+	LOG(Debug) << "wndProcMain received msg: " << (boost::wformat(L"%|#02x|") % uMsg) << " [wParam=" << wParam << "],[lParam=" << lParam << "]";
 	return 1;
 }

@@ -3,7 +3,7 @@
 #pragma comment(lib, "shell32.lib")
 
 #include "Logger/Logger.h"
-#define LOG_SENDER L"WindowsShell"
+#define LOG_SENDER L"GUI"
 using namespace Musador;
 
 volatile LONG WindowsShellIcon::counter = 0;
@@ -65,13 +65,22 @@ hWnd(hWnd)
 	this->nid.uCallbackMessage = uCallbackMsg;
 }
 
+WindowsShellIcon::~WindowsShellIcon()
+{
+	this->hide();
+}
+
 void WindowsShellIcon::setIcon(const Icon& icon)
 {
-	this->nid.hIcon = ::LoadIcon(::GetModuleHandle(NULL),icon);
-	if (NULL == this->nid.hIcon)
+	HICON hIcon = ::LoadIcon(::GetModuleHandle(NULL),icon);
+	if (NULL == hIcon)
 	{
 		LOG(Error) << "Unable to load icon " << icon << " [" << ::GetLastError() << "]";
  	}
+	else
+	{
+		this->nid.hIcon = hIcon;
+	}
 }
 
 void WindowsShellIcon::setToolTip(const std::wstring& toolTip)
