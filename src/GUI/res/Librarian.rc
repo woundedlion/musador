@@ -56,22 +56,6 @@ END
 // remains consistent on all systems.
 IDI_ACTIVE              ICON                    "active.ico"
 IDI_INACTIVE            ICON                    "inactive.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
-IDM_TRAY MENU 
-BEGIN
-    POPUP "IDM_TRAY_POPUP"
-    BEGIN
-        MENUITEM "Enable",                      ID_IDM_ENABLE
-        MENUITEM SEPARATOR
-        MENUITEM "Exit",                        ID_IDM_EXIT
-    END
-END
-
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

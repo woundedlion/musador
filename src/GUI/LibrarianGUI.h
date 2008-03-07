@@ -32,9 +32,12 @@ namespace Musador
 			DISABLE
 		};
 
+		void onRunning();
+
 		void onTrayMenu();
 
-		WindowsShellIcon trayIcon;
+//		PipeConnection librarian;
+		std::auto_ptr<WindowsShellIcon> trayIcon;
 		WinMenu trayMenu;
 	};
 }

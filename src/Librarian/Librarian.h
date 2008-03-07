@@ -7,8 +7,7 @@
 #include "Utilities/Console.h"
 #include "Config/Config.h"
 #include "LibrarianController.h"
-#include "LibrarianGUI.h"
-
+//#include "PipeConnection.h"
 
 using namespace Musador;
 namespace Musador
@@ -36,9 +35,9 @@ namespace Musador
 
 	private:
 
+//		PipeConnection gui;
 		std::auto_ptr<Server> server;
 		LibrarianController controller;
-		LibrarianGUI gui;
 
 	};
 

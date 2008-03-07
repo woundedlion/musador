@@ -2,7 +2,6 @@
 #include "Librarian.h"
 #include "Network/Network.h"
 #include "Indexer/ConsoleProgressReporter.h"
-#include "res/resource.h"
 
 #include "Logger/Logger.h"
 #define LOG_SENDER "Librarian"
@@ -93,7 +92,7 @@ Librarian::enable()
 	{
 		this->server.reset(new Server(Config::instance()->server));
 		this->server->start();
-		this->gui.postMessage(WM_APP_SERVERUP);
+//		this->gui.postMessage(WM_APP_SERVERUP);
 	}
 }
 
@@ -104,7 +103,7 @@ void Librarian::disable()
 		this->server->stop();
 		server->waitForStop();
 		this->server.reset();
-		this->gui.postMessage(WM_APP_SERVERDOWN);
+//		this->gui.postMessage(WM_APP_SERVERDOWN);
 	}
 
 }

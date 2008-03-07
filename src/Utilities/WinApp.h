@@ -28,7 +28,9 @@ namespace Musador
 
 		static HRESULT CALLBACK _wndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-		virtual HRESULT wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		virtual HRESULT wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
+
+		virtual void onRunning() {}
 
 		operator HWND() { return this->hWndMain; }
 
@@ -38,10 +40,6 @@ namespace Musador
 		HWND hWndMain;
 		HINSTANCE hInst;
 
-		boost::thread * mainThread;
-		bool started;
-		Mutex startedMutex;
-		Condition startedCV;
 	};
 
 	inline BOOL WinApp::postMessage(UINT uMsg, WPARAM wParam /* = NULL */, LPARAM lParam /* = NULL */)

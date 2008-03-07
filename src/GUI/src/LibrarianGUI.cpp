@@ -1,4 +1,3 @@
-#include "Librarian.h"
 #include "LibrarianGUI.h"
 #include "res/resource.h"
 #include "Logger/Logger.h"
@@ -8,11 +7,9 @@
 
 using namespace Musador;
 
-
-
 LibrarianGUI::LibrarianGUI() :
 WinApp(L"Musador Librarian"),
-trayIcon(this->hWndMain, WM_APP_TRAYICON)
+trayIcon(NULL)
 {
 	this->trayMenu.insertItem(0,ENABLE,L"Enable");
 	this->trayMenu.insertSep(1,EXIT_SEP);
@@ -21,7 +18,6 @@ trayIcon(this->hWndMain, WM_APP_TRAYICON)
 
 LibrarianGUI::~LibrarianGUI()
 {
-
 }
 
 HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -30,26 +26,27 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	switch (uMsg)
 	{
+
 	case WM_DESTROY:
 		::PostQuitMessage(0);
 		break;
 	
 	case WM_APP_SERVERUP:
-		this->trayIcon.setToolTip(L"Musador Librarian : Running");
-		this->trayIcon.setIcon(MAKEINTRESOURCE(IDI_ACTIVE));
-		this->trayIcon.show();
+		this->trayIcon->setToolTip(L"Musador Librarian : Running");
+		this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_ACTIVE));
+		this->trayIcon->show();
 		this->trayMenu.updateItem(ENABLE,DISABLE,L"Disable");
 		break;
 	
 	case WM_APP_SERVERDOWN:
-		this->trayIcon.setToolTip(L"Musador Librarian : Disabled");
-		this->trayIcon.setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
-		this->trayIcon.show();
+		this->trayIcon->setToolTip(L"Musador Librarian : Disabled");
+		this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
+		this->trayIcon->show();
 		this->trayMenu.updateItem(DISABLE,ENABLE,L"Enable");
 		break;
 	
 	case WM_APP_TRAYICON:
-		if (wParam == this->trayIcon.getID())
+		if (wParam == this->trayIcon->getID())
 		{
 			switch (lParam)
 			{
@@ -65,13 +62,13 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		switch (LOWORD(wParam))
 		{
 		case DISABLE:
-			Librarian::instance()->disable();
+//			Librarian::instance()->disable();
 			break;
 		case ENABLE:
-			Librarian::instance()->enable();
+//			Librarian::instance()->enable();
 			break;
 		case EXIT:
-			Librarian::instance()->stop();
+			::PostQuitMessage(0);
 			break;
 		}
 		break;
@@ -81,6 +78,15 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 	}
 
 	return 1;
+}
+
+void 
+LibrarianGUI::onRunning()
+{
+	this->trayIcon.reset(new WindowsShellIcon(this->hWndMain,WM_APP_TRAYICON));
+	this->trayIcon->setToolTip(L"Musador Librarian : Disabled");
+	this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
+	this->trayIcon->show();
 }
 
 void

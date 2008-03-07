@@ -4,10 +4,6 @@
 //
 #define IDI_ACTIVE                      101
 #define IDI_INACTIVE                    102
-#define IDM_TRAY                        106
-#define ID_IDM_EXIT                     40008
-#define ID_IDM_ENABLE                   40009
-#define ID_IDM_DISABLE                  40010
 
 // Next default values for new objects
 // 

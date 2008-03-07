@@ -11,20 +11,12 @@ using namespace Musador;
 WinApp::WinApp(const std::wstring& appName) :
 appName(appName),
 hWndMain(NULL),
-hInst(::GetModuleHandle(NULL)),
-started(false)
+hInst(::GetModuleHandle(NULL))
 {
-	this->mainThread = new boost::thread(boost::bind(&WinApp::run,this));
-
-	Guard lock(this->startedMutex);
-	while (!this->started) this->startedCV.wait(lock);
 }
 
 WinApp::~WinApp()
 {
-	::PostMessage(this->hWndMain,WM_QUIT,NULL,NULL);
-	this->mainThread->join();
-	delete this->mainThread;
 }
 
 void 
@@ -64,12 +56,8 @@ WinApp::run()
 		return;
 	}
 
-	// Notify waiting threads that we have started
-	{
-		Guard lock(this->startedMutex);
-		this->started = true;
-		this->startedCV.notify_all();
-	}
+	// Invoke derived initializers which might depend on a valid HWND
+	this->onRunning();
 
 	// Main message loop
 	BOOL r;
@@ -88,12 +76,6 @@ WinApp::run()
 			::DispatchMessage(&msg); 
 		}
 	} 
-
-	// The main message loop has terminated
-	{
-		Guard lock(this->startedMutex);
-		this->started = false;
-	}
 
 	::DestroyWindow(this->hWndMain);
 	::UnregisterClass(this->appName.c_str(),this->hInst);
@@ -117,9 +99,11 @@ WinApp::_wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return 1;
 }
 
+/*
 LRESULT 
 WinApp::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	LOG(Debug) << "wndProcMain received msg: " << (boost::wformat(L"%|#02x|") % uMsg) << " [wParam=" << wParam << "],[lParam=" << lParam << "]";
 	return 1;
 }
+*/
