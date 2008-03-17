@@ -24,7 +24,8 @@ typedef boost::mutex::scoped_lock Guard;
 namespace Musador
 {
 
-	class Connection;
+	class SocketListener;
+	class SocketConnection;
 	class CompletionCtx;
 
 	//////////////////////////////////////////////////////////////////////////
@@ -34,40 +35,40 @@ namespace Musador
 	{
 	public:
 
-		typedef boost::function2<void, boost::shared_ptr<IOMsg>, boost::any> EventHandler;
-
 		/// Constructor
 		Proactor();
 		
 		/// Destructor
 		~Proactor();
 
-		void beginAccept(SOCKET listenSocket, 
-						 boost::shared_ptr<ConnectionFactory> connFactory, 
+		// Socket I/O
+		void beginAccept(boost::shared_ptr<SocketListener> listener, 
 						 EventHandler handler, 
 						 boost::any tag = NULL);
 
-		void beginRead(boost::shared_ptr<Connection> conn, 
+		void beginRead(boost::shared_ptr<SocketConnection> conn, 
 					   EventHandler handler, 
 					   boost::any tag = NULL);
 		
-		void beginRead(boost::shared_ptr<Connection> conn, 
+		void beginRead(boost::shared_ptr<SocketConnection> conn, 
 					   EventHandler handler, 
 					   boost::shared_ptr<IOMsgReadComplete> msgRead, 
 					   boost::any tag = NULL);
 
-		void beginWrite(boost::shared_ptr<Connection> conn, 
+		void beginWrite(boost::shared_ptr<SocketConnection> conn, 
 										  EventHandler handler, 
 										  boost::shared_array<char> data, 
 										  int len, 
 										  boost::any tag = NULL);
 
-		void beginWrite(boost::shared_ptr<Connection> conn, 
+		void beginWrite(boost::shared_ptr<SocketConnection> conn, 
 						EventHandler handler, 
 						boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
 						boost::any tag = NULL);
 
+		// Pipe I/O
 
+		// Control
 		void start(int numWorkers = 1);
 
 		void stop(); 
@@ -81,7 +82,7 @@ namespace Musador
 
 		std::vector<boost::thread *> workers;
 
-		void completeAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
+		void completeSocketAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
 		void completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
 		void completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
 
@@ -93,6 +94,24 @@ namespace Musador
 
 	};
 
+	inline void Proactor::beginRead(boost::shared_ptr<SocketConnection> conn, EventHandler handler, boost::any tag /* = NULL */)
+	{
+		boost::shared_ptr<IOMsgReadComplete> msgRead(new IOMsgReadComplete());
+		this->beginRead(conn, handler, msgRead, tag);
+	}
+
+	inline void Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn, 
+									EventHandler handler, 
+									boost::shared_array<char> data, 
+									int len, 
+									boost::any tag /* = NULL */)
+	{
+		boost::shared_ptr<IOMsgWriteComplete> msgWrite(new IOMsgWriteComplete());
+		msgWrite->buf = data;
+		msgWrite->len = len;
+		this->beginWrite(conn, handler, msgWrite, tag);
+	}
+
 	class IOException : public StreamException<IOException> { };
 
 #ifdef WIN32
@@ -102,7 +121,7 @@ namespace Musador
 
 		boost::shared_ptr<IOMsg> msg;
 
-		Proactor::EventHandler handler;
+		EventHandler handler;
 
 		boost::any tag;
 	};

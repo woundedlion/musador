@@ -4,7 +4,6 @@
 #include <sstream>
 #include "boost/function.hpp"
 #include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include "boost/any.hpp"
 #include "Network/Network.h"
 #include "Utilities/Factory.h"
@@ -19,6 +18,8 @@ namespace Musador
 	class Server;
 	class ConnectionProcessor;
 
+	typedef AbstractFactory<Connection> ConnectionFactory;
+
 	class ConnectionCtx
 	{
 	public:
@@ -32,55 +33,41 @@ namespace Musador
 		ConnectionProcessor * processor;
 	};
 
-	class Connection  : public boost::enable_shared_from_this<Connection>
+	class Connection
 	{
 	public:
 
 		Connection();
 
-		Connection(SOCKET socket);
-
 		virtual ~Connection();
-
-		SOCKET getSocket();
-		
-		void setSocket(SOCKET s);
-
-		sockaddr_in getLocalEP();
-		
-		void setLocalEP(sockaddr_in localEP);
-
-		sockaddr_in getRemoteEP();
-
-		void setRemoteEP(sockaddr_in localEP);
 
 		boost::shared_ptr<ConnectionCtx> getCtx();
 		virtual void setCtx(boost::shared_ptr<ConnectionCtx>);
 
-		void close();
+		virtual void beginRead() = 0;
+		virtual void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead) = 0;
 
-		std::string toString();
-
-		void beginRead();
-		void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead);
-
-		void beginWrite(boost::shared_array<char> data, unsigned int len);
-		void beginWrite(std::istream& dataStream);
-		void beginWrite(const std::string& str);
+		virtual void beginWrite(EventHandler handler, 
+								boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
+								boost::any tag /* = NULL */) = 0;
+		virtual void beginWrite(boost::shared_array<char> data, unsigned int len) = 0;
+		virtual void beginWrite(std::istream& dataStream) = 0;
+		virtual void beginWrite(const std::string& str) = 0;
 
 		virtual void accepted() = 0;
+
+		virtual void close() = 0;
+
+		virtual std::string toString() = 0;
+
 		virtual void post(boost::shared_ptr<IOMsgReadComplete> msgRead) = 0;
 		virtual void post(boost::shared_ptr<IOMsgWriteComplete> msgWrite) = 0;
 
 	protected:
 
 		boost::shared_ptr<ConnectionCtx> ctx;
-		sockaddr_in localEP;
-		sockaddr_in remoteEP;
-		SOCKET sock;
-	};
 
-	typedef AbstractFactory<Connection> ConnectionFactory;
+	};
 
 
 }

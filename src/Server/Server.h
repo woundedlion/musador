@@ -30,11 +30,8 @@ namespace Musador
 
 		void start();
 
-		template <class ConnType>
-		void acceptConnections(	const sockaddr_in& localEP, 
-								boost::shared_ptr<ConnectionCtx> ctx = boost::shared_ptr<ConnectionCtx>(),
-								int socketType = SOCK_STREAM, 
-								int socketProto = IPPROTO_TCP);
+		void acceptConnections(	boost::shared_ptr<Listener> listener, 
+								boost::shared_ptr<ConnectionCtx> ctx = boost::shared_ptr<ConnectionCtx>());
 
 		void waitForStart();
 
@@ -74,7 +71,7 @@ namespace Musador
 
 		// Collection types
         typedef std::vector<boost::shared_ptr<Connection> > ConnCollection;
-		typedef std::map<SOCKET, boost::shared_ptr<ConnectionFactory> > ListenerCollection;
+		typedef std::vector<boost::shared_ptr<Listener> > ListenerCollection;
 		typedef std::map<std::string, boost::shared_ptr<Session> > SessionCollection;
 
 		ConnCollection conns;

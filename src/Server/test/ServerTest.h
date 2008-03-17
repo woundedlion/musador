@@ -9,6 +9,7 @@
 #include "boost/thread.hpp"
 #include "boost/bind.hpp"
 #include "Logger/Logger.h"
+#include "EchoListener.h"
 #include "EchoConnection.h"
 
 #define LOG_SENDER L"ServerTest"
@@ -55,7 +56,8 @@ public:
 		localEP.sin_family = AF_INET;
 		localEP.sin_addr.s_addr = ::inet_addr("0.0.0.0");
 		localEP.sin_port = ::htons(5152);
-		s.acceptConnections<EchoConnection>(localEP);
+		boost::shared_ptr<Listener> listener(new EchoListener(localEP));
+		s.acceptConnections(listener);
 
 		const int BANK_COUNT = 10;
 		const int BANK_SIZE = 10;

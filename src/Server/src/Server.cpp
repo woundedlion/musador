@@ -1,15 +1,17 @@
+#include <stdio.h>
+#include <boost/filesystem.hpp>
+
 #include "Server.h"
-#include "stdio.h"
 #include "Utilities/Util.h"
 #include "Utilities/md5.h"
 #include "ConnectionProcessor.h"
 #include "Controller.h"
 #include "boost/bind.hpp"
-#include "Logger/Logger.h"
+#include "HTTPListener.h"
 #include "HTTPConnection.h"
-#include <boost/filesystem.hpp>
 
 
+#include "Logger/Logger.h"
 #define LOG_SENDER L"Server"
 
 using namespace Musador;
@@ -62,7 +64,8 @@ void Server::start()
 		env->cfg = &*iter;
 		env->controller = this->cfg.controller;
 
-		this->acceptConnections<HTTPConnection>(ep,boost::static_pointer_cast<ConnectionCtx>(env));
+		boost::shared_ptr<Listener> listener(new HTTPListener(ep));
+		this->acceptConnections(listener, boost::static_pointer_cast<ConnectionCtx>(env));
 	}
 
 	// We're officially started now
@@ -95,8 +98,7 @@ void Server::stop()
 	{
 		try
 		{	
-			net->closeSocket(iter->first);
-			LOG(Info) << "Closing server socket " << iter->first;
+			(*iter)->close();
 		}
 		catch (const NetworkException& e)
 		{
@@ -132,13 +134,10 @@ void Server::restart()
     this->doRecycle = true;
 }
 
-template <class ConnType>
-void Server::acceptConnections(const sockaddr_in& localEP, 
-							   boost::shared_ptr<ConnectionCtx> ctx /* = NULL */,
-							   int socketType /* = SOCK_STREAM */, 
-							   int socketProto /* = IPPROTO_TCP */)
+void Server::acceptConnections(boost::shared_ptr<Listener> listener, 
+							   boost::shared_ptr<ConnectionCtx> ctx /* = boost::shared_ptr<ConnectionCtx> */)
 {
-	// Set up ctx;
+	// Set up ctx
 	if (NULL == ctx)
 	{
 		ctx = boost::shared_ptr<ConnectionCtx>(new ConnectionCtx());
@@ -146,22 +145,10 @@ void Server::acceptConnections(const sockaddr_in& localEP,
 	ctx->server = this;
 	ctx->processor = &this->processor;
 
-	// Set up server socket
-	SOCKET s;
-	try
-	{
-		s = net->socket(localEP.sin_family,socketType,socketProto);
-		net->bind(s,const_cast<sockaddr_in *>(&localEP));
-		net->listen(s);
-		this->listeners[s] = boost::shared_ptr<ConnectionFactory>(new ConcreteFactory<Connection,ConnType>());
-		Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),ctx);
-	}
-	catch (const NetworkException& e)
-	{
-		LOG(Error) << e.what();
-		return;
-	}
-	LOG(Debug) << "Accepting connections on " << ::inet_ntoa(localEP.sin_addr) << ":" << ::ntohs(localEP.sin_port) << " [" << s << "]";
+	this->listeners.push_back(listener);
+
+	// Do the async accept
+	listener->beginAccept(boost::bind(&Server::onAccept,this,_1,_2), ctx);
 }
 
 
@@ -170,13 +157,12 @@ void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 
 	switch (msg->getType())
 	{
-	case IO_ACCEPT_COMPLETE:
+	case IO_SOCKET_ACCEPT_COMPLETE:
 		{
-			boost::shared_ptr<IOMsgAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgAcceptComplete>(msg));
+			boost::shared_ptr<IOMsgSocketAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgSocketAcceptComplete>(msg));
 
-			// Register for another accept notification
-			SOCKET s = msgAccept->listener;
-			Proactor::instance()->beginAccept(s,this->listeners[s],boost::bind(&Server::onAccept,this,_1,_2),tag);
+			// Do another async accept
+			msgAccept->listener->beginAccept(boost::bind(&Server::onAccept,this,_1,_2),tag);
 
 			// Set up the new connection
 			msgAccept->conn->setCtx(boost::any_cast<boost::shared_ptr<ConnectionCtx> >(tag));
@@ -199,7 +185,7 @@ void Server::onError(boost::shared_ptr<IOMsgError> msgErr)
 	// Kill the connection
 	if (NULL != msgErr->err)
 	{
-		LOG(Info) << "Socket error detected on socket " << msgErr->conn->getSocket() << ": " << msgErr->err;
+		LOG(Info) << "Socket error detected on " << msgErr->conn->toString() << ": " << msgErr->err;
 	}
 	this->killConnection(msgErr->conn);
 }
@@ -245,26 +231,6 @@ void Server::killConnections()
 	this->conns.clear();
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-// Template specializations
-
-#include "HTTPConnection.h"
-template void Server::acceptConnections<HTTPConnection>(const sockaddr_in& localEP, 
-														boost::shared_ptr<ConnectionCtx> ctx /* = NULL */,
-														int socketType /* = SOCK_STREAM */, 
-														int socketProto /* = IPPROTO_TCP */);
-
-#include "NullConnection.h"
-template void Server::acceptConnections<NullConnection>(const sockaddr_in& localEP, 
-														boost::shared_ptr<ConnectionCtx> ctx /* = NULL */,
-														int socketType /* = SOCK_STREAM */, 
-														int socketProto /* = IPPROTO_TCP */);
-
-#include "EchoConnection.h"
-template void Server::acceptConnections<EchoConnection>(const sockaddr_in& localEP, 
-														boost::shared_ptr<ConnectionCtx> ctx /* = NULL */,
-														int socketType /* = SOCK_STREAM */, 
-														int socketProto /* = IPPROTO_TCP */);
 
 /*
 

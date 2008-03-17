@@ -4,7 +4,7 @@
 #include <queue>
 
 #include "HTTP.h"
-#include "Connection.h"
+#include "SocketConnection.h"
 
 #include "boost/weak_ptr.hpp"
 #include "boost/shared_ptr.hpp"
@@ -165,7 +165,7 @@ namespace Musador
 	}
 
 
-	class HTTPConnection : public Connection, public boost::enable_shared_from_this<HTTPConnection>
+	class HTTPConnection : public SocketConnection, public boost::enable_shared_from_this<HTTPConnection>
 	{
 	public:
 
@@ -187,9 +187,6 @@ namespace Musador
 
 		HTTP::FSM fsm;
 	};
-
-	class HTTPConnectionFactory : public ConcreteFactory<Connection,HTTPConnection> { };
-
 
 }
 

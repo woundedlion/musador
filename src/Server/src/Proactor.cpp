@@ -1,8 +1,10 @@
 #include "Proactor.h"
 #include "boost/bind.hpp"
+#include "SocketListener.h"
+#include "SocketConnection.h"
 
 #include "Logger/Logger.h"
-#define LOG_SENDER L"Proactor"
+#define LOG_SENDER L"I/O"
 
 using namespace Musador;
 
@@ -53,8 +55,8 @@ void Proactor::runIO()
 				boost::shared_ptr<CompletionCtx> ctx(ctxPtr);
 				switch(ctx->msg->getType())
 				{
-					case IO_ACCEPT_COMPLETE:
-						this->completeAccept(ctx, nBytes);
+					case IO_SOCKET_ACCEPT_COMPLETE:
+						this->completeSocketAccept(ctx, nBytes);
 						break;
 					case IO_READ_COMPLETE:
 						this->completeRead(ctx, nBytes);
@@ -69,10 +71,13 @@ void Proactor::runIO()
 				DWORD err = ::GetLastError();
 				if (WAIT_TIMEOUT != err)
 				{
+					// TODO: These can leak if they don't complete e.g. on shutdown
+					// Refcount the Completion Context again
 					std::auto_ptr<CompletionCtx> ctx(ctxPtr);
+
 					DWORD flags = 0;
-					::WSAGetOverlappedResult(ctx->msg->conn->getSocket(),ctxPtr,&nBytes,FALSE,&flags);
-					DWORD err = ::WSAGetLastError();
+	//				::WSAGetOverlappedResult(ctx->msg->conn->getSocket(),ctxPtr,&nBytes,FALSE,&flags);
+	//				DWORD err = ::WSAGetLastError();
 					if (WSAECONNRESET != err && WSA_OPERATION_ABORTED != err)
 					{
 						LOG(Error) << "GetQueuedCompletionStatus() failed: " << err;
@@ -92,17 +97,17 @@ void Proactor::runIO()
 	} while(this->doRecycle);
 }
 
-void Proactor::beginAccept(SOCKET listenSocket, 
-						   boost::shared_ptr<ConnectionFactory> connFactory, 
-						   EventHandler handler, 
-						   boost::any tag /* = NULL */)
+void 
+Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
+					  EventHandler handler, 
+					  boost::any tag /* = NULL */)
 {
 	// Load AcceptEx function
 	if (NULL == this->fnAcceptEx)
 	{
 		GUID guid = WSAID_ACCEPTEX;
 		DWORD nBytes = 0;
-		DWORD err = ::WSAIoctl(	listenSocket, 
+		DWORD err = ::WSAIoctl(	listener->getSocket(), 
 								SIO_GET_EXTENSION_FUNCTION_POINTER, 
 								&guid, 
 								sizeof(guid),
@@ -123,7 +128,7 @@ void Proactor::beginAccept(SOCKET listenSocket,
 	{
 		GUID guid = WSAID_GETACCEPTEXSOCKADDRS;
 		DWORD nBytes = 0;
-		DWORD err = ::WSAIoctl(	listenSocket, 
+		DWORD err = ::WSAIoctl(	listener->getSocket(), 
 								SIO_GET_EXTENSION_FUNCTION_POINTER, 
 								&guid, 
 								sizeof(guid),
@@ -141,14 +146,18 @@ void Proactor::beginAccept(SOCKET listenSocket,
 	}
 	
 	// Associate the listening socket with the IO completion port
-	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(listenSocket), this->iocp, listenSocket, NULL);
+	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(listener->getSocket()), this->iocp, listener->getSocket(), NULL);
 
 	// Create the completion data
-	boost::shared_ptr<IOMsgAcceptComplete> msgAccept(new IOMsgAcceptComplete());
-	msgAccept->listener = listenSocket;
-	msgAccept->conn.reset(connFactory->create());
-	msgAccept->conn->setSocket(Network::instance()->socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
-
+	boost::shared_ptr<IOMsgSocketAcceptComplete> msgAccept(new IOMsgSocketAcceptComplete());
+	msgAccept->listener = listener;
+	boost::shared_ptr<Connection> conn(listener->createConnection());
+	if (NULL == conn) 
+	{
+		// Socket creation failed
+		return;
+	}
+	msgAccept->conn = conn;
 	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
 	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
 	ctx->msg = msgAccept;
@@ -157,8 +166,8 @@ void Proactor::beginAccept(SOCKET listenSocket,
 
 	// Make the async accept request
 	DWORD nBytes = 0;
-	if ( !this->fnAcceptEx(	listenSocket,
-							msgAccept->conn->getSocket(), 
+	if ( !this->fnAcceptEx(	listener->getSocket(),
+							boost::static_pointer_cast<SocketConnection>(conn)->getSocket(), 
 							msgAccept->buf.get(), 
 							0, 
 							sizeof(sockaddr_in) + 16, 
@@ -194,14 +203,15 @@ void Proactor::beginAccept(SOCKET listenSocket,
 	ctx.release();
 }
 
-void Proactor::completeAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes)
+void 
+Proactor::completeSocketAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes)
 {
 	// Retrieve the addresses and any received data and notify the event handler
 	sockaddr_in * localAddr;
 	sockaddr_in * remoteAddr;
 	int localAddrSize = 0;
 	int remoteAddrSize = 0;
-	boost::shared_ptr<IOMsgAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgAcceptComplete>(ctx->msg));
+	boost::shared_ptr<IOMsgSocketAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgSocketAcceptComplete>(ctx->msg));
 	this->fnGetAcceptExSockaddrs(	msgAccept->buf.get(), 
 									0,
 									sizeof(sockaddr_in) + 16,
@@ -212,14 +222,15 @@ void Proactor::completeAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned lon
 									&remoteAddrSize);
 
 	// Augment the accept message
-	msgAccept->conn->setLocalEP(*localAddr);
-	msgAccept->conn->setRemoteEP(*remoteAddr);
+	SocketConnection& conn = static_cast<SocketConnection&>(*msgAccept->conn);
+	conn.setLocalEP(*localAddr);
+	conn.setRemoteEP(*remoteAddr);
 	msgAccept->len = nBytes;
 
-	LOG(Debug) << "Accept completed: " << msgAccept->conn->toString();
+	LOG(Debug) << "Accept completed: " << conn.toString();
 
 	// Associate the socket with the IO completion port
-	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(msgAccept->conn->getSocket()), this->iocp, msgAccept->conn->getSocket(), NULL);
+	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(conn.getSocket()), this->iocp, conn.getSocket(), NULL);
 
 	// notify the handler
 	if (NULL != ctx->handler)
@@ -228,13 +239,8 @@ void Proactor::completeAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned lon
 	}
 }
 
-void Proactor::beginRead(boost::shared_ptr<Connection> conn, EventHandler handler, boost::any tag /* = NULL */)
-{
-	boost::shared_ptr<IOMsgReadComplete> msgRead(new IOMsgReadComplete());
-	this->beginRead(conn, handler, msgRead, tag);
-}
-
-void Proactor::beginRead(boost::shared_ptr<Connection> conn, 
+void 
+Proactor::beginRead(boost::shared_ptr<SocketConnection> conn, 
 						 EventHandler handler, 
 						 boost::shared_ptr<IOMsgReadComplete> msgRead, 
 						 boost::any tag /* = NULL */)
@@ -291,7 +297,8 @@ void Proactor::beginRead(boost::shared_ptr<Connection> conn,
 	ctx.release();
 }
 
-void Proactor::completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes)
+void 
+Proactor::completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes)
 {
 	boost::shared_ptr<IOMsgReadComplete> msgRead(boost::shared_static_cast<IOMsgReadComplete>(ctx->msg));
 	msgRead->len += nBytes;
@@ -320,19 +327,8 @@ void Proactor::completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long 
 	}
 }
 
-void Proactor::beginWrite(boost::shared_ptr<Connection> conn, 
-						  EventHandler handler, 
-						  boost::shared_array<char> data, 
-						  int len, 
-						  boost::any tag /* = NULL */)
-{
-	boost::shared_ptr<IOMsgWriteComplete> msgWrite(new IOMsgWriteComplete());
-	msgWrite->buf = data;
-	msgWrite->len = len;
-	this->beginWrite(conn, handler, msgWrite, tag);
-}
-
-void Proactor::beginWrite(boost::shared_ptr<Connection> conn, 
+void 
+Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn, 
 						  EventHandler handler, 
 						  boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
 						  boost::any tag /* = NULL */)
@@ -363,7 +359,7 @@ void Proactor::beginWrite(boost::shared_ptr<Connection> conn,
 		{
 			if (WSAECONNRESET != err)
 			{
-				LOG(Error) << "WSASend() failed on socket " << conn->getSocket() << " [" << err << "]";
+				LOG(Error) << "WSASend() failed on " << conn->toString() << " [" << err << "]";
 			}
 
 			// notify the handler
@@ -383,14 +379,15 @@ void Proactor::beginWrite(boost::shared_ptr<Connection> conn,
 	ctx.release();
 }
 
-void Proactor::completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes)
+void 
+Proactor::completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes)
 {
 	boost::shared_ptr<IOMsgWriteComplete> msgWrite(boost::shared_static_cast<IOMsgWriteComplete>(ctx->msg));
 	msgWrite->off += nBytes;
-	if (msgWrite-> off < msgWrite->len)
+	if (msgWrite->off < msgWrite->len)
 	{
-		// Not done writing, so reschedule the write
-		this->beginWrite(ctx->msg->conn, ctx->handler, msgWrite, ctx->tag);
+		// Not done writing, so reschedule the write with a double-dispatch
+		msgWrite->conn->beginWrite(ctx->handler, msgWrite, ctx->tag);
 		return;
 	}
 
@@ -403,7 +400,8 @@ void Proactor::completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long
 	}
 }
 
-void Proactor::start(int numWorkers /* = 0 */)
+void 
+Proactor::start(int numWorkers /* = 0 */)
 {
 	for (int i = 0; i < numWorkers; ++i)
 	{
@@ -411,7 +409,8 @@ void Proactor::start(int numWorkers /* = 0 */)
 	}
 }
 
-void Proactor::stop()
+void 
+Proactor::stop()
 {
 	::PostQueuedCompletionStatus(this->iocp,0,0,NULL);
 	for (std::vector<boost::thread *>::iterator iter = this->workers.begin(); iter != this->workers.end(); ++iter)
