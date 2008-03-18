@@ -127,7 +127,7 @@ namespace Musador
 
 			Request * req;
 			Response * res;
-			const SiteConfig * cfg;
+			const HTTPConfig * cfg;
 			Controller * controller;
 			Session * session;
 		};

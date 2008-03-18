@@ -94,6 +94,17 @@ namespace Musador
 		unsigned long off;
 	};
 
+	class IOMsgPipeAcceptComplete : public IOMsg
+	{
+	public:
+
+		inline IOMsgPipeAcceptComplete() : IOMsg(IO_PIPE_ACCEPT_COMPLETE)
+		{
+		}
+
+		boost::shared_ptr<Listener> listener;
+	};
+
 	class IOMsgError : public IOMsg
 	{
 	public:

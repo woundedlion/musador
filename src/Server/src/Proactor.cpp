@@ -1,5 +1,7 @@
 #include "Proactor.h"
 #include "boost/bind.hpp"
+#include "PipeListener.h"
+#include "PipeConnection.h"
 #include "SocketListener.h"
 #include "SocketConnection.h"
 
@@ -57,6 +59,9 @@ void Proactor::runIO()
 				{
 					case IO_SOCKET_ACCEPT_COMPLETE:
 						this->completeSocketAccept(ctx, nBytes);
+						break;
+					case IO_PIPE_ACCEPT_COMPLETE:
+						this->completePipeAccept(ctx);
 						break;
 					case IO_READ_COMPLETE:
 						this->completeRead(ctx, nBytes);
@@ -204,6 +209,56 @@ Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
 }
 
 void 
+Proactor::beginAccept(boost::shared_ptr<PipeListener> listener, 
+					  EventHandler handler, 
+					  boost::any tag /* = NULL */)
+{
+	// Associate the pipe handle with the IO completion port
+	::CreateIoCompletionPort(listener->getPipe(), this->iocp, reinterpret_cast<ULONG_PTR>(listener->getPipe()), NULL);
+
+	// Create the completion data
+	boost::shared_ptr<IOMsgPipeAcceptComplete> msgAccept(new IOMsgPipeAcceptComplete());
+	msgAccept->listener = listener;
+	boost::shared_ptr<Connection> conn(listener->createConnection());
+	if (NULL == conn) 
+	{
+		// Pipe creation failed
+		return;
+	}
+	msgAccept->conn = conn;
+	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
+	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
+	ctx->msg = msgAccept;
+	ctx->handler = handler;
+	ctx->tag = tag;
+
+	// Make the async accept request
+	if (!::ConnectNamedPipe(listener->getPipe(),ctx.get()))
+	{
+		DWORD err = ::GetLastError();
+		if (ERROR_PIPE_CONNECTED != err)
+		{
+			LOG(Error) << "ConnectNamedPipe() failed: " << err;
+
+			// notify the handler
+			if (NULL != ctx->handler)
+			{
+				boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+				msgErr->conn = msgAccept->conn;
+				msgErr->err = err;
+				ctx->handler(msgErr,ctx->tag);
+			}
+
+			return;
+		}
+	}
+
+	// Accept will complete asynchronously
+	ctx.release();
+}
+
+
+void 
 Proactor::completeSocketAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes)
 {
 	// Retrieve the addresses and any received data and notify the event handler
@@ -235,6 +290,17 @@ Proactor::completeSocketAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned lo
 	// notify the handler
 	if (NULL != ctx->handler)
 	{
+		ctx->handler(msgAccept,ctx->tag);
+	}
+}
+
+void 
+Proactor::completePipeAccept(boost::shared_ptr<CompletionCtx> ctx)
+{
+	// notify the handler
+	if (NULL != ctx->handler)
+	{
+		boost::shared_ptr<IOMsgPipeAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgPipeAcceptComplete>(ctx->msg));
 		ctx->handler(msgAccept,ctx->tag);
 	}
 }
@@ -295,6 +361,16 @@ Proactor::beginRead(boost::shared_ptr<SocketConnection> conn,
 
 	// Read will complete asynchronously
 	ctx.release();
+}
+
+
+void 
+Proactor::beginRead(boost::shared_ptr<PipeConnection> conn, 
+					EventHandler handler, 
+					boost::shared_ptr<IOMsgReadComplete> msgRead, 
+					boost::any tag /* = NULL */)
+{
+
 }
 
 void 
@@ -377,6 +453,15 @@ Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn,
 
 	// Write will complete asynchronously
 	ctx.release();
+}
+
+void 
+Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn, 
+				     EventHandler handler, 
+				     boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
+				     boost::any /* tag = NULL */)
+{
+
 }
 
 void 

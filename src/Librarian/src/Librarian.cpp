@@ -2,6 +2,7 @@
 #include "Librarian.h"
 #include "Network/Network.h"
 #include "Indexer/ConsoleProgressReporter.h"
+#include "Server/PipeListener.h"
 
 #include "Logger/Logger.h"
 #define LOG_SENDER "Librarian"
@@ -53,7 +54,7 @@ void
 Librarian::configDefaults(Config& cfg)
 {
 	cfg.server.sites.clear();
-	SiteConfig site;
+	HTTPConfig site;
 	site.addr = "0.0.0.0";
 	site.port = 5152;
 	site.documentRoot = L"html";
@@ -74,8 +75,6 @@ Librarian::index(const std::wstring& outfile,const std::vector<std::wstring>& pa
 	
 	indexer.reindex();
 
-//	Console console;
-//	console.setSignalHandler(&sigHandler);
 	ConsoleProgressReporter reporter(indexer);
 	reporter.run();
 	

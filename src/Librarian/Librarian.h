@@ -7,12 +7,12 @@
 #include "Utilities/Console.h"
 #include "Config/Config.h"
 #include "LibrarianController.h"
-//#include "PipeConnection.h"
+#include "GUIListener.h"
 
 using namespace Musador;
 namespace Musador
 {
-	class LibrarianGUI;
+	class PipeListener;
 
 	class Librarian : public WindowsService<Librarian>
 	{
@@ -35,7 +35,7 @@ namespace Musador
 
 	private:
 
-//		PipeConnection gui;
+		GUIListener gui;
 		std::auto_ptr<Server> server;
 		LibrarianController controller;
 

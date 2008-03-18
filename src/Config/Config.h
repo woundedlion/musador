@@ -8,11 +8,11 @@
 namespace Musador
 {
 
-	class SiteConfig
+	class HTTPConfig
 	{
 	public:
 		
-		SiteConfig() :
+		HTTPConfig() :
 			documentRoot(L"html"),
 			addr("0.0.0.0"),
 			port(5152),
@@ -43,7 +43,7 @@ namespace Musador
 	{
 	public:
 		
-		typedef std::vector<SiteConfig> SiteCollection;
+		typedef std::vector<HTTPConfig> HTTPSiteCollection;
 
 		template<class Archive>
 		void serialize(Archive & ar, const unsigned int version)
@@ -51,7 +51,7 @@ namespace Musador
 			ar & BOOST_SERIALIZATION_NVP(sites);
 		}
 
-		SiteCollection sites;
+		HTTPSiteCollection sites;
 
 		/************************/
 		Controller * controller;

@@ -26,7 +26,7 @@ public:
 		cfg.server.sites.clear();
 		for (int i = 0; i < 10; i++)
 		{
-			SiteConfig site;
+			HTTPConfig site;
 			site.addr = "111.222.333.444";
 			site.port = 5152 + i;
 			site.documentRoot = L"DOC_ROOT_TEST_";

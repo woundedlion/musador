@@ -6,8 +6,7 @@
 #define LOG_SENDER L"I/O"
 using namespace Musador;
 
-SocketConnection::SocketConnection() :
-sock(sock)
+SocketConnection::SocketConnection()
 {
 
 }

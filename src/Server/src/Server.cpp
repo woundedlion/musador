@@ -47,7 +47,7 @@ void Server::start()
 	this->processor.start();
 
 	// Start listeners
-	for (ServerConfig::SiteCollection::const_iterator iter = this->cfg.sites.begin(); 
+	for (ServerConfig::HTTPSiteCollection::const_iterator iter = this->cfg.sites.begin(); 
 		iter != this->cfg.sites.end(); ++iter)
 	{
 		if (!fs::exists(iter->documentRoot))
