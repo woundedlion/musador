@@ -6,6 +6,7 @@
 using namespace Musador;
 
 PipeListener::PipeListener(const std::wstring& name) :
+pipe(NULL),
 name(name)
 {
 	HANDLE p = ::CreateNamedPipe(this->name.c_str(),

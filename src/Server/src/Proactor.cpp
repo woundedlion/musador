@@ -370,7 +370,45 @@ Proactor::beginRead(boost::shared_ptr<PipeConnection> conn,
 					boost::shared_ptr<IOMsgReadComplete> msgRead, 
 					boost::any tag /* = NULL */)
 {
+	if (msgRead->MAX == msgRead->len)
+	{
+		throw IOException() << "Message overflow at " << msgRead->MAX << " bytes";
+	}
 
+	// Create completion context to send off into asynchronous land
+	msgRead->conn = conn;
+	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
+	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
+	ctx->msg = msgRead;
+	ctx->handler = handler;
+	ctx->tag = tag;
+
+	if (0 != ::ReadFile(conn->getPipe(), 
+						msgRead->buf.get() + msgRead->len, 
+						msgRead->MAX - msgRead->len, 
+						NULL,
+						ctx.get()))
+	{
+		DWORD err = ::GetLastError();
+		if (ERROR_IO_PENDING != err)
+		{
+			LOG(Error) << "ReadFile() failed on pipe " << conn->getPipe() << " [" << err << "]";
+
+			// notify the handler
+			if (NULL != ctx->handler)
+			{
+				boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+				msgErr->conn = conn;
+				msgErr->err = err;
+				ctx->handler(msgErr,ctx->tag);
+			}
+
+			return;
+		}
+	}
+
+	// Read will complete asynchronously
+	ctx.release();
 }
 
 void 
@@ -459,9 +497,42 @@ void
 Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn, 
 				     EventHandler handler, 
 				     boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
-				     boost::any /* tag = NULL */)
+				     boost::any tag /* = NULL */)
 {
+	// Create completion context to send off into asynchronous land
+	msgWrite->conn = conn;
+	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
+	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
+	ctx->msg = msgWrite;
+	ctx->handler = handler;
+	ctx->tag = tag;
 
+	// Make the async write request
+	if ( 0 != ::WriteFile(conn->getPipe(), 
+						  msgWrite->buf.get() + msgWrite->off, 
+						  msgWrite->len - msgWrite->off, 
+						  NULL,ctx.get()))
+	{
+		DWORD err = ::GetLastError();
+		if (ERROR_IO_PENDING != err)
+		{
+			LOG(Error) << "WriteFile() failed on " << conn->toString() << " [" << err << "]";
+			
+			// notify the handler
+			if (NULL != ctx->handler)
+			{
+				boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+				msgErr->conn = conn;
+				msgErr->err = err;
+				ctx->handler(msgErr,ctx->tag);
+			}
+
+			return;
+		}
+	}
+
+	// Write will complete asynchronously
+	ctx.release();
 }
 
 void 
