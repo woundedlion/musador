@@ -50,8 +50,8 @@ Librarian::run(unsigned long argc, wchar_t * argv[])
 {
 	this->enable();
 
-	GUIListener GUIListener;
-	GUIListener.beginAccept(boost::bind(&Librarian::onAcceptGUIConnection,this,_1,_2));
+	boost::shared_ptr<GUIListener> GUIListener(new GUIListener());
+	GUIListener->beginAccept(boost::bind(&Librarian::onAcceptGUIConnection,this,_1,_2));
 
 	this->waitForStop(); // Wait until SCM or ctrl-c shuts us down
 	this->disable();
@@ -139,7 +139,10 @@ Librarian::onAcceptGUIConnection(boost::shared_ptr<IOMsg> msg, boost::any tag)
 
             // Keep listening for new connections
             msgAccept->listener->beginAccept(boost::bind(&Librarian::onAcceptGUIConnection,this,_1,_2));
-        }
+
+			// Start the connection state machine
+			msgAccept->conn->accepted();
+		}
         break;
     case IO_ERROR:
         {

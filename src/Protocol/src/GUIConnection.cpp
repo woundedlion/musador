@@ -8,7 +8,6 @@ using namespace Musador;
 GUIConnection::GUIConnection() :
 PipeConnection(GUI_PIPE_NAME)
 {
-
 }
 
 GUIConnection::GUIConnection(HANDLE pipe) : 

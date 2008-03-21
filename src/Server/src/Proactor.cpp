@@ -236,7 +236,7 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
 	if (!::ConnectNamedPipe(listener->getPipe(),ctx.get()))
 	{
 		DWORD err = ::GetLastError();
-		if (ERROR_PIPE_CONNECTED != err)
+		if (ERROR_IO_PENDING != err && ERROR_PIPE_CONNECTED != err)
 		{
 			LOG(Error) << "ConnectNamedPipe() failed: " << err;
 
@@ -383,10 +383,11 @@ Proactor::beginRead(boost::shared_ptr<PipeConnection> conn,
 	ctx->handler = handler;
 	ctx->tag = tag;
 
-	if (0 != ::ReadFile(conn->getPipe(), 
+	DWORD nBytes = 0;
+	if (0 == ::ReadFile(conn->getPipe(), 
 						msgRead->buf.get() + msgRead->len, 
 						msgRead->MAX - msgRead->len, 
-						NULL,
+						&nBytes,
 						ctx.get()))
 	{
 		DWORD err = ::GetLastError();
@@ -508,16 +509,18 @@ Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn,
 	ctx->tag = tag;
 
 	// Make the async write request
-	if ( 0 != ::WriteFile(conn->getPipe(), 
+	DWORD nBytes = 0;
+	if (0 == ::WriteFile(conn->getPipe(), 
 						  msgWrite->buf.get() + msgWrite->off, 
 						  msgWrite->len - msgWrite->off, 
-						  NULL,ctx.get()))
+						  &nBytes,
+						  ctx.get()))
 	{
 		DWORD err = ::GetLastError();
 		if (ERROR_IO_PENDING != err)
 		{
 			LOG(Error) << "WriteFile() failed on " << conn->toString() << " [" << err << "]";
-			
+
 			// notify the handler
 			if (NULL != ctx->handler)
 			{
@@ -568,7 +571,11 @@ Proactor::start(int numWorkers /* = 0 */)
 void 
 Proactor::stop()
 {
-	::PostQueuedCompletionStatus(this->iocp,0,0,NULL);
+	for (unsigned int i = 0; i < this->workers.size(); ++i)
+	{
+		::PostQueuedCompletionStatus(this->iocp,0,0,NULL);
+	}
+
 	for (std::vector<boost::thread *>::iterator iter = this->workers.begin(); iter != this->workers.end(); ++iter)
 	{
 		(*iter)->join();

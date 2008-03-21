@@ -1,13 +1,15 @@
 #ifndef LIBRARIAN_F34BA23D_EBB0_4871_89C1_20AB9FDC155D
 #define LIBRARIAN_F34BA23D_EBB0_4871_89C1_20AB9FDC155D
 
+#include <boost/archive/binary_oarchive.hpp>
+
 #include "Utilities/WindowsService.h"
 #include "Indexer/Indexer.h"
 #include "Server/Server.h"
 #include "Utilities/Console.h"
 #include "Config/Config.h"
 #include "LibrarianController.h"
-#include "GUIConnection.h"
+#include "Protocol/GUIConnection.h"
 
 using namespace Musador;
 namespace Musador
@@ -46,14 +48,18 @@ namespace Musador
 
 	};
 
-        template <typename T>
-        void Librarian::notifyGUI()
-        {
-            if (NULL != this->gui)
-            {
-                boost::shared_ptr<T> msg(new T());
-            }
-        }
+	template <typename T>
+	void Librarian::notifyGUI()
+	{
+		if (NULL != this->gui)
+		{
+			boost::shared_ptr<T> msg(new T());
+			std::stringstream msgData;
+			boost::archive::binary_oarchive ar(msgData);
+			ar & *msg;
+			this->gui->beginWrite(msgData);
+		}
+	}
 
 }
 

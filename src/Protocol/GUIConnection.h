@@ -12,13 +12,13 @@ namespace Musador
 
 	public:
 
-                GUIConnection();
+		GUIConnection();
 
 		GUIConnection(HANDLE pipe);
 
 		void accepted() { this->beginRead(); }
 
-                void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
+		void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 
 		void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 

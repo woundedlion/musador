@@ -1,6 +1,8 @@
 #ifndef GUIMESSAGES_06E5C6BBB53C_4038_A5DC_BE634E8E0430
 #define GUIMESSAGES_06E5C6BBB53C_4038_A5DC_BE634E8E0430
 
+#include <boost/serialization/serialization.hpp>
+
 namespace Musador
 {
     enum GUIMsgType
@@ -19,7 +21,13 @@ namespace Musador
 
         inline GUIMsgType getType() { return type; }
 
-    private: 
+		template<class A>
+		void serialize(A & ar, const unsigned int version)
+		{
+			ar & type;
+		}
+
+	private: 
 
         GUIMsgType type;    
     };

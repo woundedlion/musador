@@ -41,9 +41,8 @@ Server::start()
 {
 	LOG(Info) << "Server starting...";
 	
-	// Start worker threads
-	
-	Proactor::instance()->start();
+	// Start worker threads	
+	Proactor::instance()->start(2);
 
 	// Start listeners
 	for (ServerConfig::HTTPSiteCollection::const_iterator iter = this->cfg.sites.begin(); 

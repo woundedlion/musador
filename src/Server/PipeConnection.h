@@ -11,9 +11,9 @@ namespace Musador
 	{
 	public:
 
-                PipeConnection(const std::wstring& name);
+		PipeConnection(const std::wstring& name);
 
-                PipeConnection(const std::wstring& name, HANDLE pipe);
+		PipeConnection(const std::wstring& name, HANDLE pipe);
 
 		~PipeConnection();
 
