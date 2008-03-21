@@ -18,15 +18,10 @@ namespace Musador
 
 		void accepted() { this->beginRead(); }
 
-                void post(boost::shared_ptr<IOMsgReadComplete> msgRead, boost::any tag = NULL) 
-		{ 
+                void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 
-                }
+		void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 
-		void post(boost::shared_ptr<IOMsgWriteComplete> msgWrite, boost::any tag = NULL) 
-		{
-			this->beginRead();
-		}
 	};
 
 }
