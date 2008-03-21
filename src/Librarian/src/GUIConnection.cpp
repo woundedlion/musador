@@ -10,3 +10,15 @@ PipeConnection(GUI_PIPE_NAME,pipe)
 {
 
 }
+
+void
+GUIConnection::onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /* = NULL */)
+{
+
+}
+
+void
+GUIConnection::onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /* = NULL */)
+{
+
+}

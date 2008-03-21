@@ -6,8 +6,8 @@
 #include "Indexer/ConsoleProgressReporter.h"
 
 #include "Server/ConnectionProcessor.h"
-#include "GUIListener.h"
-#include "GUIMessages.h"
+#include "Protocol/GUIListener.h"
+#include "Protocol/GUIMessages.h"
 
 #include "Logger/Logger.h"
 #define LOG_SENDER "Librarian"
@@ -48,17 +48,13 @@ Librarian::~Librarian()
 int 
 Librarian::run(unsigned long argc, wchar_t * argv[])
 {
-        this->enable();
-    
-        ConnectionProcessor processor;
-        processor.start();
-        GUIListener GUIListener;
-        GUIListener.beginAccept(boost::bind(&Librarian::onAcceptGUIConnection,this,_1,_2),&processor);
+	this->enable();
+
+	GUIListener GUIListener;
+	GUIListener.beginAccept(boost::bind(&Librarian::onAcceptGUIConnection,this,_1,_2));
 
 	this->waitForStop(); // Wait until SCM or ctrl-c shuts us down
 	this->disable();
-
-        processor.shutdown();
 
 	return 0;
 }
@@ -129,9 +125,6 @@ Librarian::onAcceptGUIConnection(boost::shared_ptr<IOMsg> msg, boost::any tag)
     case IO_PIPE_ACCEPT_COMPLETE:
         {
             boost::shared_ptr<IOMsgPipeAcceptComplete>& msgAccept = boost::shared_static_cast<IOMsgPipeAcceptComplete>(msg);
-            boost::shared_ptr<ConnectionCtx> ctx(new ConnectionCtx());
-            ctx->processor = boost::any_cast<ConnectionProcessor *>(tag);
-            msgAccept->conn->setCtx(ctx);
 
             this->gui = boost::shared_static_cast<GUIConnection>(msgAccept->conn);
 

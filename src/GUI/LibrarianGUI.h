@@ -38,11 +38,11 @@ namespace Musador
 
 		void onTrayMenu();
 
-                template <typename T>
-                void notifyService();
+		template <typename T>
+		void notifyService();
 
-                boost::shared_ptr<GUIConnection> service;
-                std::auto_ptr<WindowsShellIcon> trayIcon;
+		boost::shared_ptr<GUIConnection> service;
+		std::auto_ptr<WindowsShellIcon> trayIcon;
 		WinMenu trayMenu;
 	};
 

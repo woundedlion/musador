@@ -35,12 +35,12 @@ namespace Musador
 
 	private:
 
-                void Librarian::onAcceptGUIConnection(boost::shared_ptr<IOMsg> msg, boost::any tag);
+		void Librarian::onAcceptGUIConnection(boost::shared_ptr<IOMsg> msg, boost::any tag);
 
-                template <typename T>
-                void notifyGUI();
+		template <typename T>
+		void notifyGUI();
 
-                boost::shared_ptr<GUIConnection> gui;
+		boost::shared_ptr<GUIConnection> gui;
 		std::auto_ptr<Server> server;
 		LibrarianController controller;
 

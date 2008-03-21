@@ -17,13 +17,13 @@ WinApp(L"Musador Librarian"),
 trayIcon(NULL),
 service(new GUIConnection())
 {
-        Proactor::instance()->start();
+	Proactor::instance()->start();
 
-        this->trayMenu.insertItem(0,ENABLE,L"Enable");
+	this->trayMenu.insertItem(0,ENABLE,L"Enable");
 	this->trayMenu.insertSep(1,EXIT_SEP);
 	this->trayMenu.insertItem(2,EXIT,L"Exit");
-        
-        this->service->beginRead();
+
+	this->service->beginRead();
 }
 
 LibrarianGUI::~LibrarianGUI()

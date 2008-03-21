@@ -1,4 +1,5 @@
 #include "PipeListener.h"
+#include "Server/Proactor.h"
 
 #include "Logger/Logger.h"
 #define LOG_SENDER L"I/O"
@@ -48,7 +49,7 @@ PipeListener::close()
 void
 PipeListener::beginAccept(EventHandler handler, boost::any tag /* = NULL */)
 {
+	Proactor::instance()->beginAccept(this->shared_from_this(), handler, tag);
 	LOG(Debug) << "Accepting connections on named pipe: " << this->name;
-
 }
 
