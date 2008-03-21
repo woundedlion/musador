@@ -6,7 +6,6 @@
 #include "Network/Network.h"
 #include "boost/shared_ptr.hpp"
 #include "Connection.h"
-#include "ConnectionProcessor.h"
 #include "Proactor.h"
 #include "Server.h"
 

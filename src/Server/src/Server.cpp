@@ -4,7 +4,6 @@
 #include "Server.h"
 #include "Utilities/Util.h"
 #include "Utilities/md5.h"
-#include "ConnectionProcessor.h"
 #include "Controller.h"
 #include "boost/bind.hpp"
 #include "HTTPListener.h"
@@ -37,14 +36,14 @@ Server::~Server()
 	this->net = NULL;
 }
 
-void Server::start() 
+void 
+Server::start() 
 {
 	LOG(Info) << "Server starting...";
 	
 	// Start worker threads
 	
 	Proactor::instance()->start();
-	this->processor.start();
 
 	// Start listeners
 	for (ServerConfig::HTTPSiteCollection::const_iterator iter = this->cfg.sites.begin(); 
@@ -78,7 +77,8 @@ void Server::start()
 
 }
 
-void Server::waitForStart()
+void 
+Server::waitForStart()
 {
 	Guard guard(this->runningMutex);
 	while(!this->running)
@@ -87,7 +87,8 @@ void Server::waitForStart()
 	}
 }
 
-void Server::stop() 
+void 
+Server::stop() 
 {
 	LOG(Info) << "Server shutting down...";
 
@@ -106,8 +107,6 @@ void Server::stop()
 		}
 	}
 
-	this->processor.shutdown();
-
 	{
 		Guard guard(this->runningMutex);
 		this->running = false;
@@ -120,7 +119,8 @@ void Server::stop()
 	LOG(Info) << "Server stopped...";
 }
 
-void Server::waitForStop()
+void 
+Server::waitForStop()
 {
 	Guard guard(this->runningMutex);
 	while(this->running)
@@ -129,13 +129,15 @@ void Server::waitForStop()
 	}
 }
 
-void Server::restart() 
+void 
+Server::restart() 
 {
     this->doRecycle = true;
 }
 
-void Server::acceptConnections(boost::shared_ptr<Listener> listener, 
-							   boost::shared_ptr<ConnectionCtx> ctx /* = boost::shared_ptr<ConnectionCtx> */)
+void 
+Server::acceptConnections(boost::shared_ptr<Listener> listener, 
+                          boost::shared_ptr<ConnectionCtx> ctx /* = boost::shared_ptr<ConnectionCtx> */)
 {
 	// Set up ctx
 	if (NULL == ctx)
@@ -143,7 +145,6 @@ void Server::acceptConnections(boost::shared_ptr<Listener> listener,
 		ctx = boost::shared_ptr<ConnectionCtx>(new ConnectionCtx());
 	}
 	ctx->server = this;
-	ctx->processor = &this->processor;
 
 	this->listeners.push_back(listener);
 
@@ -152,9 +153,9 @@ void Server::acceptConnections(boost::shared_ptr<Listener> listener,
 }
 
 
-void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
+void 
+Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 {
-
 	switch (msg->getType())
 	{
 	case IO_SOCKET_ACCEPT_COMPLETE:
@@ -180,7 +181,8 @@ void Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 	}
 }
 
-void Server::onError(boost::shared_ptr<IOMsgError> msgErr)
+void 
+Server::onError(boost::shared_ptr<IOMsgError> msgErr)
 {
 	// Kill the connection
 	if (NULL != msgErr->err)
@@ -191,7 +193,8 @@ void Server::onError(boost::shared_ptr<IOMsgError> msgErr)
 }
 
 
-Session & Server::getSession(const std::string& key)
+Session & 
+Server::getSession(const std::string& key)
 {
 	Guard lock(this->sessionsMutex);
 	if (NULL == this->sessions[key])
@@ -201,14 +204,16 @@ Session & Server::getSession(const std::string& key)
 	return *this->sessions[key];
 }
 
-void Server::addConnection(boost::shared_ptr<Connection> conn)
+void 
+Server::addConnection(boost::shared_ptr<Connection> conn)
 {
 	LOG(Info) << "Connected: " << conn->toString();
 	Guard lock(this->connsMutex);
 	this->conns.push_back(conn);
 }
 
-void Server::removeConnection(boost::shared_ptr<Connection> conn)
+void 
+Server::removeConnection(boost::shared_ptr<Connection> conn)
 {
 	Guard lock(this->connsMutex);
 	for (ConnCollection::iterator iter = this->conns.begin(); iter!= this->conns.end(); ++iter)
@@ -219,12 +224,14 @@ void Server::removeConnection(boost::shared_ptr<Connection> conn)
 	LOG(Info) << "Disconnected: " << conn->toString();
 }
 
-void Server::killConnection(boost::shared_ptr<Connection> conn)
+void 
+Server::killConnection(boost::shared_ptr<Connection> conn)
 {
 	this->removeConnection(conn);
 }
 
-void Server::killConnections()
+void 
+Server::killConnections()
 {
 	Guard lock(this->connsMutex);
 	ConnCollection::iterator iter;

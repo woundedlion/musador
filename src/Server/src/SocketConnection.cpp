@@ -17,49 +17,48 @@ SocketConnection::~SocketConnection()
 }
 
 void 
-SocketConnection::beginRead()
+SocketConnection::beginRead(boost::any tag /* = NULL */)
 {
-	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2));
+	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&Connection::onReadComplete,this,_1,_2));
 }
 
 void 
-SocketConnection::beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead)
+SocketConnection::beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead, boost::any tag /* = NULL */)
 {
-	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2), msgRead);
+	Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&Connection::onReadComplete,this,_1,_2), msgRead);
 }
 
 inline
 void 
-SocketConnection::beginWrite(EventHandler handler, 
-								boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
-								boost::any tag /* = NULL */)
+SocketConnection::beginWrite(boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
+			     boost::any tag /* = NULL */)
 {
-	Proactor::instance()->beginWrite(this->shared_from_this(), handler, msgWrite, tag);
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), msgWrite, tag);
 }
 
 
 void 
-SocketConnection::beginWrite(boost::shared_array<char> data, unsigned int len)
+SocketConnection::beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag /* = NULL */)
 {
-	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2), data, len);
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), data, len);
 }
 
 void 
-SocketConnection::beginWrite(std::istream& dataStream)
+SocketConnection::beginWrite(std::istream& dataStream, boost::any tag /* = NULL */)
 {
 	boost::shared_array<char> data(new char[IOMsgWriteComplete::MAX]);
 	dataStream.read(data.get(),IOMsgWriteComplete::MAX);
 	int len = dataStream.gcount();
-	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2), data, len);
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), data, len);
 }
 
 void 
-SocketConnection::beginWrite(const std::string& str)
+SocketConnection::beginWrite(const std::string& str, boost::any /* tag = NULL */)
 {
 	unsigned int len = str.size();
 	boost::shared_array<char> data(new char[len]);
 	str.copy(data.get(), len);
-	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&ConnectionProcessor::post,this->ctx->processor,_1,_2), data, len);
+	Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), data, len);
 }
 
 void 

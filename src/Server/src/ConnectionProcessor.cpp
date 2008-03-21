@@ -29,16 +29,14 @@ void ConnectionProcessor::_run()
 		{
 		case IO_SHUTDOWN:
 			return;			
-		case IO_READ_COMPLETE:
+                case IO_READ_COMPLETE:
 			{
-				boost::shared_ptr<IOMsgReadComplete> msgRead(boost::shared_static_cast<IOMsgReadComplete>(msg));
-				msgRead->conn->post(msgRead);
+				msg->conn->onReadComplete(msg);
 			}
 			break;
 		case IO_WRITE_COMPLETE:
 			{
-				boost::shared_ptr<IOMsgWriteComplete> msgWrite(boost::shared_static_cast<IOMsgWriteComplete>(msg));
-				msgWrite->conn->post(msgWrite);
+				msg->conn->onWriteComplete(msg);
 			}
 			break;
 		case IO_ERROR:

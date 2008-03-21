@@ -1,8 +1,13 @@
-#include "boost/filesystem.hpp"
+#include <boost/filesystem.hpp>
+#include <boost/bind.hpp>
+
 #include "Librarian.h"
 #include "Network/Network.h"
 #include "Indexer/ConsoleProgressReporter.h"
-#include "Server/PipeListener.h"
+
+#include "Server/ConnectionProcessor.h"
+#include "GUIListener.h"
+#include "GUIMessages.h"
 
 #include "Logger/Logger.h"
 #define LOG_SENDER "Librarian"
@@ -43,9 +48,17 @@ Librarian::~Librarian()
 int 
 Librarian::run(unsigned long argc, wchar_t * argv[])
 {
-	this->enable();
+        this->enable();
+    
+        ConnectionProcessor processor;
+        processor.start();
+        GUIListener GUIListener;
+        GUIListener.beginAccept(boost::bind(&Librarian::onAcceptGUIConnection,this,_1,_2),&processor);
+
 	this->waitForStop(); // Wait until SCM or ctrl-c shuts us down
 	this->disable();
+
+        processor.shutdown();
 
 	return 0;
 }
@@ -91,8 +104,9 @@ Librarian::enable()
 	{
 		this->server.reset(new Server(Config::instance()->server));
 		this->server->start();
-//		this->gui.postMessage(WM_APP_SERVERUP);
 	}
+
+        this->notifyGUI<GUIMsgEnabledNotify>();        
 }
 
 void Librarian::disable()
@@ -102,7 +116,43 @@ void Librarian::disable()
 		this->server->stop();
 		server->waitForStop();
 		this->server.reset();
-//		this->gui.postMessage(WM_APP_SERVERDOWN);
 	}
+    
+        this->notifyGUI<GUIMsgDisabledNotify>();        
+}
 
+void
+Librarian::onAcceptGUIConnection(boost::shared_ptr<IOMsg> msg, boost::any tag)
+{
+    switch (msg->getType())
+    {
+    case IO_PIPE_ACCEPT_COMPLETE:
+        {
+            boost::shared_ptr<IOMsgPipeAcceptComplete>& msgAccept = boost::shared_static_cast<IOMsgPipeAcceptComplete>(msg);
+            boost::shared_ptr<ConnectionCtx> ctx(new ConnectionCtx());
+            ctx->processor = boost::any_cast<ConnectionProcessor *>(tag);
+            msgAccept->conn->setCtx(ctx);
+
+            this->gui = boost::shared_static_cast<GUIConnection>(msgAccept->conn);
+
+            if (NULL != this->server.get())
+            {
+                this->notifyGUI<GUIMsgEnabledNotify>();        
+            }
+            else
+            {
+                this->notifyGUI<GUIMsgDisabledNotify>();        
+            }
+
+            // Keep listening for new connections
+            msgAccept->listener->beginAccept(boost::bind(&Librarian::onAcceptGUIConnection,this,_1,_2));
+        }
+        break;
+    case IO_ERROR:
+        {
+            boost::shared_ptr<IOMsgError> msgErr(boost::shared_static_cast<IOMsgError>(msg));
+            LOG(Error) << "Error accepting GUI Connection: " << msgErr->err;
+        }
+        break;
+    }
 }

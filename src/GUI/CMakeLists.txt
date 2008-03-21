@@ -8,6 +8,7 @@ FILE(GLOB rsrcs res/*.rc res/*.h)
 SET(libs 
 		Utilities
 		Logger
+		LibrarianProtocol
 )
 
 ADD_EXECUTABLE(${PROJECT_NAME} WIN32 ${hdrs} ${srcs} ${rsrcs})

@@ -16,7 +16,6 @@ namespace Musador
 	using namespace Musador;
 
 	class Server;
-	class ConnectionProcessor;
 
 	typedef AbstractFactory<Connection> ConnectionFactory;
 
@@ -25,12 +24,10 @@ namespace Musador
 	public:
 		
 		ConnectionCtx() :
-			server(NULL),
-			processor(NULL)
+			server(NULL)
 		{}
 
 		Server * server;
-		ConnectionProcessor * processor;
 	};
 
 	class Connection
@@ -44,15 +41,15 @@ namespace Musador
 		boost::shared_ptr<ConnectionCtx> getCtx();
 		virtual void setCtx(boost::shared_ptr<ConnectionCtx>);
 
-		virtual void beginRead() = 0;
-		virtual void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead) = 0;
+		virtual void beginRead(boost::any tag = NULL) = 0;
+		virtual void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead, 
+                                       boost::any tag = NULL) = 0;
 
-		virtual void beginWrite(EventHandler handler, 
-								boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
-								boost::any tag /* = NULL */) = 0;
-		virtual void beginWrite(boost::shared_array<char> data, unsigned int len) = 0;
-		virtual void beginWrite(std::istream& dataStream) = 0;
-		virtual void beginWrite(const std::string& str) = 0;
+		virtual void beginWrite(boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
+					boost::any tag = NULL) = 0;
+		virtual void beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag = NULL) = 0;
+		virtual void beginWrite(std::istream& dataStream, boost::any tag = NULL) = 0;
+		virtual void beginWrite(const std::string& str, boost::any tag = NULL) = 0;
 
 		virtual void accepted() = 0;
 
@@ -60,8 +57,8 @@ namespace Musador
 
 		virtual std::string toString() = 0;
 
-		virtual void post(boost::shared_ptr<IOMsgReadComplete> msgRead) = 0;
-		virtual void post(boost::shared_ptr<IOMsgWriteComplete> msgWrite) = 0;
+                virtual void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;
+		virtual void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;
 
 	protected:
 

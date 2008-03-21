@@ -1,3 +1,8 @@
+#include "Protocol/GUIListener.h"
+#include "Protocol/GUIMessages.h"
+#include "Server/IOMessages.h"
+#include "Server/Proactor.h"
+
 #include "LibrarianGUI.h"
 #include "res/resource.h"
 #include "Logger/Logger.h"
@@ -9,15 +14,22 @@ using namespace Musador;
 
 LibrarianGUI::LibrarianGUI() :
 WinApp(L"Musador Librarian"),
-trayIcon(NULL)
+trayIcon(NULL),
+service(new GUIConnection())
 {
-	this->trayMenu.insertItem(0,ENABLE,L"Enable");
+        Proactor::instance()->start();
+
+        this->trayMenu.insertItem(0,ENABLE,L"Enable");
 	this->trayMenu.insertSep(1,EXIT_SEP);
 	this->trayMenu.insertItem(2,EXIT,L"Exit");
+        
+        this->service->beginRead();
 }
 
 LibrarianGUI::~LibrarianGUI()
 {
+    Proactor::instance()->stop();
+    Proactor::destroy();
 }
 
 HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -62,10 +74,10 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		switch (LOWORD(wParam))
 		{
 		case DISABLE:
-//			Librarian::instance()->disable();
+                        this->notifyService<GUIMsgDisableReq>();
 			break;
 		case ENABLE:
-//			Librarian::instance()->enable();
+                        this->notifyService<GUIMsgEnableReq>();
 			break;
 		case EXIT:
 			::PostQuitMessage(0);
@@ -94,3 +106,19 @@ LibrarianGUI::onTrayMenu()
 {
 	this->trayMenu.popupAtCursor(this->hWndMain);
 }
+
+/*
+void
+LibrarianGUI::onServiceMsg(boost::shared_ptr<IOMsg> msg, boost::any tag)
+{
+    switch (msg->getType())
+    {
+    case IO_READ_COMPLETE:
+        break;
+    case IO_ERROR:
+        boost::shared_ptr<IOMsgError>& msgErr = boost::static_pointer_cast<IOMsgError>(msg);
+        LOG(Error) << "Error received from service pipe: " << msgErr->err;
+        break;
+    }
+}
+*/

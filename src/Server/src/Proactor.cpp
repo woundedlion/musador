@@ -543,7 +543,7 @@ Proactor::completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long nByt
 	if (msgWrite->off < msgWrite->len)
 	{
 		// Not done writing, so reschedule the write with a double-dispatch
-		msgWrite->conn->beginWrite(ctx->handler, msgWrite, ctx->tag);
+		msgWrite->conn->beginWrite(msgWrite, ctx->tag);
 		return;
 	}
 

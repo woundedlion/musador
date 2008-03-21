@@ -36,14 +36,16 @@ HTTPConnection::accepted()
 }
 
 void 
-HTTPConnection::post(boost::shared_ptr<IOMsgReadComplete> msgRead)
+HTTPConnection::onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*= NULL*/)
 {
+        boost::shared_ptr<IOMsgReadComplete> & msgRead = boost::shared_static_cast<IOMsgReadComplete>(msg);
 	this->fsm.process_event(HTTP::EvtReadComplete(msgRead));
 }
 
 void 
-HTTPConnection::post(boost::shared_ptr<IOMsgWriteComplete> msgWrite)
+HTTPConnection::onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*= NULL*/)
 {
+        boost::shared_ptr<IOMsgWriteComplete> & msgWrite = boost::shared_static_cast<IOMsgWriteComplete>(msg);
 	this->fsm.process_event(HTTP::EvtWriteComplete(msgWrite));
 }
 

@@ -13,6 +13,7 @@ SET(libs
 		Server
 		Utilities
 		Config
+		LibrarianProtocol
 )
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${hdrs} ${srcs} ${rsrcs})

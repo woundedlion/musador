@@ -6,6 +6,8 @@
 #include "Utilities/WindowsShellIcon.h"
 #include "Utilities/WinMenu.h"
 
+#include "Protocol/GUIConnection.h"
+
 #define WM_APP_SERVERUP WM_APP
 #define WM_APP_SERVERDOWN WM_APP + 1
 #define WM_APP_TRAYICON WM_APP + 2
@@ -36,10 +38,22 @@ namespace Musador
 
 		void onTrayMenu();
 
-//		PipeConnection librarian;
-		std::auto_ptr<WindowsShellIcon> trayIcon;
+                template <typename T>
+                void notifyService();
+
+                boost::shared_ptr<GUIConnection> service;
+                std::auto_ptr<WindowsShellIcon> trayIcon;
 		WinMenu trayMenu;
 	};
+
+        template <typename T>
+        void LibrarianGUI::notifyService()
+        {
+            if (NULL != this->service->getPipe())
+            {
+                boost::shared_ptr<T> msg(new T());
+            }
+        }
 }
 
 

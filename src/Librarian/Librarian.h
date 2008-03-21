@@ -7,7 +7,7 @@
 #include "Utilities/Console.h"
 #include "Config/Config.h"
 #include "LibrarianController.h"
-#include "GUIListener.h"
+#include "GUIConnection.h"
 
 using namespace Musador;
 namespace Musador
@@ -35,12 +35,25 @@ namespace Musador
 
 	private:
 
-		GUIListener gui;
+                void Librarian::onAcceptGUIConnection(boost::shared_ptr<IOMsg> msg, boost::any tag);
+
+                template <typename T>
+                void notifyGUI();
+
+                boost::shared_ptr<GUIConnection> gui;
 		std::auto_ptr<Server> server;
 		LibrarianController controller;
 
 	};
 
+        template <typename T>
+        void Librarian::notifyGUI()
+        {
+            if (NULL != this->gui)
+            {
+                boost::shared_ptr<T> msg(new T());
+            }
+        }
 
 }
 

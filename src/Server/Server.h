@@ -5,7 +5,6 @@
 #include "Utilities/MIMEResolver.h"
 #include "boost/shared_ptr.hpp"
 #include "boost/thread.hpp"
-#include "ConnectionProcessor.h"
 #include "Connection.h"
 #include "Proactor.h"
 #include "Session.h"
@@ -66,8 +65,6 @@ namespace Musador
 		Musador::Network * net;
 
 		const ServerConfig& cfg;
-
-		ConnectionProcessor processor;
 
 		// Collection types
         typedef std::vector<boost::shared_ptr<Connection> > ConnCollection;
