@@ -72,10 +72,10 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		break;
 
 	default:
-		::DefWindowProc(hWnd, uMsg, wParam, lParam);
+		return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	return 1;
+	return 0;
 }
 
 void 
