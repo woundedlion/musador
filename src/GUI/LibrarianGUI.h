@@ -1,6 +1,9 @@
 #ifndef LIBRARIANGUI_F34BA23D_EBB0_4871_89C1_20AB9FDC155D
 #define LIBRARIANGUI_F34BA23D_EBB0_4871_89C1_20AB9FDC155D
 
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+
 #include "Utilities/WinApp.h"
 #include "Utilities/MessageSink.h"
 #include "Utilities/WindowsShellIcon.h"
@@ -8,12 +11,12 @@
 
 #include "Protocol/GUIConnection.h"
 
-#define WM_APP_SERVERUP WM_APP
-#define WM_APP_SERVERDOWN WM_APP + 1
-#define WM_APP_TRAYICON WM_APP + 2
+#define WM_APP_TRAYICON WM_APP
 
 namespace Musador
 {
+	class GUIMsg;
+
 	class LibrarianGUI : public WinApp
 	{
 	public:
@@ -36,6 +39,8 @@ namespace Musador
 
 		void onRunning();
 
+		void onServiceMsg(boost::shared_ptr<GUIMsg> msg);
+
 		void onTrayMenu();
 
 		template <typename T>
@@ -46,14 +51,18 @@ namespace Musador
 		WinMenu trayMenu;
 	};
 
-        template <typename T>
-        void LibrarianGUI::notifyService()
-        {
-            if (NULL != this->service->getPipe())
-            {
-                boost::shared_ptr<T> msg(new T());
-            }
-        }
+	template <typename T>
+	void LibrarianGUI::notifyService()
+	{
+		if (NULL != this->service->getPipe())
+		{
+			boost::shared_ptr<T> msg(new T());
+			std::stringstream msgData;
+			boost::archive::binary_oarchive ar(msgData);
+			ar & msg;
+			this->service->beginWrite(msgData);
+		}
+	}
 }
 
 

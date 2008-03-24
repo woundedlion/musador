@@ -2,6 +2,7 @@
 #define LIBRARIAN_F34BA23D_EBB0_4871_89C1_20AB9FDC155D
 
 #include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
 #include "Utilities/WindowsService.h"
 #include "Indexer/Indexer.h"
@@ -56,7 +57,7 @@ namespace Musador
 			boost::shared_ptr<T> msg(new T());
 			std::stringstream msgData;
 			boost::archive::binary_oarchive ar(msgData);
-			ar & *msg;
+			ar & msg;
 			this->gui->beginWrite(msgData);
 		}
 	}

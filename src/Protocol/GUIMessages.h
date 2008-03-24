@@ -15,19 +15,23 @@ namespace Musador
 
     class GUIMsg
     {
-    public:
+		friend class boost::serialization::access;
+
+	public:
+
+		GUIMsg() {};
 
         GUIMsg(GUIMsgType type) : type(type) {}
 
         inline GUIMsgType getType() { return type; }
+
+	private: 
 
 		template<class A>
 		void serialize(A & ar, const unsigned int version)
 		{
 			ar & type;
 		}
-
-	private: 
 
         GUIMsgType type;    
     };
@@ -36,8 +40,8 @@ namespace Musador
     class GUIMsgEnableReq : public GUIMsg
     {
     public:
-        GUIMsgEnableReq() : GUIMsg(GUI_MSG_ENABLE_REQ) {}
-    };
+		GUIMsgEnableReq() : GUIMsg(GUI_MSG_ENABLE_REQ) {}
+	};
 
     class GUIMsgDisableReq : public GUIMsg
     {
@@ -56,6 +60,8 @@ namespace Musador
     public:
         GUIMsgDisabledNotify() : GUIMsg(GUI_MSG_DISABLED_NOTIFY) {}
     };
+
+	typedef boost::function1<void, boost::shared_ptr<GUIMsg> > GUIHandler;
 
 }
 

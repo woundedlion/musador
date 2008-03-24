@@ -14,6 +14,8 @@ namespace Musador
 
 		boost::shared_ptr<Connection> createConnection();
 
+		void close() {}
+
 	};
 }
 

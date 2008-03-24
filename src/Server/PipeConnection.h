@@ -13,22 +13,24 @@ namespace Musador
 
 		PipeConnection(const std::wstring& name);
 
-		PipeConnection(const std::wstring& name, HANDLE pipe);
-
 		~PipeConnection();
 
 		void close();
+
+		void beginConnect(boost::any tag = NULL);
 
 		void beginRead(boost::any tag = NULL);
 		void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead, boost::any tag = NULL);
 
 		void beginWrite(boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
-			        boost::any tag = NULL);
+						boost::any tag = NULL);
 		void beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag = NULL);
 		void beginWrite(std::istream& dataStream, boost::any tag = NULL);
 		void beginWrite(const std::string& str, boost::any tag = NULL);
 
 		std::string toString();
+
+		std::wstring getName();
 
 		HANDLE getPipe();
 

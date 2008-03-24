@@ -9,6 +9,7 @@ SET(libs
 		Utilities
 		Logger
 		LibrarianProtocol
+		Boost.Serialization
 )
 
 ADD_EXECUTABLE(${PROJECT_NAME} WIN32 ${hdrs} ${srcs} ${rsrcs})

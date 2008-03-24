@@ -63,6 +63,11 @@ void Proactor::runIO()
 					case IO_PIPE_ACCEPT_COMPLETE:
 						this->completePipeAccept(ctx);
 						break;
+					case IO_SOCKET_CONNECT_COMPLETE:
+						break;
+					case IO_PIPE_CONNECT_COMPLETE:
+						this->completePipeConnect(ctx);
+						break;
 					case IO_READ_COMPLETE:
 						this->completeRead(ctx, nBytes);
 						break;
@@ -213,18 +218,31 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
 					  EventHandler handler, 
 					  boost::any tag /* = NULL */)
 {
+	// Create a listening pipe
+	HANDLE hPipe = ::CreateNamedPipe(listener->getName().c_str(),
+		PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, 
+		PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE, 
+		PIPE_UNLIMITED_INSTANCES,
+		4096,
+		4096,
+		INFINITE,
+		NULL
+		);
+
+	if (INVALID_HANDLE_VALUE == hPipe)
+	{
+		LOG(Error) << "CreateNamedPipe() failed for " << listener->getName() <<": " << ::GetLastError();
+		return;
+	}
+
 	// Associate the pipe handle with the IO completion port
-	::CreateIoCompletionPort(listener->getPipe(), this->iocp, reinterpret_cast<ULONG_PTR>(listener->getPipe()), NULL);
+	::CreateIoCompletionPort(hPipe, this->iocp, reinterpret_cast<ULONG_PTR>(hPipe), NULL);
 
 	// Create the completion data
 	boost::shared_ptr<IOMsgPipeAcceptComplete> msgAccept(new IOMsgPipeAcceptComplete());
 	msgAccept->listener = listener;
-	boost::shared_ptr<Connection> conn(listener->createConnection());
-	if (NULL == conn) 
-	{
-		// Pipe creation failed
-		return;
-	}
+	boost::shared_ptr<PipeConnection> conn(boost::shared_static_cast<PipeConnection>(listener->createConnection()));
+	conn->setPipe(hPipe);
 	msgAccept->conn = conn;
 	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
 	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
@@ -233,7 +251,7 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
 	ctx->tag = tag;
 
 	// Make the async accept request
-	if (!::ConnectNamedPipe(listener->getPipe(),ctx.get()))
+	if (!::ConnectNamedPipe(hPipe,ctx.get()))
 	{
 		DWORD err = ::GetLastError();
 		if (ERROR_IO_PENDING != err && ERROR_PIPE_CONNECTED != err)
@@ -297,6 +315,77 @@ Proactor::completeSocketAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned lo
 void 
 Proactor::completePipeAccept(boost::shared_ptr<CompletionCtx> ctx)
 {
+	PipeConnection& conn = static_cast<PipeConnection&>(*ctx->msg->conn);
+
+	LOG(Debug) << "Accept completed: " << conn.toString();
+
+	// notify the handler
+	if (NULL != ctx->handler)
+	{
+		boost::shared_ptr<IOMsgPipeAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgPipeAcceptComplete>(ctx->msg));
+		ctx->handler(msgAccept,ctx->tag);
+	}
+}
+
+void
+Proactor::beginConnect(boost::shared_ptr<PipeConnection> conn, 
+					   EventHandler handler, 
+					   const std::wstring& dest, 
+					   boost::any tag /* = NULL */)
+{
+	boost::shared_ptr<IOMsgPipeConnectComplete> msgConnect(new IOMsgPipeConnectComplete());
+	
+	// Create completion context to send off into asynchronous land
+	msgConnect->conn = conn;
+	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
+	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
+	ctx->msg = msgConnect;
+	ctx->handler = handler;
+	ctx->tag = tag;
+
+	// Make the faux async connect request
+	HANDLE p  = ::CreateFile(conn->getName().c_str(),
+		FILE_READ_DATA | FILE_WRITE_DATA,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		NULL,
+		OPEN_EXISTING,
+		FILE_FLAG_OVERLAPPED,
+		NULL
+		);
+
+	if (INVALID_HANDLE_VALUE == p)
+	{
+		DWORD err = ::GetLastError();
+		LOG(Error) << "CreateFile() failed to open name pipe: " << conn->getName() << " [" << err << "]";
+
+		// notify the handler
+		if (NULL != ctx->handler)
+		{
+			boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+			msgErr->conn = conn;
+			msgErr->err = err;
+			ctx->handler(msgErr,ctx->tag);
+		}
+		return;
+	}
+
+	// Connect will complete through completion port
+	conn->setPipe(p);
+	::PostQueuedCompletionStatus(this->iocp, 0, reinterpret_cast<ULONG_PTR>(p), ctx.get());	
+	ctx.release();
+}
+
+void
+Proactor::completePipeConnect(boost::shared_ptr<CompletionCtx> ctx)
+{
+
+	PipeConnection& conn = static_cast<PipeConnection&>(*ctx->msg->conn);
+
+	LOG(Debug) << "Connect completed: " << conn.toString();
+
+	// Associate the socket with the IO completion port
+	::CreateIoCompletionPort(conn.getPipe(), this->iocp, reinterpret_cast<ULONG_PTR>(conn.getPipe()), NULL);
+
 	// notify the handler
 	if (NULL != ctx->handler)
 	{

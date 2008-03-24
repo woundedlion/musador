@@ -14,10 +14,12 @@ namespace Musador
 
 	enum IOMsgType
 	{
-		IO_WRITE_COMPLETE,
-		IO_READ_COMPLETE,
 		IO_SOCKET_ACCEPT_COMPLETE,
 		IO_PIPE_ACCEPT_COMPLETE,
+		IO_WRITE_COMPLETE,
+		IO_READ_COMPLETE,
+		IO_SOCKET_CONNECT_COMPLETE,
+		IO_PIPE_CONNECT_COMPLETE,
 		IO_ERROR,
 		IO_SHUTDOWN
 	};
@@ -103,6 +105,24 @@ namespace Musador
 		}
 
 		boost::shared_ptr<Listener> listener;
+	};
+
+	class IOMsgSocketConnectComplete : public IOMsg
+	{
+	public:
+
+		inline IOMsgSocketConnectComplete() : IOMsg(IO_SOCKET_CONNECT_COMPLETE)
+		{
+		}
+	};
+
+	class IOMsgPipeConnectComplete : public IOMsg
+	{
+	public:
+
+		inline IOMsgPipeConnectComplete() : IOMsg(IO_PIPE_CONNECT_COMPLETE)
+		{
+		}
 	};
 
 	class IOMsgError : public IOMsg

@@ -1,3 +1,5 @@
+#include <boost/bind.hpp>
+
 #include "Protocol/GUIListener.h"
 #include "Protocol/GUIMessages.h"
 #include "Server/IOMessages.h"
@@ -22,8 +24,6 @@ service(new GUIConnection())
 	this->trayMenu.insertItem(0,ENABLE,L"Enable");
 	this->trayMenu.insertSep(1,EXIT_SEP);
 	this->trayMenu.insertItem(2,EXIT,L"Exit");
-
-	this->service->beginRead();
 }
 
 LibrarianGUI::~LibrarianGUI()
@@ -42,21 +42,7 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 	case WM_DESTROY:
 		::PostQuitMessage(0);
 		break;
-	
-	case WM_APP_SERVERUP:
-		this->trayIcon->setToolTip(L"Musador Librarian : Running");
-		this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_ACTIVE));
-		this->trayIcon->show();
-		this->trayMenu.updateItem(ENABLE,DISABLE,L"Disable");
-		break;
-	
-	case WM_APP_SERVERDOWN:
-		this->trayIcon->setToolTip(L"Musador Librarian : Disabled");
-		this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
-		this->trayIcon->show();
-		this->trayMenu.updateItem(DISABLE,ENABLE,L"Enable");
-		break;
-	
+		
 	case WM_APP_TRAYICON:
 		if (wParam == this->trayIcon->getID())
 		{
@@ -74,10 +60,10 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		switch (LOWORD(wParam))
 		{
 		case DISABLE:
-                        this->notifyService<GUIMsgDisableReq>();
+			this->notifyService<GUIMsgDisableReq>();
 			break;
 		case ENABLE:
-                        this->notifyService<GUIMsgEnableReq>();
+			this->notifyService<GUIMsgEnableReq>();
 			break;
 		case EXIT:
 			::PostQuitMessage(0);
@@ -99,6 +85,10 @@ LibrarianGUI::onRunning()
 	this->trayIcon->setToolTip(L"Musador Librarian : Disabled");
 	this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
 	this->trayIcon->show();
+
+	this->service->setHandler(boost::bind(&LibrarianGUI::onServiceMsg,this,_1));
+	this->service->beginConnect();
+
 }
 
 void
@@ -107,18 +97,23 @@ LibrarianGUI::onTrayMenu()
 	this->trayMenu.popupAtCursor(this->hWndMain);
 }
 
-/*
 void
-LibrarianGUI::onServiceMsg(boost::shared_ptr<IOMsg> msg, boost::any tag)
+LibrarianGUI::onServiceMsg(boost::shared_ptr<GUIMsg> msg)
 {
     switch (msg->getType())
     {
-    case IO_READ_COMPLETE:
-        break;
-    case IO_ERROR:
-        boost::shared_ptr<IOMsgError>& msgErr = boost::static_pointer_cast<IOMsgError>(msg);
-        LOG(Error) << "Error received from service pipe: " << msgErr->err;
-        break;
+	case GUI_MSG_ENABLED_NOTIFY:
+		this->trayIcon->setToolTip(L"Musador Librarian : Running");
+		this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_ACTIVE));
+		this->trayIcon->show();
+		this->trayMenu.updateItem(ENABLE,DISABLE,L"Disable");
+		break;
+
+	case GUI_MSG_DISABLED_NOTIFY:
+		this->trayIcon->setToolTip(L"Musador Librarian : Disabled");
+		this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
+		this->trayIcon->show();
+		this->trayMenu.updateItem(DISABLE,ENABLE,L"Enable");
+		break;
     }
 }
-*/

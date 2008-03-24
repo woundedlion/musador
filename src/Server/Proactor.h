@@ -72,7 +72,10 @@ namespace Musador
 		void beginAccept(boost::shared_ptr<PipeListener> listener, 
 						 EventHandler handler, 
 						 boost::any tag = NULL);
-
+		void beginConnect(boost::shared_ptr<PipeConnection> conn,
+						  EventHandler handler,
+						  const std::wstring& dest,
+						  boost::any tag = NULL);
 		void beginRead(boost::shared_ptr<PipeConnection> conn, 
  					   EventHandler handler, 
 					   boost::any tag = NULL);
@@ -111,6 +114,8 @@ namespace Musador
 		void completePipeAccept(boost::shared_ptr<CompletionCtx> ctx);
 		void completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
 		void completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
+		void completeSocketConnect(boost::shared_ptr<CompletionCtx> ctx);
+		void completePipeConnect(boost::shared_ptr<CompletionCtx> ctx);
 
 		#ifdef WIN32
 			HANDLE iocp;

@@ -12,10 +12,21 @@ namespace Musador
 
 		void accepted() { this->beginRead(); }
 		
+		void onConnectComplete(boost::shared_ptr<IOMsg>, boost::any tag = NULL) {}
+
 		void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) 
 		{ 
-                        boost::shared_ptr<IOMsgReadComplete> & msgRead = boost::shared_static_cast<IOMsgReadComplete>(msg);
-			this->beginWrite(msgRead->buf,msgRead->len);
+			switch (msg->getType())
+			{
+			case IO_READ_COMPLETE:
+				{
+					boost::shared_ptr<IOMsgReadComplete> & msgRead = boost::shared_static_cast<IOMsgReadComplete>(msg);
+					this->beginWrite(msgRead->buf,msgRead->len);
+				}
+				break;
+			case IO_ERROR:
+				break;
+			}
 		}
 
 		void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) 

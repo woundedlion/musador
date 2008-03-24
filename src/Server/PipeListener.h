@@ -20,21 +20,13 @@ namespace Musador
 
 		void beginAccept(EventHandler handler, boost::any tag = NULL);
 
-		void close();
-
-		HANDLE getPipe();
+		std::wstring getName();
 
 	protected:
 
 		std::wstring name;
-		HANDLE pipe;
 
 	};
-
-	inline HANDLE PipeListener::getPipe()
-	{
-		return this->pipe;
-	}
 }
 
 

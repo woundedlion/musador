@@ -46,7 +46,7 @@ namespace Musador
                                        boost::any tag = NULL) = 0;
 
 		virtual void beginWrite(boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
-					boost::any tag = NULL) = 0;
+								boost::any tag = NULL) = 0;
 		virtual void beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag = NULL) = 0;
 		virtual void beginWrite(std::istream& dataStream, boost::any tag = NULL) = 0;
 		virtual void beginWrite(const std::string& str, boost::any tag = NULL) = 0;
@@ -57,7 +57,8 @@ namespace Musador
 
 		virtual std::string toString() = 0;
 
-                virtual void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;
+		virtual void onConnectComplete(boost::shared_ptr<IOMsg>, boost::any tag = NULL) = 0;		
+		virtual void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;
 		virtual void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;
 
 	protected:

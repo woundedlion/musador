@@ -1,9 +1,10 @@
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+
 #include "HTTPConnection.h"
 #include "HTTP.h"
 #include "boost/regex.hpp"
 #include "Logger/Logger.h"
-#include "boost/algorithm/string.hpp"
-#include <boost/filesystem.hpp>
 #include <time.h>
 #include "Controller.h"
 #include "Server.h"
@@ -38,15 +39,36 @@ HTTPConnection::accepted()
 void 
 HTTPConnection::onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*= NULL*/)
 {
-        boost::shared_ptr<IOMsgReadComplete> & msgRead = boost::shared_static_cast<IOMsgReadComplete>(msg);
-	this->fsm.process_event(HTTP::EvtReadComplete(msgRead));
+	switch (msg->getType())
+	{
+	case IO_READ_COMPLETE:
+		{
+			boost::shared_ptr<IOMsgReadComplete> & msgRead = boost::shared_static_cast<IOMsgReadComplete>(msg);
+			this->fsm.process_event(HTTP::EvtReadComplete(msgRead));
+		}
+		break;
+
+	case IO_ERROR:
+		 
+		break;
+	}
 }
 
 void 
 HTTPConnection::onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*= NULL*/)
 {
-        boost::shared_ptr<IOMsgWriteComplete> & msgWrite = boost::shared_static_cast<IOMsgWriteComplete>(msg);
-	this->fsm.process_event(HTTP::EvtWriteComplete(msgWrite));
+	switch (msg->getType())
+	{
+	case IO_WRITE_COMPLETE:
+		{
+			boost::shared_ptr<IOMsgWriteComplete> & msgWrite = boost::shared_static_cast<IOMsgWriteComplete>(msg);
+			this->fsm.process_event(HTTP::EvtWriteComplete(msgWrite));
+		}
+		break;
+	case IO_ERROR:
+
+		break;
+	}
 }
 
 void
