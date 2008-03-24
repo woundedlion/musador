@@ -41,9 +41,6 @@ Server::start()
 {
 	LOG(Info) << "Server starting...";
 	
-	// Start worker threads	
-	Proactor::instance()->start(2);
-
 	// Start listeners
 	for (ServerConfig::HTTPSiteCollection::const_iterator iter = this->cfg.sites.begin(); 
 		iter != this->cfg.sites.end(); ++iter)
@@ -111,9 +108,6 @@ Server::stop()
 		this->running = false;
 		this->runningCV.notify_all();
 	}
-
-	Proactor::instance()->stop();
-	Proactor::destroy();
 
 	LOG(Info) << "Server stopped...";
 }

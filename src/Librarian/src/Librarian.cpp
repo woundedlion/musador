@@ -36,10 +36,16 @@ WindowsService(L"Musador Librarian")
 	}
 
 	cfg->server.controller = &this->controller;
+
+	// Start 2 worker threads
+	Proactor::instance()->start(2);
 }
 
 Librarian::~Librarian()
 {
+	Proactor::instance()->stop();
+	Proactor::destroy();
+
 	Config::destroy();
 	Musador::Network::destroy();
 	Logger::destroy();
@@ -47,7 +53,7 @@ Librarian::~Librarian()
 
 int 
 Librarian::run(unsigned long argc, wchar_t * argv[])
-{
+{	
 	this->enable();
 
 	boost::shared_ptr<GUIListener> GUIListener(new GUIListener());
@@ -114,7 +120,7 @@ void Librarian::disable()
 		this->server.reset();
 	}
     
-        this->notifyGUI<GUIMsgDisabledNotify>();        
+	this->notifyGUI<GUIMsgDisabledNotify>();        
 }
 
 void
@@ -127,6 +133,7 @@ Librarian::onAcceptGUIConnection(boost::shared_ptr<IOMsg> msg, boost::any tag)
             boost::shared_ptr<IOMsgPipeAcceptComplete>& msgAccept = boost::shared_static_cast<IOMsgPipeAcceptComplete>(msg);
 
             this->gui = boost::shared_static_cast<GUIConnection>(msgAccept->conn);
+			this->gui->setHandler(boost::bind(&Librarian::onGUIMsg,this,_1));
 
             if (NULL != this->server.get())
             {
@@ -150,5 +157,20 @@ Librarian::onAcceptGUIConnection(boost::shared_ptr<IOMsg> msg, boost::any tag)
             LOG(Error) << "Error accepting GUI Connection: " << msgErr->err;
         }
         break;
+    }
+}
+
+void
+Librarian::onGUIMsg(boost::shared_ptr<GUIMsg> msg)
+{
+    switch (msg->getType())
+    {
+	case GUI_MSG_ENABLE_REQ:
+		this->enable();
+		break;
+
+	case GUI_MSG_DISABLE_REQ:
+		this->disable();
+		break;
     }
 }
