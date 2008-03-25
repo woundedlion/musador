@@ -49,7 +49,7 @@ HTTPConnection::onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*= 
 		break;
 
 	case IO_ERROR:
-		 
+		this->ctx->server->onError(boost::shared_static_cast<IOMsgError>(msg));
 		break;
 	}
 }
@@ -66,7 +66,7 @@ HTTPConnection::onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*=
 		}
 		break;
 	case IO_ERROR:
-
+		this->ctx->server->onError(boost::shared_static_cast<IOMsgError>(msg));
 		break;
 	}
 }
