@@ -48,8 +48,8 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		{
 			switch (lParam)
 			{
-			case WM_LBUTTONDOWN:
-			case WM_RBUTTONDOWN:
+			case WM_LBUTTONUP:
+			case WM_RBUTTONUP:
 				this->onTrayMenu();
 				break;
 			}

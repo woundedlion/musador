@@ -8,7 +8,6 @@
 #include "Network/Network.h"
 #include "Utilities/Factory.h"
 #include "IOMessages.h"
-#include "ConnectionProcessor.h"
 
 namespace Musador
 {

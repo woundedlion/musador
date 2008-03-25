@@ -5,7 +5,6 @@
 #include "Network/Network.h"
 #include "Indexer/ConsoleProgressReporter.h"
 
-#include "Server/ConnectionProcessor.h"
 #include "Protocol/GUIListener.h"
 #include "Protocol/GUIMessages.h"
 
