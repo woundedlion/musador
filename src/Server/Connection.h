@@ -20,25 +20,13 @@ namespace Musador
 
 	class ConnectionCtx
 	{
-	public:
-		
-		ConnectionCtx() :
-			server(NULL)
-		{}
-
-		Server * server;
 	};
 
 	class Connection
 	{
 	public:
 
-		Connection();
-
-		virtual ~Connection();
-
-		boost::shared_ptr<ConnectionCtx> getCtx();
-		virtual void setCtx(boost::shared_ptr<ConnectionCtx>);
+		virtual ~Connection() {};
 
 		virtual void beginRead(boost::any tag = NULL) = 0;
 		virtual void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead, 
@@ -50,7 +38,7 @@ namespace Musador
 		virtual void beginWrite(std::istream& dataStream, boost::any tag = NULL) = 0;
 		virtual void beginWrite(const std::string& str, boost::any tag = NULL) = 0;
 
-		virtual void accepted() = 0;
+		virtual void accepted(boost::any tag = NULL) = 0;
 
 		virtual void close() = 0;
 
@@ -59,10 +47,6 @@ namespace Musador
 		virtual void onConnectComplete(boost::shared_ptr<IOMsg>, boost::any tag = NULL) = 0;		
 		virtual void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;
 		virtual void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;
-
-	protected:
-
-		boost::shared_ptr<ConnectionCtx> ctx;
 
 	};
 

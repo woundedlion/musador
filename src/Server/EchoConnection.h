@@ -10,7 +10,7 @@ namespace Musador
 
 	public:
 
-		void accepted() { this->beginRead(); }
+		void accepted(boost::any tag = NULL) { this->beginRead(); }
 		
 		void onConnectComplete(boost::shared_ptr<IOMsg>, boost::any tag = NULL) {}
 

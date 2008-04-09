@@ -72,7 +72,7 @@ Librarian::configDefaults(Config& cfg)
 	site.addr = "0.0.0.0";
 	site.port = 5152;
 	site.documentRoot = L"html";
-	site.requireAuth = true;
+	//site.requireAuth = true;
 	site.realm = L"Musador";
 	cfg.server.sites.push_back(site);
 }
@@ -107,7 +107,7 @@ Librarian::enable()
 		this->server->start();
 	}
 
-        this->notifyGUI<GUIMsgEnabledNotify>();        
+	this->notifyGUI<GUIMsgEnabledNotify>();        
 }
 
 void Librarian::disable()
@@ -147,7 +147,7 @@ Librarian::onAcceptGUIConnection(boost::shared_ptr<IOMsg> msg, boost::any tag)
             msgAccept->listener->beginAccept(boost::bind(&Librarian::onAcceptGUIConnection,this,_1,_2));
 
 			// Start the connection state machine
-			msgAccept->conn->accepted();
+			msgAccept->conn->accepted(tag);
 		}
         break;
     case IO_ERROR:

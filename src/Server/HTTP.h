@@ -130,6 +130,7 @@ namespace Musador
 			const HTTPConfig * cfg;
 			Controller * controller;
 			Session * session;
+			boost::shared_ptr<Server> server;
 		};
 
 		//////////////////////////////////////////////////////////////////////

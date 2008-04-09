@@ -70,6 +70,7 @@ namespace Musador
 
 		struct StateClosed : sc::simple_state<StateClosed,FSM>
 		{
+			StateClosed() {}
 			typedef sc::transition<EvtOpen,StateRecvReq> reactions;
 		};
 
@@ -173,7 +174,7 @@ namespace Musador
 
 		~HTTPConnection();
 
-		void accepted();
+		void accepted(boost::any tag = NULL);
 
 		void onConnectComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) {}
 
@@ -181,13 +182,13 @@ namespace Musador
 
 		void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 
-		void setCtx(boost::shared_ptr<ConnectionCtx>);
-
-		boost::shared_ptr<HTTP::Env> getEnv();
+		HTTP::Env& getEnv();
 
 	private:
 
+		Mutex fsmMutex;
 		HTTP::FSM fsm;
+		HTTP::Env env;
 	};
 
 }

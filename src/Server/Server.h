@@ -19,7 +19,7 @@ namespace Musador
 {
 	using namespace Musador;
 
-	class Server
+	class Server : public boost::enable_shared_from_this<Server>
 	{
 	public:
 
@@ -30,7 +30,7 @@ namespace Musador
 		void start();
 
 		void acceptConnections(	boost::shared_ptr<Listener> listener, 
-								boost::shared_ptr<ConnectionCtx> ctx = boost::shared_ptr<ConnectionCtx>());
+								boost::any tag = NULL);
 
 		void waitForStart();
 

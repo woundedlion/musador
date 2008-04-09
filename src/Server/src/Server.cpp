@@ -55,12 +55,13 @@ Server::start()
 		ep.sin_addr.s_addr = ::inet_addr(iter->addr.c_str());
 		ep.sin_port = ::htons(iter->port);
 
-		boost::shared_ptr<HTTP::Env> env(new HTTP::Env());
-		env->cfg = &*iter;
-		env->controller = this->cfg.controller;
+		HTTP::Env env;
+		env.cfg = &*iter;
+		env.controller = this->cfg.controller;
+		env.server = this->shared_from_this();
 
 		boost::shared_ptr<Listener> listener(new HTTPListener(ep));
-		this->acceptConnections(listener, boost::static_pointer_cast<ConnectionCtx>(env));
+		this->acceptConnections(listener, env);
 	}
 
 	// We're officially started now
@@ -130,19 +131,13 @@ Server::restart()
 
 void 
 Server::acceptConnections(boost::shared_ptr<Listener> listener, 
-                          boost::shared_ptr<ConnectionCtx> ctx /* = boost::shared_ptr<ConnectionCtx> */)
+                          boost::any tag /* = NULL */)
 {
-	// Set up ctx
-	if (NULL == ctx)
-	{
-		ctx = boost::shared_ptr<ConnectionCtx>(new ConnectionCtx());
-	}
-	ctx->server = this;
 
 	this->listeners.push_back(listener);
 
 	// Do the async accept
-	listener->beginAccept(boost::bind(&Server::onAccept,this,_1,_2), ctx);
+	listener->beginAccept(boost::bind(&Server::onAccept,this,_1,_2), tag);
 }
 
 
@@ -159,11 +154,10 @@ Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 			msgAccept->listener->beginAccept(boost::bind(&Server::onAccept,this,_1,_2),tag);
 
 			// Set up the new connection
-			msgAccept->conn->setCtx(boost::any_cast<boost::shared_ptr<ConnectionCtx> >(tag));
 			this->addConnection(msgAccept->conn);
 
 			// Start the connection state machine
-			msgAccept->conn->accepted();
+			msgAccept->conn->accepted(tag);
 		}
 		break;
 	case IO_ERROR:

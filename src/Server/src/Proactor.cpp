@@ -5,6 +5,8 @@
 #include "SocketListener.h"
 #include "SocketConnection.h"
 
+#include <assert.h>
+
 #include "Logger/Logger.h"
 #define LOG_SENDER L"I/O"
 
@@ -54,7 +56,9 @@ void Proactor::runIO()
 					break;
 				}
 
-				boost::shared_ptr<CompletionCtx> ctx(ctxPtr);
+				// Look up completion context in internal job list
+				boost::shared_ptr<CompletionCtx> ctx = this->releaseJob(ctxPtr);
+
 				switch(ctx->msg->getType())
 				{
 					case IO_SOCKET_ACCEPT_COMPLETE:
@@ -81,9 +85,8 @@ void Proactor::runIO()
 				DWORD err = ::GetLastError();
 				if (WAIT_TIMEOUT != err)
 				{
-					// TODO: These can leak if they don't complete e.g. on shutdown
-					// Refcount the Completion Context again
-					std::auto_ptr<CompletionCtx> ctx(ctxPtr);
+					// Look up completion context in internal job list
+					boost::shared_ptr<CompletionCtx> ctx = this->releaseJob(ctxPtr);
 
 					DWORD flags = 0;
 	//				::WSAGetOverlappedResult(ctx->msg->conn->getSocket(),ctxPtr,&nBytes,FALSE,&flags);
@@ -168,7 +171,7 @@ Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
 		return;
 	}
 	msgAccept->conn = conn;
-	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
+	boost::shared_ptr<CompletionCtx> ctx(new CompletionCtx());
 	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
 	ctx->msg = msgAccept;
 	ctx->handler = handler;
@@ -176,6 +179,7 @@ Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
 
 	// Make the async accept request
 	DWORD nBytes = 0;
+	this->addJob(ctx.get(),ctx);
 	if ( !this->fnAcceptEx(	listener->getSocket(),
 							boost::static_pointer_cast<SocketConnection>(conn)->getSocket(), 
 							msgAccept->buf.get(), 
@@ -205,12 +209,10 @@ Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
 				ctx->handler(msgErr,ctx->tag);
 			}
 
+			this->releaseJob(ctx.get());
 			return;
 		}
 	}
-
-	// Accept will complete asynchronously
-	ctx.release();
 }
 
 void 
@@ -244,13 +246,14 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
 	boost::shared_ptr<PipeConnection> conn(boost::shared_static_cast<PipeConnection>(listener->createConnection()));
 	conn->setPipe(hPipe);
 	msgAccept->conn = conn;
-	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
+	boost::shared_ptr<CompletionCtx> ctx(new CompletionCtx());
 	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
 	ctx->msg = msgAccept;
 	ctx->handler = handler;
 	ctx->tag = tag;
 
 	// Make the async accept request
+	this->addJob(ctx.get(),ctx);
 	if (!::ConnectNamedPipe(hPipe,ctx.get()))
 	{
 		DWORD err = ::GetLastError();
@@ -267,12 +270,10 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
 				ctx->handler(msgErr,ctx->tag);
 			}
 
+			this->releaseJob(ctx.get());
 			return;
 		}
 	}
-
-	// Accept will complete asynchronously
-	ctx.release();
 }
 
 
@@ -337,7 +338,7 @@ Proactor::beginConnect(boost::shared_ptr<PipeConnection> conn,
 	
 	// Create completion context to send off into asynchronous land
 	msgConnect->conn = conn;
-	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
+	boost::shared_ptr<CompletionCtx> ctx(new CompletionCtx());
 	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
 	ctx->msg = msgConnect;
 	ctx->handler = handler;
@@ -371,8 +372,8 @@ Proactor::beginConnect(boost::shared_ptr<PipeConnection> conn,
 
 	// Connect will complete through completion port
 	conn->setPipe(p);
+	this->addJob(ctx.get(),ctx);
 	::PostQueuedCompletionStatus(this->iocp, 0, reinterpret_cast<ULONG_PTR>(p), ctx.get());	
-	ctx.release();
 }
 
 void
@@ -407,7 +408,7 @@ Proactor::beginRead(boost::shared_ptr<SocketConnection> conn,
 
 	// Create completion context to send off into asynchronous land
 	msgRead->conn = conn;
-	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
+	boost::shared_ptr<CompletionCtx> ctx(new CompletionCtx());
 	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
 	ctx->msg = msgRead;
 	ctx->handler = handler;
@@ -419,6 +420,7 @@ Proactor::beginRead(boost::shared_ptr<SocketConnection> conn,
 	WSABUF buf = {0};
 	buf.buf = msgRead->buf.get() + msgRead->len;
 	buf.len = msgRead->MAX - msgRead->len;
+	this->addJob(ctx.get(),ctx);
 	if ( 0 != ::WSARecv(conn->getSocket(),
 						&buf,
 						1,
@@ -444,12 +446,10 @@ Proactor::beginRead(boost::shared_ptr<SocketConnection> conn,
 				ctx->handler(msgErr,ctx->tag);
 			}
 
+			this->releaseJob(ctx.get());
 			return;
 		}
 	}
-
-	// Read will complete asynchronously
-	ctx.release();
 }
 
 
@@ -466,13 +466,14 @@ Proactor::beginRead(boost::shared_ptr<PipeConnection> conn,
 
 	// Create completion context to send off into asynchronous land
 	msgRead->conn = conn;
-	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
+	boost::shared_ptr<CompletionCtx> ctx(new CompletionCtx());
 	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
 	ctx->msg = msgRead;
 	ctx->handler = handler;
 	ctx->tag = tag;
 
 	DWORD nBytes = 0;
+	this->addJob(ctx.get(),ctx);
 	if (0 == ::ReadFile(conn->getPipe(), 
 						msgRead->buf.get() + msgRead->len, 
 						msgRead->MAX - msgRead->len, 
@@ -493,12 +494,10 @@ Proactor::beginRead(boost::shared_ptr<PipeConnection> conn,
 				ctx->handler(msgErr,ctx->tag);
 			}
 
+			this->releaseJob(ctx.get());
 			return;
 		}
 	}
-
-	// Read will complete asynchronously
-	ctx.release();
 }
 
 void 
@@ -539,7 +538,7 @@ Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn,
 {
 	// Create completion context to send off into asynchronous land
 	msgWrite->conn = conn;
-	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
+	boost::shared_ptr<CompletionCtx> ctx(new CompletionCtx());
 	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
 	ctx->msg = msgWrite;
 	ctx->handler = handler;
@@ -550,6 +549,7 @@ Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn,
 	WSABUF buf = {0};
 	buf.buf = msgWrite->buf.get() + msgWrite->off;
 	buf.len = msgWrite->len - msgWrite->off;
+	this->addJob(ctx.get(),ctx);
 	if ( 0 != ::WSASend(conn->getSocket(),
 						&buf,
 						1,
@@ -575,12 +575,10 @@ Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn,
 				ctx->handler(msgErr,ctx->tag);
 			}
 
+			this->releaseJob(ctx.get());
 			return;
 		}
 	}
-
-	// Write will complete asynchronously
-	ctx.release();
 }
 
 void 
@@ -591,7 +589,7 @@ Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn,
 {
 	// Create completion context to send off into asynchronous land
 	msgWrite->conn = conn;
-	std::auto_ptr<CompletionCtx> ctx(new CompletionCtx());
+	boost::shared_ptr<CompletionCtx> ctx(new CompletionCtx());
 	::memset(ctx.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
 	ctx->msg = msgWrite;
 	ctx->handler = handler;
@@ -599,6 +597,7 @@ Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn,
 
 	// Make the async write request
 	DWORD nBytes = 0;
+	this->addJob(ctx.get(),ctx);
 	if (0 == ::WriteFile(conn->getPipe(), 
 						  msgWrite->buf.get() + msgWrite->off, 
 						  msgWrite->len - msgWrite->off, 
@@ -619,12 +618,10 @@ Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn,
 				ctx->handler(msgErr,ctx->tag);
 			}
 
+			this->releaseJob(ctx.get());
 			return;
 		}
 	}
-
-	// Write will complete asynchronously
-	ctx.release();
 }
 
 void 
@@ -674,3 +671,21 @@ Proactor::stop()
 }
 
 #endif
+
+void
+Proactor::addJob(CompletionCtx * key, boost::shared_ptr<CompletionCtx> job)
+{
+	Guard lock(this->jobsMutex);
+	this->jobs[key] = job;
+}
+
+boost::shared_ptr<CompletionCtx>
+Proactor::releaseJob(CompletionCtx * key)
+{
+	Guard lock(this->jobsMutex);
+	JobCollection::iterator iter = this->jobs.find(key);
+	assert(iter != this->jobs.end());
+	boost::shared_ptr<CompletionCtx> job = iter->second;
+	this->jobs.erase(iter);
+	return job;
+}

@@ -31,8 +31,13 @@ HTTPConnection::~HTTPConnection()
 }
 
 void 
-HTTPConnection::accepted()
+HTTPConnection::accepted(boost::any tag /*= NULL*/)
 {
+	this->env = boost::any_cast<HTTP::Env>(tag);
+	this->env.req = &this->fsm.req;
+	this->env.res = &this->fsm.res;
+
+	Guard lock(this->fsmMutex);
 	this->fsm.process_event(HTTP::EvtOpen());
 }
 
@@ -44,12 +49,15 @@ HTTPConnection::onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*= 
 	case IO_READ_COMPLETE:
 		{
 			boost::shared_ptr<IOMsgReadComplete> & msgRead = boost::shared_static_cast<IOMsgReadComplete>(msg);
+			Guard lock(this->fsmMutex);
 			this->fsm.process_event(HTTP::EvtReadComplete(msgRead));
 		}
 		break;
 
 	case IO_ERROR:
-		this->ctx->server->onError(boost::shared_static_cast<IOMsgError>(msg));
+		{
+			this->env.server->onError(boost::shared_static_cast<IOMsgError>(msg));
+		}
 		break;
 	}
 }
@@ -62,30 +70,23 @@ HTTPConnection::onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*=
 	case IO_WRITE_COMPLETE:
 		{
 			boost::shared_ptr<IOMsgWriteComplete> & msgWrite = boost::shared_static_cast<IOMsgWriteComplete>(msg);
+			Guard lock(this->fsmMutex);
 			this->fsm.process_event(HTTP::EvtWriteComplete(msgWrite));
 		}
 		break;
 	case IO_ERROR:
-		this->ctx->server->onError(boost::shared_static_cast<IOMsgError>(msg));
+		{
+			this->env.server->onError(boost::shared_static_cast<IOMsgError>(msg));
+		}
 		break;
 	}
 }
 
-void
-HTTPConnection::setCtx(boost::shared_ptr<ConnectionCtx> ctx)
-{
-	// Clone the context so we can add per-connection stuff (default is shared ctx)
-	HTTP::Env * env = new HTTP::Env(*(boost::static_pointer_cast<HTTP::Env>(ctx)));
-	this->ctx.reset(env);
-	env->req = &this->fsm.req;
-	env->res = &this->fsm.res;
-}
-
 inline
-boost::shared_ptr<HTTP::Env>
+HTTP::Env&
 HTTPConnection::getEnv()
 {
-	return boost::static_pointer_cast<HTTP::Env>(this->ctx);
+	return this->env;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +124,7 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 	{	
 		Request& req = outermost_context().req;
 		Response& res = outermost_context().res;
-		Env& env = *(outermost_context().conn.getEnv());
+		Env& env = outermost_context().conn.getEnv();
 
 		// Fill the request object
 		req.method = matches[1];
@@ -267,7 +268,7 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
 {
 	Request& req = outermost_context().req;
 	Response& res = outermost_context().res;
-	Env& env = *(outermost_context().conn.getEnv());
+	Env& env = outermost_context().conn.getEnv();
 
 	// If the request exists in the file system, serve that
 	fs::wpath fname(env.cfg->documentRoot);

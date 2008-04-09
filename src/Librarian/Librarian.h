@@ -46,7 +46,7 @@ namespace Musador
 		void notifyGUI();
 
 		boost::shared_ptr<GUIConnection> gui;
-		std::auto_ptr<Server> server;
+		boost::shared_ptr<Server> server;
 		LibrarianController controller;
 
 	};

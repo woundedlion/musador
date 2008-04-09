@@ -15,7 +15,7 @@ namespace Musador
 
 		GUIConnection();
 
-		void accepted() { this->beginRead(); }
+		void accepted(boost::any tag = NULL) { this->beginRead(); }
 
 		void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 

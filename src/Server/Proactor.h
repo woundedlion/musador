@@ -29,6 +29,7 @@ namespace Musador
 	class PipeListener;
 	class PipeConnection;
 	class CompletionCtx;
+	class Job;
 
 	//////////////////////////////////////////////////////////////////////////
 	/// Proactor 
@@ -44,9 +45,7 @@ namespace Musador
 		~Proactor();
 
 		// Socket I/O
-		void beginAccept(boost::shared_ptr<SocketListener> listener, 
-						 EventHandler handler, 
-						 boost::any tag = NULL);
+		void beginAccept(boost::shared_ptr<SocketListener> listener, EventHandler handler, boost::any tag = NULL);
 
 		void beginRead(boost::shared_ptr<SocketConnection> conn, 
 					   EventHandler handler, 
@@ -103,7 +102,15 @@ namespace Musador
 
 	private:
 
+		typedef std::map<CompletionCtx *, boost::shared_ptr<CompletionCtx> > JobCollection;
+
 		void runIO();
+	
+		void addJob(CompletionCtx * key, boost::shared_ptr<CompletionCtx> job);
+		boost::shared_ptr<CompletionCtx> releaseJob(CompletionCtx * key);
+
+		Mutex jobsMutex;
+		JobCollection jobs;
 
 		bool doRecycle;
 		bool doShutdown;
