@@ -34,11 +34,14 @@ public:
 
 	void setUp() 
 	{
-            Logger::instance()->setLevel(Debug);
+		Logger::instance()->setLevel(Debug);
+		Proactor::instance()->start();
 	}
 
 	void tearDown()
 	{
+		Proactor::instance()->stop();
+		Proactor::instance()->destroy();
 	}
 
 

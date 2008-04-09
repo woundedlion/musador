@@ -156,6 +156,7 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 			}
 		}
 
+		// TODO: Cleanup/expire sessions
 		// Set up Session
 		std::string sessionName = Util::unicodeToUtf8(env.cfg->realm);
 		if (sessionName.empty())
