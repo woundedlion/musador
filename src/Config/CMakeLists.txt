@@ -7,6 +7,7 @@ FILE(GLOB hdrs *.h)
 SET(libs
 		Boost.Serialization
 		Boost.Filesystem		
+		Server
 )
 
 ADD_LIBRARY(${PROJECT_NAME} ${hdrs} ${srcs})

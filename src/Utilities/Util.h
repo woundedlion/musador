@@ -38,8 +38,6 @@ namespace Util
 
 	char hexToChar(const std::string& hex);
 
-	void base64Encode(std::string& raw);
-
 	bool parseNameValuePair(const std::string& pairString, char delim, std::pair<std::string,std::string>& resultPair);
 
 	void replaceChar(std::string& str, char from, char to);

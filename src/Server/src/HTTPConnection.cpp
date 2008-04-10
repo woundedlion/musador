@@ -184,6 +184,7 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 				}
 				res.headers["WWW-Authenticate"] = "Digest realm=\"" + sessionName + "\" , qop=\"auth\" , nonce=\"" + 
 					env.session->get<std::string>("nonce") + "\" , opaque=\"" + env.session->get<std::string>("opaque") + "\"\r\n";
+//				res.headers["WWW-Authenticate"] = "Basic realm=\"" + sessionName + "\" ";
 				res.status = 401;
 				res.reason = "Unauthorized";
 				return transit<StateReqError>();

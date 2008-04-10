@@ -183,51 +183,6 @@ void Util::tokenize(const std::string& str,
 	}
 }
 
-void Util::base64Encode(std::string& raw) {
-	static const char szCS[]=
-		"=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-	int iDigits[4] = {0,0,0,0};
-
-	std::string enc;
-	size_t cbSize = raw.length();
-	unsigned int i2, i3;
-	for(i2=0; i2 < cbSize; i2 += 3)
-	{
-		iDigits[0] = (((BYTE)raw[i2]) >> 2) & 0x3f;
-		iDigits[1] = (((BYTE)raw[i2]) & 0x03) << 4;
-
-		if((i2 + 1) >= cbSize)
-		{
-			iDigits[2] = -1;
-			iDigits[3] = -1;
-		}
-		else
-		{
-			iDigits[1] |= (((BYTE)raw[i2 + 1]) & 0xf0) >> 4;
-			iDigits[2] = (((BYTE)raw[i2 + 1]) & 0x0f) << 2;
-		}
-
-		if((i2 + 2) >= cbSize)
-		{
-			iDigits[3] = -1;
-		}
-		else
-		{
-			iDigits[2] |= (((BYTE)raw[i2 + 2]) & 0xc0) >> 6;
-			iDigits[3] = ((BYTE)raw[i2 + 2]) & 0x3f;
-		}
-
-		// now add them to the std::string
-
-		for(i3=0; i3 < 4; i3++)
-		{
-			enc += szCS[iDigits[i3] + 1];
-		}
-	}
-
-	raw = enc;
-}
-
 int Util::hexToDec(char digit) {
 	int n;
 	switch (digit) {

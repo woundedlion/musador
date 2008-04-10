@@ -1,5 +1,6 @@
 #include "Utilities/Util.h"
 #include "HTTP.h"
+#include "Config/Config.h"
 #include "Utilities/md5.h"
 
 using namespace Musador;
@@ -173,14 +174,16 @@ HTTP::auth(const Env& env)
 	else if (authString.substr(0,6) == "Basic ") 
 	{ // Check auth in headers
 		std::string authInfo = authString.substr(6);
-		// TODO: Handle multiple usernames
-		// Must base64Decode and parse username then call:
-		//if (!this->isValidUser(PARSED_USERNAME)
-		//	return false;
-		//string challenge = PARSED_USERNAME + ":" + this->getPassword(PARSED_USERNAME);
-		std::string challenge = std::string("gabe") + ":" + "gblgbl";
-		Util::base64Encode(challenge);
-		return (authInfo == challenge);
+		std::string username = Util::base64Decode(authInfo);
+		username.erase(username.find_first_of(':'));
+		UserCollection::const_iterator iter = env.cfg->users.find(username);
+		if (iter == env.cfg->users.end())
+		{
+			return false;
+		}
+		const User& u = iter->second;
+		std::string challenge = u.getUsername() + ":" + u.getPassword();
+		return (authInfo == Util::base64Encode(challenge));
 	}
 	// Handle Digest HTTP Authentication
 	else if (authString.substr(0,7) == "Digest ") 
@@ -229,15 +232,16 @@ HTTP::auth(const Env& env)
 		// check nc
 
 		// check username
-//		if (!this->isValidUser(authInfo["username"]))
-//		{
-//			return false;
-//		}
+		UserCollection::const_iterator iter = env.cfg->users.find(authInfo["username"]);
+		if (iter == env.cfg->users.end())
+		{
+			return false;
+		}
+		const User& u = iter->second;
 
 		// check response
 		std::string& response = authInfo["response"];
-//		challenge = HTTP::genDigestResponse(authInfo, env.req->method, this->getPassword(authInfo["username"]));
-		challenge = HTTP::genDigestResponse(authInfo, env.req->method, "gblgbl");
+		challenge = HTTP::genDigestResponse(authInfo, env.req->method, u.getPassword());
 		if (authInfo["response"] != challenge)
 		{
 			return false;
@@ -388,4 +392,42 @@ HTTP::parseCookie(const std::string& cookieStr,CookieCollection& cookies)
 		Util::parseNameValuePair(*c,'=',pair);
 		cookies[pair.first] = pair.second;
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// User
+///////////////////////////////////////////////////////////////////////////////////////////
+HTTP::User::User()
+{
+
+}
+
+HTTP::User::User(const std::string& username) :
+username(username)
+{
+
+}
+
+std::string
+HTTP::User::getUsername() const
+{
+	return this->username;
+}
+
+void
+HTTP::User::setUsername(std::string& username)
+{
+	this->username = username;
+}
+						
+std::string
+HTTP::User::getPassword() const
+{
+	return this->password;
+}
+
+void
+HTTP::User::setPassword(const std::string& password)
+{
+	this->password = password;
 }

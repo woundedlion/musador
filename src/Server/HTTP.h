@@ -7,11 +7,12 @@
 
 #include "Connection.h"
 #include "Utilities/Util.h"
+#include "Utilities/Base64.h"
 #include "Utilities/MTRand.h"
 #include "boost/shared_ptr.hpp"
 #include "boost/thread/mutex.hpp"
+#include "boost/serialization/nvp.hpp"
 #include "Session.h"
-#include "Config/Config.h"
 
 typedef boost::mutex Mutex;
 typedef boost::mutex::scoped_lock Guard;
@@ -26,6 +27,8 @@ typedef boost::mutex::scoped_lock Guard;
 
 namespace Musador
 {
+	class HTTPConfig;
+	class Controller;
 
 	namespace HTTP
 	{
@@ -37,13 +40,24 @@ namespace Musador
 		{
 		public:
 
+			User();
+
 			User(const std::string& username);
 
-			~User();
+			std::string getUsername() const;
+			
+			void setUsername(std::string& username);
+
+			std::string getPassword() const;
 
 			void setPassword(const std::string& password);
 
-			void authorize(const std::string& password);
+			template<class Archive>
+			void serialize(Archive & ar, const unsigned int version)
+			{
+				ar & BOOST_SERIALIZATION_NVP(username);
+				ar & BOOST_SERIALIZATION_NVP(password);
+			}
 
 		private:
 
@@ -52,7 +66,7 @@ namespace Musador
 
 		};
 
-	
+		typedef std::map<std::string,User> UserCollection;	
 		typedef std::map<std::string,std::string> HeaderCollection;
 		typedef std::map<std::string,std::string> ParamCollection;
 		typedef std::map<std::string,std::string> CookieCollection;	
