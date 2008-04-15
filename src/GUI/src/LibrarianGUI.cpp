@@ -63,6 +63,11 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			this->notifyService<GUIMsgDisableReq>();
 			break;
 		case ENABLE:
+                        {
+                            LibrarianService l;
+                            l.launch();
+                            this->service->beginConnect();
+                        }
 			break;
 		case EXIT:
 			::PostQuitMessage(0);

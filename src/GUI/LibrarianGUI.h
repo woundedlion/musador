@@ -8,6 +8,7 @@
 #include "Utilities/MessageSink.h"
 #include "Utilities/WindowsShellIcon.h"
 #include "Utilities/WinMenu.h"
+#include "Utilities/WindowsService.h"
 
 #include "Protocol/GUIConnection.h"
 
@@ -16,6 +17,17 @@
 namespace Musador
 {
 	class GUIMsg;
+        
+        class LibrarianService : public WindowsService<LibrarianService>
+        {
+            friend class WindowsService<LibrarianService>;
+        public:
+
+            LibrarianService() : 
+              WindowsService(L"Musador Librarian") {}
+
+            int run(unsigned long argc, LPTSTR argv[]) { return 0; }
+        };
 
 	class LibrarianGUI : public WinApp
 	{

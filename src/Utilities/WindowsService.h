@@ -235,7 +235,42 @@ void WindowsService<T>::stop()
 template <class T>
 void WindowsService<T>::launch()
 {
-	// Start the Service through the SCM
+        if (NULL == this->hSvc)
+        {
+            SC_HANDLE schSCManager;
+            TCHAR szPath[MAX_PATH];
+
+            if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
+            {
+                throw ServiceException() << "Cannot launch service: " << ::GetLastError();
+            }
+
+            // Get a handle to the SCM database.  
+            schSCManager = ::OpenSCManager( 
+                NULL,                    // local computer
+                NULL,                    // ServicesActive database 
+                SC_MANAGER_ALL_ACCESS);  // full access rights 
+
+            if (NULL == schSCManager) 
+            {
+                throw ServiceException() << "OpenSCManager failed: " << ::GetLastError();
+            }
+
+            // Open the service
+            this->hSvc = ::OpenService( 
+                schSCManager,           // SCM database 
+                this->svcName.c_str(),  // name of service 
+                SERVICE_START );	// access
+
+            if (this->hSvc == NULL) 
+            {
+                ::CloseServiceHandle(schSCManager);
+                throw ServiceException() << "The specified service is not installed. (" << ::GetLastError() << ")";
+            }
+
+        }
+
+        // Start the Service through the SCM
 	if (0 == ::StartService(this->hSvc, 0, NULL))
 	{
 		throw ServiceException() << "The service could not be started. (" << ::GetLastError() << ")";
