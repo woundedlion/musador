@@ -35,6 +35,8 @@ WindowsService(L"Musador Librarian")
 	}
 
 	cfg->server.controller = &this->controller;
+        
+        this->server.reset(new Server(cfg->server));
 
 	// Start 2 worker threads
 	Proactor::instance()->start(2);
@@ -53,13 +55,16 @@ Librarian::~Librarian()
 int 
 Librarian::run(unsigned long argc, wchar_t * argv[])
 {	
-	this->enable();
+	this->server->start();
 
 	boost::shared_ptr<GUIListener> GUIListener(new GUIListener());
 	GUIListener->beginAccept(boost::bind(&Librarian::onAcceptGUIConnection,this,_1,_2));
 
 	this->waitForStop(); // Wait until SCM or ctrl-c shuts us down
-	this->disable();
+
+        this->server->stop();
+        this->server->waitForStop();
+        this->notifyGUI<GUIMsgDisabledNotify>();        
 
 	return 0;
 }
@@ -102,30 +107,6 @@ Librarian::index(const std::wstring& outfile,const std::vector<std::wstring>& pa
 }
 
 void
-Librarian::enable()
-{
-	if (NULL == this->server.get())
-	{
-		this->server.reset(new Server(Config::instance()->server));
-		this->server->start();
-	}
-
-	this->notifyGUI<GUIMsgEnabledNotify>();        
-}
-
-void Librarian::disable()
-{
-	if (NULL != this->server.get())
-	{
-		this->server->stop();
-		server->waitForStop();
-		this->server.reset();
-	}
-    
-	this->notifyGUI<GUIMsgDisabledNotify>();        
-}
-
-void
 Librarian::onAcceptGUIConnection(boost::shared_ptr<IOMsg> msg, boost::any tag)
 {
     switch (msg->getType())
@@ -137,14 +118,7 @@ Librarian::onAcceptGUIConnection(boost::shared_ptr<IOMsg> msg, boost::any tag)
             this->gui = boost::shared_static_cast<GUIConnection>(msgAccept->conn);
 			this->gui->setHandler(boost::bind(&Librarian::onGUIMsg,this,_1));
 
-            if (NULL != this->server.get())
-            {
-                this->notifyGUI<GUIMsgEnabledNotify>();        
-            }
-            else
-            {
-                this->notifyGUI<GUIMsgDisabledNotify>();        
-            }
+            this->notifyGUI<GUIMsgEnabledNotify>();        
 
             // Keep listening for new connections
             msgAccept->listener->beginAccept(boost::bind(&Librarian::onAcceptGUIConnection,this,_1,_2));
@@ -167,12 +141,8 @@ Librarian::onGUIMsg(boost::shared_ptr<GUIMsg> msg)
 {
     switch (msg->getType())
     {
-	case GUI_MSG_ENABLE_REQ:
-		this->enable();
-		break;
-
 	case GUI_MSG_DISABLE_REQ:
-		this->disable();
+		this->stop();
 		break;
     }
 }

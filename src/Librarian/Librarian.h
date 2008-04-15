@@ -32,10 +32,6 @@ namespace Musador
 
 		void configDefaults(Config& cfg);
 
-		void enable();
-
-		void disable();
-
 		void onGUIMsg(boost::shared_ptr<GUIMsg> msg);
 
 	private:
