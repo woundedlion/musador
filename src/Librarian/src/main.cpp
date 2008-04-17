@@ -75,7 +75,7 @@ int _tmain(int argc, wchar_t * argv[])
 		} 
 		else
 		{
-			app->start();
+			app->serviceStart();
 			r = 0;
 		}
 

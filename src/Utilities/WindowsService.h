@@ -28,11 +28,11 @@ public:
 
 	void uninstall();
 
-	void start();
+	void serviceStart();
 
 	void stop();
 
-	void launch();
+	void start();
 
 	void terminate();
 
@@ -141,7 +141,7 @@ void WindowsService<T>::install()
 	// Start the service
 	try
 	{
-		this->launch();
+		this->start();
 	}
 	catch (const ServiceException& e)
 	{
@@ -211,7 +211,7 @@ void WindowsService<T>::uninstall()
 }
 
 template <class T>
-void WindowsService<T>::start()
+void WindowsService<T>::serviceStart()
 {
 		SERVICE_TABLE_ENTRY dispatchTable[] = 
 		{ 
@@ -233,44 +233,44 @@ void WindowsService<T>::stop()
 }
 
 template <class T>
-void WindowsService<T>::launch()
+void WindowsService<T>::start()
 {
-        if (NULL == this->hSvc)
-        {
-            SC_HANDLE schSCManager;
-            TCHAR szPath[MAX_PATH];
+	if (NULL == this->hSvc)
+	{
+		SC_HANDLE schSCManager;
+		TCHAR szPath[MAX_PATH];
 
-            if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
-            {
-                throw ServiceException() << "Cannot launch service: " << ::GetLastError();
-            }
+		if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
+		{
+			throw ServiceException() << "Cannot launch service: " << ::GetLastError();
+		}
 
-            // Get a handle to the SCM database.  
-            schSCManager = ::OpenSCManager( 
-                NULL,                    // local computer
-                NULL,                    // ServicesActive database 
-                SC_MANAGER_ALL_ACCESS);  // full access rights 
+		// Get a handle to the SCM database.  
+		schSCManager = ::OpenSCManager( 
+			NULL,                    // local computer
+			NULL,                    // ServicesActive database 
+			SC_MANAGER_ALL_ACCESS);  // full access rights 
 
-            if (NULL == schSCManager) 
-            {
-                throw ServiceException() << "OpenSCManager failed: " << ::GetLastError();
-            }
+		if (NULL == schSCManager) 
+		{
+			throw ServiceException() << "OpenSCManager failed: " << ::GetLastError();
+		}
 
-            // Open the service
-            this->hSvc = ::OpenService( 
-                schSCManager,           // SCM database 
-                this->svcName.c_str(),  // name of service 
-                SERVICE_START );	// access
+		// Open the service
+		this->hSvc = ::OpenService( 
+			schSCManager,           // SCM database 
+			this->svcName.c_str(),  // name of service 
+			SERVICE_START );	// access
 
-            if (this->hSvc == NULL) 
-            {
-                ::CloseServiceHandle(schSCManager);
-                throw ServiceException() << "The specified service is not installed. (" << ::GetLastError() << ")";
-            }
+		if (this->hSvc == NULL) 
+		{
+			::CloseServiceHandle(schSCManager);
+			throw ServiceException() << "The specified service is not installed. (" << ::GetLastError() << ")";
+		}
 
-        }
+	}
 
-        // Start the Service through the SCM
+	// Start the Service through the SCM
 	if (0 == ::StartService(this->hSvc, 0, NULL))
 	{
 		throw ServiceException() << "The service could not be started. (" << ::GetLastError() << ")";

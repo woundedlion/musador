@@ -21,6 +21,7 @@ WindowsService(L"Musador Librarian")
 #endif
 
 	Network::instance();
+	MIMEResolver::instance();
 
 	// load config or generate defaults
 	std::wstring cfgPath = L"Librarian.xml";
@@ -50,6 +51,7 @@ Librarian::~Librarian()
 	Config::destroy();
 	Musador::Network::destroy();
 	Logger::destroy();
+	MIMEResolver::destroy();
 }
 
 int 
@@ -77,7 +79,7 @@ Librarian::configDefaults(Config& cfg)
 	site.addr = "0.0.0.0";
 	site.port = 5152;
 	site.documentRoot = L"html";
-	site.requireAuth = true;
+	site.requireAuth = false;
 	HTTP::User u("admin");
 	u.setPassword("password");
 	site.addUser(u);

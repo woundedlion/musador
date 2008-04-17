@@ -4,7 +4,7 @@
 #include "Protocol/GUIMessages.h"
 #include "Server/IOMessages.h"
 #include "Server/Proactor.h"
-
+#include "Utilities/TimerQueue.h"
 #include "LibrarianGUI.h"
 #include "res/resource.h"
 #include "Logger/Logger.h"
@@ -20,6 +20,7 @@ trayIcon(NULL),
 service(new GUIConnection())
 {
 	Proactor::instance()->start();
+	TimerQueue::instance()->start();
 
 	this->trayMenu.insertItem(0,ENABLE,L"Enable");
 	this->trayMenu.insertSep(1,EXIT_SEP);
@@ -30,6 +31,8 @@ LibrarianGUI::~LibrarianGUI()
 {
     Proactor::instance()->stop();
     Proactor::destroy();
+	TimerQueue::instance()->stop();
+	TimerQueue::destroy();
 }
 
 HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -60,14 +63,16 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		switch (LOWORD(wParam))
 		{
 		case DISABLE:
+			this->trayMenu.updateItem(DISABLE,DISABLE,L"Disable",false);
 			this->notifyService<GUIMsgDisableReq>();
 			break;
 		case ENABLE:
-                        {
-                            LibrarianService l;
-                            l.launch();
-                            this->service->beginConnect();
-                        }
+			{
+				this->trayMenu.updateItem(ENABLE,ENABLE,L"Enable",false);
+				LibrarianService l;
+				l.start();
+				this->service->beginConnect();
+			}
 			break;
 		case EXIT:
 			::PostQuitMessage(0);

@@ -28,6 +28,8 @@ namespace Musador
 	private:
 
 		GUIHandler handler;
+
+		int connRetries;
 	};
 
 }

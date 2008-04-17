@@ -1,6 +1,9 @@
 #include <cxxtest\TestSuite.h>
 
+#include <boost/bind.hpp>
+
 #include "Util.h"
+#include "Utilities/TimerQueue.h"
 #include "Logger/Logger.h"
 #define LOG_SENDER L"UtilTest"
 
@@ -40,5 +43,24 @@ public:
 
 	void tearDown()
 	{
+	}
+
+	int timerTicks;
+
+	void gotTimer()
+	{
+		LOG(Info) << "Got Timer";
+		++timerTicks;
+	}
+
+	void testTimerQueue()
+	{
+		TimerQueue::instance()->start();
+		this->timerTicks = 0;	
+		TimerQueue::instance()->createTimer(1000, boost::bind(&UtilTest::gotTimer,this),false,123);
+		::Sleep(4500);
+		TS_ASSERT(this->timerTicks == 4);
+		TimerQueue::instance()->stop();
+		TimerQueue::destroy();
 	}
 };

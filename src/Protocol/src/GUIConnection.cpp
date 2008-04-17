@@ -1,6 +1,7 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/serialization/shared_ptr.hpp>
-
+#include <boost/bind.hpp>
+#include "Utilities/TimerQueue.h"
 #include "GUIConnection.h"
 #include "GUIMessages.h"
 
@@ -10,7 +11,8 @@
 using namespace Musador;
 
 GUIConnection::GUIConnection() :
-PipeConnection(GUI_PIPE_NAME)
+PipeConnection(GUI_PIPE_NAME),
+connRetries(0)
 {
 }
 
@@ -48,9 +50,20 @@ GUIConnection::onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /* =
 } 
 
 void 
-GUIConnection::onConnectComplete(boost::shared_ptr<IOMsg>, boost::any tag /* = NULL */)
+GUIConnection::onConnectComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /* = NULL */)
 {
-	this->beginRead();
+	switch (msg->getType())
+	{
+	case IO_PIPE_CONNECT_COMPLETE:
+		this->beginRead();
+		break;
+	case IO_ERROR:
+		{
+			int retryDelay = min(5000, static_cast<int>(::pow((long double)2,connRetries) * 200));
+			TimerQueue::instance()->createTimer(retryDelay, boost::bind(&GUIConnection::beginConnect,this,NULL));
+		}
+		break;
+	}
 }
 
 void
