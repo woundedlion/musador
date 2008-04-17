@@ -55,11 +55,20 @@ GUIConnection::onConnectComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*
 	switch (msg->getType())
 	{
 	case IO_PIPE_CONNECT_COMPLETE:
+		this->connRetries = 0;
 		this->beginRead();
 		break;
 	case IO_ERROR:
 		{
-			int retryDelay = min(5000, static_cast<int>(::pow((long double)2,connRetries) * 200));
+			int retryDelay;
+			if (this->connRetries > 5)
+			{
+				retryDelay = 5000; 
+			}
+			else
+			{
+				retryDelay = static_cast<int>(::pow((long double)2,connRetries++) * 100);
+			}
 			TimerQueue::instance()->createTimer(retryDelay, boost::bind(&GUIConnection::beginConnect,this,NULL));
 		}
 		break;

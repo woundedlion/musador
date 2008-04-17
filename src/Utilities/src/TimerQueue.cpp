@@ -20,7 +20,7 @@ tag(tag)
 void
 Timer::cancel()
 {
-
+ // TODO: implement timer cancelation
 }
 
 TimerQueue::TimerQueue() :

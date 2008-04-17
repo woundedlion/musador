@@ -273,7 +273,10 @@ void WindowsService<T>::start()
 	// Start the Service through the SCM
 	if (0 == ::StartService(this->hSvc, 0, NULL))
 	{
-		throw ServiceException() << "The service could not be started. (" << ::GetLastError() << ")";
+		if (::GetLastError() != ERROR_SERVICE_ALREADY_RUNNING)
+		{
+			throw ServiceException() << "The service could not be started. (" << ::GetLastError() << ")";
+		}
 	}
 }
 
