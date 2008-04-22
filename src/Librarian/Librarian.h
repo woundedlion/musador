@@ -32,11 +32,11 @@ namespace Musador
 
 		void configDefaults(Config& cfg);
 
-		void onGUIMsg(boost::shared_ptr<GUIMsg> msg);
-
 	private:
 
-		void Librarian::onAcceptGUIConnection(boost::shared_ptr<IOMsg> msg, boost::any tag);
+		void Librarian::onGUIAccept(boost::shared_ptr<IOMsg> msg, boost::any tag);
+		void Librarian::onGUIConnect(boost::shared_ptr<IOMsg> msg, boost::any tag);
+		void onGUIMsg(boost::shared_ptr<GUIMsg> msg);
 
 		template <typename T>
 		void notifyGUI();

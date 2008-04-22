@@ -28,6 +28,8 @@ namespace Musador
 
 		virtual ~Connection() {};
 
+		virtual void beginConnect(EventHandler handler, boost::any tag = NULL) = 0;
+
 		virtual void beginRead(boost::any tag = NULL) = 0;
 		virtual void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead, 
                                        boost::any tag = NULL) = 0;
@@ -38,12 +40,11 @@ namespace Musador
 		virtual void beginWrite(std::istream& dataStream, boost::any tag = NULL) = 0;
 		virtual void beginWrite(const std::string& str, boost::any tag = NULL) = 0;
 
-		virtual void accepted(boost::any tag = NULL) = 0;
-
 		virtual void close() = 0;
 
 		virtual std::string toString() = 0;
 
+		virtual void onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;
 		virtual void onConnectComplete(boost::shared_ptr<IOMsg>, boost::any tag = NULL) = 0;		
 		virtual void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;
 		virtual void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;

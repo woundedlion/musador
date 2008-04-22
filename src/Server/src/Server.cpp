@@ -155,9 +155,6 @@ Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 
 			// Set up the new connection
 			this->addConnection(msgAccept->conn);
-
-			// Start the connection state machine
-			msgAccept->conn->accepted(tag);
 		}
 		break;
 	case IO_ERROR:

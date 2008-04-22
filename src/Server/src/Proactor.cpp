@@ -311,21 +311,27 @@ Proactor::completeSocketAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned lo
 	{
 		ctx->handler(msgAccept,ctx->tag);
 	}
+
+	// notify the connection
+	msgAccept->conn->onAcceptComplete(msgAccept, ctx->tag);
 }
 
 void 
 Proactor::completePipeAccept(boost::shared_ptr<CompletionCtx> ctx)
 {
 	PipeConnection& conn = static_cast<PipeConnection&>(*ctx->msg->conn);
-
 	LOG(Debug) << "Accept completed: " << conn.toString();
+
+	boost::shared_ptr<IOMsgPipeAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgPipeAcceptComplete>(ctx->msg));
 
 	// notify the handler
 	if (NULL != ctx->handler)
-	{
-		boost::shared_ptr<IOMsgPipeAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgPipeAcceptComplete>(ctx->msg));
+	{		
 		ctx->handler(msgAccept,ctx->tag);
 	}
+
+	// notify the connection
+	msgAccept->conn->onAcceptComplete(msgAccept, ctx->tag);
 }
 
 void
@@ -381,18 +387,21 @@ Proactor::completePipeConnect(boost::shared_ptr<CompletionCtx> ctx)
 {
 
 	PipeConnection& conn = static_cast<PipeConnection&>(*ctx->msg->conn);
-
 	LOG(Debug) << "Connect completed: " << conn.toString();
 
 	// Associate the socket with the IO completion port
 	::CreateIoCompletionPort(conn.getPipe(), this->iocp, reinterpret_cast<ULONG_PTR>(conn.getPipe()), NULL);
 
+	boost::shared_ptr<IOMsgPipeConnectComplete> msgConnect(boost::shared_static_cast<IOMsgPipeConnectComplete>(ctx->msg));
+
 	// notify the handler
 	if (NULL != ctx->handler)
 	{
-		boost::shared_ptr<IOMsgPipeAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgPipeAcceptComplete>(ctx->msg));
-		ctx->handler(msgAccept,ctx->tag);
+		ctx->handler(msgConnect, ctx->tag);
 	}
+
+	// notify the connection
+	msgConnect->conn->onConnectComplete(msgConnect, ctx->tag);
 }
 
 void 

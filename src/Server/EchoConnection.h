@@ -10,9 +10,15 @@ namespace Musador
 
 	public:
 
-		void accepted(boost::any tag = NULL) { this->beginRead(); }
+		void onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) 
+		{ 
+			this->beginRead(); 
+		}
 		
-		void onConnectComplete(boost::shared_ptr<IOMsg>, boost::any tag = NULL) {}
+		void onConnectComplete(boost::shared_ptr<IOMsg>, boost::any tag = NULL) 
+		{
+
+		}
 
 		void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) 
 		{ 

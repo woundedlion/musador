@@ -30,9 +30,9 @@ PipeConnection::close()
 }
 
 void
-PipeConnection::beginConnect(boost::any tag /*= NULL*/)
+PipeConnection::beginConnect(EventHandler handler, boost::any tag /*= NULL*/)
 {
-	Proactor::instance()->beginConnect(this->shared_from_this(), boost::bind(&Connection::onConnectComplete,this,_1,_2), this->getName(), tag);
+	Proactor::instance()->beginConnect(this->shared_from_this(), handler, this->getName(), tag);
 }
 
 void 

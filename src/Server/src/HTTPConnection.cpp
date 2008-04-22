@@ -31,7 +31,7 @@ HTTPConnection::~HTTPConnection()
 }
 
 void 
-HTTPConnection::accepted(boost::any tag /*= NULL*/)
+HTTPConnection::onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*= NULL*/)
 {
 	this->env = boost::any_cast<HTTP::Env>(tag);
 	this->env.req = &this->fsm.req;

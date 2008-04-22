@@ -174,7 +174,7 @@ namespace Musador
 
 		~HTTPConnection();
 
-		void accepted(boost::any tag = NULL);
+		void onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 
 		void onConnectComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) {}
 

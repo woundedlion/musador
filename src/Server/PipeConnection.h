@@ -17,7 +17,7 @@ namespace Musador
 
 		void close();
 
-		void beginConnect(boost::any tag = NULL);
+		void beginConnect(EventHandler handler, boost::any tag = NULL);
 
 		void beginRead(boost::any tag = NULL);
 		void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead, boost::any tag = NULL);
