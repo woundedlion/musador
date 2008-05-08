@@ -2,7 +2,7 @@
 #define WINDOWS_SHELL_ICON_H_2103FF09_F0C1_42d8_9B39_EEDC1EB6878E
 
 #include <string>
-#include <WinSock2.h>
+#include <windows.h>
 #include <shellapi.h>
 #include <tchar.h>
 

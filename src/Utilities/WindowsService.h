@@ -1,8 +1,6 @@
 #ifndef WINDOWSERVICE_07837928_36A9_4351_ABA1_2A355EE4825D
 #define WINDOWSERVICE_07837928_36A9_4351_ABA1_2A355EE4825D
 
-
-#include <winsock2.h>
 #include <windows.h>
 #include <tchar.h>
 #include "Singleton.h"
@@ -76,6 +74,9 @@ public:
 	~ServiceException() {}
 
 };
+
+struct ServiceAlreadyStartedException : public ServiceException
+{};
 
 template <class T>
 WindowsService<T>::WindowsService(const tstring& svcName) :
@@ -273,7 +274,11 @@ void WindowsService<T>::start()
 	// Start the Service through the SCM
 	if (0 == ::StartService(this->hSvc, 0, NULL))
 	{
-		if (::GetLastError() != ERROR_SERVICE_ALREADY_RUNNING)
+		if (::GetLastError() == ERROR_SERVICE_ALREADY_RUNNING)
+		{
+			throw ServiceAlreadyStartedException();
+		}
+		else
 		{
 			throw ServiceException() << "The service could not be started. (" << ::GetLastError() << ")";
 		}

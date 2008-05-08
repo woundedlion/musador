@@ -1,7 +1,6 @@
 #ifndef WINMENU_H_986987979879879
 #define WINMENU_H_986987979879879
 
-#include <winsock2.h>
 #include <windows.h>
 #include <string>
 

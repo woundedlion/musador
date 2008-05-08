@@ -373,6 +373,7 @@ Proactor::beginConnect(boost::shared_ptr<PipeConnection> conn,
 			msgErr->err = err;
 			ctx->handler(msgErr,ctx->tag);
 		}
+
 		return;
 	}
 

@@ -5,9 +5,9 @@
 #include <vector>
 #ifdef WIN32
 #include "winsock2.h"
-	#include <rpc.h>
-	#pragma comment(lib,"Rpcrt4.lib")
-	#pragma comment(lib,"ws2_32.lib")
+#include <rpc.h>
+#pragma comment(lib,"Rpcrt4.lib")
+#pragma comment(lib,"ws2_32.lib")
 #endif
 
 namespace Util

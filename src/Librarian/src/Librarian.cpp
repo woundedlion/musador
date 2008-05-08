@@ -59,14 +59,11 @@ Librarian::run(unsigned long argc, wchar_t * argv[])
 {	
 	this->server->start();
 
-	// Try to connect to an existing GUI
-	this->gui.reset(new GUIConnection());
-	this->gui->setHandler(boost::bind(&Librarian::onGUIMsg,this,_1));
-	this->gui->beginConnect(boost::bind(&Librarian::onGUIConnect,this, _1, _2));
-
 	// Start listening for incoming gui connections
 	boost::shared_ptr<GUIListener> listener(new GUIListener());
 	listener->beginAccept(boost::bind(&Librarian::onGUIAccept,this,_1,_2));
+
+	// Signal waiting clients
 
 	this->waitForStop(); // Wait until SCM or ctrl-c shuts us down
 
@@ -142,22 +139,6 @@ Librarian::onGUIAccept(boost::shared_ptr<IOMsg> msg, boost::any /*tag = NULL*/)
         }
         break;
     }
-}
-
-void
-Librarian::onGUIConnect(boost::shared_ptr<IOMsg> msg, boost::any tag /* = NULL*/)
-{
-	switch (msg->getType())
-	{
-	case IO_PIPE_CONNECT_COMPLETE:
-		this->notifyGUI<GUIMsgEnabledNotify>();        
-		this->gui->beginRead();
-		break;
-	case IO_ERROR:
-		{
-		}
-		break;
-	}
 }
 
 void

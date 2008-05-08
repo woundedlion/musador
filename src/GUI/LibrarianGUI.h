@@ -51,7 +51,6 @@ namespace Musador
 
 		void onRunning();
 
-		void onServiceAccept(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 		void onServiceConnect(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 		void onServiceMsg(boost::shared_ptr<GUIMsg> msg);
 

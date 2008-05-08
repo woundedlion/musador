@@ -35,7 +35,6 @@ namespace Musador
 	private:
 
 		void Librarian::onGUIAccept(boost::shared_ptr<IOMsg> msg, boost::any tag);
-		void Librarian::onGUIConnect(boost::shared_ptr<IOMsg> msg, boost::any tag);
 		void onGUIMsg(boost::shared_ptr<GUIMsg> msg);
 
 		template <typename T>

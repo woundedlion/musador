@@ -69,9 +69,15 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
 				this->trayMenu.updateItem(ENABLE,ENABLE,L"Enable",false);
 				LibrarianService l;
-				l.start();
-
-				this->service->beginConnect(boost::bind(&LibrarianGUI::onServiceConnect,this, _1, _2));
+				try
+				{
+					l.start();
+				}
+				catch (const ServiceAlreadyStartedException&)
+				{
+					this->service->beginConnect(boost::bind(&LibrarianGUI::onServiceConnect,this, _1, _2));
+					break;
+				}
 			}
 			break;
 		case EXIT:
@@ -108,25 +114,6 @@ LibrarianGUI::onTrayMenu()
 }
 
 void
-LibrarianGUI::onServiceAccept(boost::shared_ptr<IOMsg> msg, boost::any tag /*= NULL*/)
-{
-	switch (msg->getType())
-	{
-	case IO_PIPE_ACCEPT_COMPLETE:
-		{
-			boost::shared_ptr<IOMsgPipeAcceptComplete>& msgAccept = boost::shared_static_cast<IOMsgPipeAcceptComplete>(msg);
-
-			this->service = boost::shared_static_cast<GUIConnection>(msgAccept->conn);
-			this->service->setHandler(boost::bind(&LibrarianGUI::onServiceMsg, this, _1));
-			this->service->beginRead();
-		}
-		break;
-	case IO_ERROR:
-		break;
-	}
-}
-
-void
 LibrarianGUI::onServiceConnect(boost::shared_ptr<IOMsg> msg, boost::any tag /* = NULL*/)
 {
 	switch (msg->getType())
@@ -135,11 +122,6 @@ LibrarianGUI::onServiceConnect(boost::shared_ptr<IOMsg> msg, boost::any tag /* =
 		this->service->beginRead();
 		break;
 	case IO_ERROR:
-		{
-			// Start listening for incoming service connections
-			boost::shared_ptr<GUIListener> listener(new GUIListener());
-			listener->beginAccept(boost::bind(&LibrarianGUI::onServiceAccept,this,_1,_2));
-		}
 		break;
 	}
 }

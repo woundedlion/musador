@@ -2,6 +2,10 @@
 #include <locale>
 #include <sstream>
 
+#ifdef WIN32
+#include <objbase.h>
+#endif
+
 #include <boost/thread/tss.hpp>
 #define BOOST_UTF8_BEGIN_NAMESPACE namespace boost {
 #define BOOST_UTF8_DECL

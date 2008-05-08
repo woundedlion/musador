@@ -8,6 +8,7 @@ SET(libs
 	Boost.Thread
 	Boost.Regex
 	Boost.Filesystem
+	Boost.System
 	Utilities
 	Logger
 	Network
@@ -15,7 +16,7 @@ SET(libs
 
 ADD_LIBRARY(${PROJECT_NAME} ${hdrs} ${srcs})
 
-ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
+ADD_DEFINITIONS(-DUNICODE -D_UNICODE -DBOOST_REGEX_MATCH_EXTRA)
 ADD_DEPENDENCIES(${PROJECT_NAME} ${libs})
 
 cxxTestLink(${libs})

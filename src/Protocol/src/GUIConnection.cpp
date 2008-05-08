@@ -39,6 +39,8 @@ GUIConnection::onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /* = 
 		this->beginRead();
 		break;
 	case IO_ERROR:
+
+		// TODO: start listening for the Service connection to come back
 		break;
 	}
 }

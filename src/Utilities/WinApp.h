@@ -1,7 +1,6 @@
 #ifndef WINAPP_H_986987979879879
 #define WINAPP_H_986987979879879
 
-#include <winsock2.h>
 #include <windows.h>
 #include <string>
 #include "boost/thread.hpp"
