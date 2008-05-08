@@ -22,4 +22,4 @@ ADD_LIBRARY(Boost.Serialization ${serialization_srcs})
 FILE (GLOB system_srcs boost/system/*.hpp libs/system/src/*.cpp )
 ADD_LIBRARY(Boost.System ${system_srcs})
 
-ADD_DEFINITIONS(-DBOOST_THREAD_BUILD_LIB)
+ADD_DEFINITIONS(-DBOOST_THREAD_BUILD_LIB -DBOOST_REGEX_MATCH_EXTRA)
