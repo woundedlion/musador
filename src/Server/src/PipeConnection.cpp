@@ -6,16 +6,36 @@
 #include "Logger/Logger.h"
 #define LOG_SENDER L"I/O"
 using namespace Musador;
+namespace ipc = boost::interprocess;
+
+#pragma warning(push)
+#pragma warning(disable: 4355)
 
 PipeConnection::PipeConnection(const std::wstring& name) :
 name(name),
 pipe(NULL)
 {
+	// Set up shared mem
+	ipc::named_mutex::remove((this->friendlyName() + "Mutex").c_str());
+	ipc::named_condition::remove((this->friendlyName() + "Cond").c_str());
+	ipc::shared_memory_object::remove((this->friendlyName() + "Listening").c_str());
+	this->listeningMutex.reset(new ipc::named_mutex(ipc::open_or_create, (this->friendlyName() + "Mutex").c_str()));
+	this->listeningCond.reset(new ipc::named_condition(ipc::open_or_create, (this->friendlyName() + "Cond").c_str()));
+	this->listening.reset(new ipc::shared_memory_object(ipc::open_or_create, (this->friendlyName() + "Listening").c_str(), ipc::read_write));
+	ipc::scoped_lock<ipc::named_mutex> lock(*this->listeningMutex);
+	this->listening->truncate(1);
 }
+
+#pragma warning(pop)
 
 PipeConnection::~PipeConnection()
 {
 	this->close();
+
+	// Cleanup shared mem
+	ipc::named_mutex::remove((this->friendlyName() + "Mutex").c_str());
+	ipc::named_condition::remove((this->friendlyName() + "Cond").c_str());
+	ipc::shared_memory_object::remove((this->friendlyName() + "Listening").c_str());
 }
 
 void 
@@ -30,9 +50,47 @@ PipeConnection::close()
 }
 
 void
-PipeConnection::beginConnect(EventHandler handler, boost::any tag /*= NULL*/)
+PipeConnection::beginConnect(boost::any tag /*= NULL*/)
 {
-	Proactor::instance()->beginConnect(this->shared_from_this(), handler, this->getName(), tag);
+	Proactor::instance()->beginConnect(this->shared_from_this(), boost::bind(&Connection::onConnectComplete,this,_1,_2), this->getName(), tag);
+}
+
+void
+PipeConnection::beginWaitForListener(EventHandler handler, boost::any tag /*= NULL*/)
+{
+	boost::thread waitingThread(boost::bind(&PipeConnection::waitForListener,this, handler, tag));
+	waitingThread.detach();
+}
+
+void 
+PipeConnection::waitForListener(EventHandler handler, boost::any tag /*= NULL*/)
+{
+	{
+		ipc::scoped_lock<ipc::named_mutex> lock(*this->listeningMutex);
+		ipc::mapped_region listeningRegion(*this->listening,ipc::read_only);
+		while (*(reinterpret_cast<bool *>(listeningRegion.get_address())) == 0)
+		{
+			this->listeningCond->wait(lock);
+		}
+	}
+
+	if (FALSE == ::WaitNamedPipe(this->name.c_str(),INFINITE))
+	{
+		if (handler)
+		{
+			// notify the handler
+			DWORD err = ::GetLastError();
+			boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+			msgErr->conn = shared_from_this();
+			msgErr->err = err;
+			handler(msgErr,tag);
+		}
+		return;
+	}
+
+	boost::shared_ptr<IOMsgPipeWaitComplete> msgWait(new IOMsgPipeWaitComplete());
+	msgWait->conn = shared_from_this();
+	handler(msgWait,tag);
 }
 
 void 
@@ -99,4 +157,19 @@ void
 PipeConnection::setPipe(HANDLE pipe)
 {
 	this->pipe = pipe;
+}
+
+std::string
+PipeConnection::friendlyName()
+{
+	std::string r = Util::unicodeToUtf8(this->name);
+	size_t pos = r.find_last_of("\\/");
+	if (pos == std::string::npos)
+	{
+		return r;
+	} 
+	else 
+	{
+		return r.substr(r.find_last_of("\\/") + 1);
+	}
 }

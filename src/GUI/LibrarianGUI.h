@@ -3,6 +3,10 @@
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
+#include <boost/interprocess/sync/named_condition.hpp>
+#include <boost/interprocess/shared_memory_object.hpp>
+
 
 #include "Utilities/WinApp.h"
 #include "Utilities/MessageSink.h"
@@ -50,6 +54,7 @@ namespace Musador
 		};
 
 		void onRunning();
+		void connectService();
 
 		void onServiceConnect(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 		void onServiceMsg(boost::shared_ptr<GUIMsg> msg);
@@ -62,6 +67,7 @@ namespace Musador
 		boost::shared_ptr<GUIConnection> service;
 		std::auto_ptr<WindowsShellIcon> trayIcon;
 		WinMenu trayMenu;
+
 	};
 
 	template <typename T>

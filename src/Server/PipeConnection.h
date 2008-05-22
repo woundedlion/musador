@@ -2,7 +2,13 @@
 #define PIPE_CONNECTION_A8167A71_4E20_466d_8D70_C211158BB00D
 
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <boost/thread.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
+#include <boost/interprocess/sync/named_condition.hpp>
+#include <boost/interprocess/shared_memory_object.hpp>
+
 #include "Connection.h"
 
 namespace Musador
@@ -17,7 +23,8 @@ namespace Musador
 
 		void close();
 
-		void beginConnect(EventHandler handler, boost::any tag = NULL);
+		void beginWaitForListener(EventHandler handler, boost::any tag = NULL);
+		void beginConnect(boost::any tag = NULL);
 
 		void beginRead(boost::any tag = NULL);
 		void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead, boost::any tag = NULL);
@@ -38,8 +45,15 @@ namespace Musador
 
 	protected:
 
+		std::string friendlyName();
+		void waitForListener(EventHandler handler, boost::any tag = NULL);
+
 		std::wstring name;
 		HANDLE pipe;
+
+		boost::scoped_ptr<boost::interprocess::named_mutex> listeningMutex;
+		boost::scoped_ptr<boost::interprocess::named_condition> listeningCond;
+		boost::scoped_ptr<boost::interprocess::shared_memory_object> listening;
 
 	};
 }

@@ -5,12 +5,12 @@
 #include "Network/Network.h"
 #include "Indexer/ConsoleProgressReporter.h"
 
-#include "Protocol/GUIListener.h"
 #include "Protocol/GUIMessages.h"
 
 #include "Logger/Logger.h"
 #define LOG_SENDER "Librarian"
 using namespace Musador;
+
 namespace fs = boost::filesystem;
 
 Librarian::Librarian() :
@@ -36,8 +36,8 @@ WindowsService(L"Musador Librarian")
 	}
 
 	cfg->server.controller = &this->controller;
-        
-        this->server.reset(new Server(cfg->server));
+
+	this->server.reset(new Server(cfg->server));
 
 	// Start 2 worker threads
 	Proactor::instance()->start(2);
@@ -60,16 +60,15 @@ Librarian::run(unsigned long argc, wchar_t * argv[])
 	this->server->start();
 
 	// Start listening for incoming gui connections
-	boost::shared_ptr<GUIListener> listener(new GUIListener());
-	listener->beginAccept(boost::bind(&Librarian::onGUIAccept,this,_1,_2));
+	this->listener.reset(new GUIListener());
+	this->listener->beginAccept(boost::bind(&Librarian::onGUIAccept,this,_1,_2));
 
-	// Signal waiting clients
+	// Wait until SCM or ctrl-c shuts us down
+	this->waitForStop(); 
 
-	this->waitForStop(); // Wait until SCM or ctrl-c shuts us down
-
-        this->server->stop();
-        this->server->waitForStop();
-        this->notifyGUI<GUIMsgDisabledNotify>();        
+	this->server->stop();
+	this->server->waitForStop();
+	this->notifyGUI<GUIMsgDisabledNotify>();  
 
 	return 0;
 }
@@ -126,8 +125,8 @@ Librarian::onGUIAccept(boost::shared_ptr<IOMsg> msg, boost::any /*tag = NULL*/)
             this->notifyGUI<GUIMsgEnabledNotify>();        
 
 			// Keep listening for new connections
-			msgAccept->listener->beginAccept(boost::bind(&Librarian::onGUIAccept,this,_1,_2));
-
+			this->listener->beginAccept(boost::bind(&Librarian::onGUIAccept,this,_1,_2));
+			
 			this->gui->beginRead();
 
 		}

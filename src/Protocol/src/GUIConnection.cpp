@@ -39,8 +39,7 @@ GUIConnection::onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /* = 
 		this->beginRead();
 		break;
 	case IO_ERROR:
-
-		// TODO: start listening for the Service connection to come back
+		this->beginConnect();
 		break;
 	}
 }
@@ -59,6 +58,18 @@ GUIConnection::onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*=
 void 
 GUIConnection::onConnectComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /* = NULL */)
 {
+	switch (msg->getType())
+	{
+	case IO_PIPE_CONNECT_COMPLETE:
+		this->beginRead();
+		break;
+	case IO_ERROR:
+		this->beginWaitForListener(boost::bind(&GUIConnection::onConnectComplete,this,_1,_2));
+		break;
+	case IO_PIPE_WAIT_COMPLETE:
+		this->beginConnect();
+		break;
+	}
 }
 
 void

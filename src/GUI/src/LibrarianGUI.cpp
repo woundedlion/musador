@@ -74,10 +74,13 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					l.start();
 				}
 				catch (const ServiceAlreadyStartedException&)
+				{}
+				catch(const ServiceException&)
 				{
-					this->service->beginConnect(boost::bind(&LibrarianGUI::onServiceConnect,this, _1, _2));
+					//TODO: LOG!
 					break;
 				}
+				this->service->beginConnect();
 			}
 			break;
 		case EXIT:
@@ -103,27 +106,13 @@ LibrarianGUI::onRunning()
 
 	this->service.reset(new GUIConnection());
 	this->service->setHandler(boost::bind(&LibrarianGUI::onServiceMsg,this,_1));
-	this->service->beginConnect(boost::bind(&LibrarianGUI::onServiceConnect,this, _1, _2));
-
+	this->service->beginConnect();
 }
 
 void
 LibrarianGUI::onTrayMenu()
 {
 	this->trayMenu.popupAtCursor(this->hWndMain);
-}
-
-void
-LibrarianGUI::onServiceConnect(boost::shared_ptr<IOMsg> msg, boost::any tag /* = NULL*/)
-{
-	switch (msg->getType())
-	{
-	case IO_PIPE_CONNECT_COMPLETE:
-		this->service->beginRead();
-		break;
-	case IO_ERROR:
-		break;
-	}
 }
 
 void

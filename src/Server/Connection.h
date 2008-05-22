@@ -28,7 +28,7 @@ namespace Musador
 
 		virtual ~Connection() {};
 
-		virtual void beginConnect(EventHandler handler, boost::any tag = NULL) = 0;
+		virtual void beginConnect(boost::any tag = NULL) = 0;
 
 		virtual void beginRead(boost::any tag = NULL) = 0;
 		virtual void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead, 

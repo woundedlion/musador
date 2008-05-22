@@ -20,6 +20,7 @@ namespace Musador
 		IO_READ_COMPLETE,
 		IO_SOCKET_CONNECT_COMPLETE,
 		IO_PIPE_CONNECT_COMPLETE,
+		IO_PIPE_WAIT_COMPLETE,
 		IO_ERROR,
 		IO_SHUTDOWN
 	};
@@ -121,6 +122,15 @@ namespace Musador
 	public:
 
 		inline IOMsgPipeConnectComplete() : IOMsg(IO_PIPE_CONNECT_COMPLETE)
+		{
+		}
+	};
+
+	class IOMsgPipeWaitComplete : public IOMsg
+	{
+	public:
+
+		inline IOMsgPipeWaitComplete() : IOMsg(IO_PIPE_WAIT_COMPLETE)
 		{
 		}
 	};

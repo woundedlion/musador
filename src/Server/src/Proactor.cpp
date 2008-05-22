@@ -257,7 +257,13 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
 	if (!::ConnectNamedPipe(hPipe,ctx.get()))
 	{
 		DWORD err = ::GetLastError();
-		if (ERROR_IO_PENDING != err && ERROR_PIPE_CONNECTED != err)
+		if (ERROR_PIPE_CONNECTED == err)
+		{
+			// A completion packet is never queued to the port in this case
+			// so send one ourselves to complete asynchronously
+			::PostQueuedCompletionStatus(this->iocp, 0, reinterpret_cast<ULONG_PTR>(hPipe), ctx.get());	
+		}
+		else if (ERROR_IO_PENDING != err)
 		{
 			LOG(Error) << "ConnectNamedPipe() failed: " << err;
 
@@ -400,9 +406,6 @@ Proactor::completePipeConnect(boost::shared_ptr<CompletionCtx> ctx)
 	{
 		ctx->handler(msgConnect, ctx->tag);
 	}
-
-	// notify the connection
-	msgConnect->conn->onConnectComplete(msgConnect, ctx->tag);
 }
 
 void 

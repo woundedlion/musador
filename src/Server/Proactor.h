@@ -71,10 +71,12 @@ namespace Musador
 		void beginAccept(boost::shared_ptr<PipeListener> listener, 
 						 EventHandler handler, 
 						 boost::any tag = NULL);
+		
 		void beginConnect(boost::shared_ptr<PipeConnection> conn,
 						  EventHandler handler,
 						  const std::wstring& dest,
 						  boost::any tag = NULL);
+		
 		void beginRead(boost::shared_ptr<PipeConnection> conn, 
  					   EventHandler handler, 
 					   boost::any tag = NULL);
