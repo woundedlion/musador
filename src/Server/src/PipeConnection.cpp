@@ -6,36 +6,19 @@
 #include "Logger/Logger.h"
 #define LOG_SENDER L"I/O"
 using namespace Musador;
-namespace ipc = boost::interprocess;
-
-#pragma warning(push)
-#pragma warning(disable: 4355)
 
 PipeConnection::PipeConnection(const std::wstring& name) :
 name(name),
-pipe(NULL)
+pipe(NULL),
+evtCreated(NULL)
 {
-	// Set up shared mem
-	ipc::named_mutex::remove((this->friendlyName() + "Mutex").c_str());
-	ipc::named_condition::remove((this->friendlyName() + "Cond").c_str());
-	ipc::shared_memory_object::remove((this->friendlyName() + "Listening").c_str());
-	this->listeningMutex.reset(new ipc::named_mutex(ipc::open_or_create, (this->friendlyName() + "Mutex").c_str()));
-	this->listeningCond.reset(new ipc::named_condition(ipc::open_or_create, (this->friendlyName() + "Cond").c_str()));
-	this->listening.reset(new ipc::shared_memory_object(ipc::open_or_create, (this->friendlyName() + "Listening").c_str(), ipc::read_write));
-	ipc::scoped_lock<ipc::named_mutex> lock(*this->listeningMutex);
-	this->listening->truncate(1);
+    this->evtCreated = ::CreateEventA(NULL, TRUE, FALSE, (this->friendlyName() + "Evt").c_str());
 }
-
-#pragma warning(pop)
 
 PipeConnection::~PipeConnection()
 {
 	this->close();
-
-	// Cleanup shared mem
-	ipc::named_mutex::remove((this->friendlyName() + "Mutex").c_str());
-	ipc::named_condition::remove((this->friendlyName() + "Cond").c_str());
-	ipc::shared_memory_object::remove((this->friendlyName() + "Listening").c_str());
+        ::CloseHandle(this->evtCreated);
 }
 
 void 
@@ -65,14 +48,7 @@ PipeConnection::beginWaitForListener(EventHandler handler, boost::any tag /*= NU
 void 
 PipeConnection::waitForListener(EventHandler handler, boost::any tag /*= NULL*/)
 {
-	{
-		ipc::scoped_lock<ipc::named_mutex> lock(*this->listeningMutex);
-		ipc::mapped_region listeningRegion(*this->listening,ipc::read_only);
-		while (*(reinterpret_cast<bool *>(listeningRegion.get_address())) == 0)
-		{
-			this->listeningCond->wait(lock);
-		}
-	}
+    ::WaitForSingleObject(this->evtCreated, INFINITE);
 
 	if (FALSE == ::WaitNamedPipe(this->name.c_str(),INFINITE))
 	{
