@@ -30,8 +30,6 @@ namespace Musador
 	private:
 
 		std::string friendlyName();
-
-                HANDLE evtCreated;
 	};
 }
 

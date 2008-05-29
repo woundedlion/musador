@@ -7,15 +7,12 @@
 using namespace Musador;
 
 PipeListener::PipeListener(const std::wstring& name) :
-name(name),
-evtCreated(NULL)
+name(name)
 {
-    this->evtCreated = ::CreateEventA(NULL, TRUE, FALSE, (this->friendlyName() + "Evt").c_str());
 }
 
 PipeListener::~PipeListener()
 {
-    ::CloseHandle(this->evtCreated);
 }
 
 void
@@ -23,7 +20,6 @@ PipeListener::beginAccept(EventHandler handler, boost::any tag /* = NULL */)
 {
     Proactor::instance()->beginAccept(this->shared_from_this(), handler, tag);
     LOG(Debug) << "Accepting connections on named pipe: " << this->name;
-    ::SetEvent(this->evtCreated);
 }
 
 std::wstring

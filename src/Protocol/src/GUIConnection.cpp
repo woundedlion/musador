@@ -64,10 +64,7 @@ GUIConnection::onConnectComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*
 		this->beginRead();
 		break;
 	case IO_ERROR:
-		this->beginWaitForListener(boost::bind(&GUIConnection::onConnectComplete,this,_1,_2));
-		break;
-	case IO_PIPE_WAIT_COMPLETE:
-		this->beginConnect();
+                TimerQueue::instance()->createTimer(500, boost::bind(&PipeConnection::beginConnect,this,tag));
 		break;
 	}
 }

@@ -20,7 +20,6 @@ namespace Musador
 
 		void close();
 
-		void beginWaitForListener(EventHandler handler, boost::any tag = NULL);
 		void beginConnect(boost::any tag = NULL);
 
 		void beginRead(boost::any tag = NULL);
@@ -47,7 +46,6 @@ namespace Musador
 
 		std::wstring name;
 		HANDLE pipe;
-                HANDLE evtCreated;
 
 	};
 }

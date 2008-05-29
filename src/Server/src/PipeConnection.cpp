@@ -9,16 +9,13 @@ using namespace Musador;
 
 PipeConnection::PipeConnection(const std::wstring& name) :
 name(name),
-pipe(NULL),
-evtCreated(NULL)
+pipe(NULL)
 {
-    this->evtCreated = ::CreateEventA(NULL, TRUE, FALSE, (this->friendlyName() + "Evt").c_str());
 }
 
 PipeConnection::~PipeConnection()
 {
 	this->close();
-        ::CloseHandle(this->evtCreated);
 }
 
 void 
@@ -36,37 +33,6 @@ void
 PipeConnection::beginConnect(boost::any tag /*= NULL*/)
 {
 	Proactor::instance()->beginConnect(this->shared_from_this(), boost::bind(&Connection::onConnectComplete,this,_1,_2), this->getName(), tag);
-}
-
-void
-PipeConnection::beginWaitForListener(EventHandler handler, boost::any tag /*= NULL*/)
-{
-	boost::thread waitingThread(boost::bind(&PipeConnection::waitForListener,this, handler, tag));
-	waitingThread.detach();
-}
-
-void 
-PipeConnection::waitForListener(EventHandler handler, boost::any tag /*= NULL*/)
-{
-    ::WaitForSingleObject(this->evtCreated, INFINITE);
-
-	if (FALSE == ::WaitNamedPipe(this->name.c_str(),INFINITE))
-	{
-		if (handler)
-		{
-			// notify the handler
-			DWORD err = ::GetLastError();
-			boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
-			msgErr->conn = shared_from_this();
-			msgErr->err = err;
-			handler(msgErr,tag);
-		}
-		return;
-	}
-
-	boost::shared_ptr<IOMsgPipeWaitComplete> msgWait(new IOMsgPipeWaitComplete());
-	msgWait->conn = shared_from_this();
-	handler(msgWait,tag);
 }
 
 void 
