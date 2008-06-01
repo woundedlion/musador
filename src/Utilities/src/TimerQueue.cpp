@@ -50,37 +50,39 @@ TimerQueue::run()
 	while (!this->doShutdown)
 	{
 		std::vector<TimerCollection::iterator> expired;
-		Guard lock(this->timersMutex);
-		// Scan the TimerCollection
-		for (iter = this->timers.begin(); !this->doShutdown && iter != this->timers.end(); ++iter)
-		{
-			boost::shared_ptr<Timer> timer = iter->second;
-			if (timer->timeoutMs <= 10)
-			{
-				// Execute Timer
-				timer->handler();
+        {
+            Guard lock(this->timersMutex);
+            // Scan the TimerCollection
+            for (iter = this->timers.begin(); !this->doShutdown && iter != this->timers.end(); ++iter)
+            {
+                boost::shared_ptr<Timer> timer = iter->second;
+                if (timer->timeoutMs <= 10)
+                {
+                    // Execute Timer
+                    timer->handler();
 
-				// Expire timer
-				if (0 == timer->repeatInterval)
-				{
-					expired.push_back(iter); // no repeat
-				}
-				else
-				{
-					timer->timeoutMs = timer->repeatInterval; // reset to original interval
-				}
-			}
-			else
-			{
-				// decrement timer
-				timer->timeoutMs -= 10;
-			}
-		}
-		// Erase expired timers
-		for (std::vector<TimerCollection::iterator>::iterator iter = expired.begin(); iter != expired.end(); ++iter)
-		{
-			this->timers.erase(*iter);
-		}
+                    // Expire timer
+                    if (0 == timer->repeatInterval)
+                    {
+                        expired.push_back(iter); // no repeat
+                    }
+                    else
+                    {
+                        timer->timeoutMs = timer->repeatInterval; // reset to original interval
+                    }
+                }
+                else
+                {
+                    // decrement timer
+                    timer->timeoutMs -= 10;
+                }
+            }
+            // Erase expired timers
+            for (std::vector<TimerCollection::iterator>::iterator iter = expired.begin(); iter != expired.end(); ++iter)
+            {
+                this->timers.erase(*iter);
+            }
+        }
 		::Sleep(10);
 	}
 }

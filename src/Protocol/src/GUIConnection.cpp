@@ -39,7 +39,12 @@ GUIConnection::onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /* = 
 		this->beginRead();
 		break;
 	case IO_ERROR:
-		this->beginConnect();
+		if (NULL != this->handler)
+        {
+            boost::shared_ptr<GUIMsg> msgGUI(new GUIMsgDisabledNotify());
+            this->handler(msgGUI);
+        }
+        this->beginConnect();
 		break;
 	}
 }
@@ -64,7 +69,7 @@ GUIConnection::onConnectComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*
 		this->beginRead();
 		break;
 	case IO_ERROR:
-                TimerQueue::instance()->createTimer(500, boost::bind(&PipeConnection::beginConnect,this,tag));
+        TimerQueue::instance()->createTimer(500, boost::bind(&PipeConnection::beginConnect,this,tag));
 		break;
 	}
 }
