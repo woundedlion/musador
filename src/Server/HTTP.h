@@ -133,7 +133,6 @@ namespace Musador
 			Env() :
 			req(NULL),
 			res(NULL),
-			cfg(NULL),
 			controller(NULL),
 			session(NULL)
 			{
@@ -141,7 +140,7 @@ namespace Musador
 
 			Request * req;
 			Response * res;
-			const HTTPConfig * cfg;
+            boost::shared_ptr<HTTPConfig> cfg;
 			Controller * controller;
 			Session * session;
 			boost::shared_ptr<Server> server;

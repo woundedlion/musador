@@ -57,7 +57,7 @@ Server::start()
 		ep.sin_port = ::htons(iter->port);
 
 		HTTP::Env env;
-		env.cfg = &*iter;
+		env.cfg.reset(new HTTPConfig(*iter));
 		env.controller = this->cfg.controller;
 		env.server = this->shared_from_this();
 

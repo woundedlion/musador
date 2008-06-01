@@ -18,7 +18,7 @@ namespace Musador
 		bool config(HTTP::Env& env);
 		bool index(HTTP::Env& env);
         bool stats(HTTP::Env& env);
-
+        bool getLibrariesXML(HTTP::Env& env);
 	};
 
 }

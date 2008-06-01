@@ -14,6 +14,7 @@ LibrarianController::LibrarianController()
 	BIND_HANDLER("/info",info);
 	BIND_HANDLER("/config",config);
 	BIND_HANDLER("/index",index);
+    BIND_HANDLER("/libraries.xml",getLibrariesXML);
 }
 
 bool 
@@ -51,5 +52,20 @@ LibrarianController::stats(HTTP::Env& env)
 {
     std::string& libID = env.req->params["lib"];
     
+    return true;
+}
+
+bool
+LibrarianController::getLibrariesXML(HTTP::Env& env)
+{
+    env.res->data.reset(new std::stringstream);
+    {
+        std::map<int, LibraryConfig> libraries = Config::instance()->librarian.libraries;
+        boost::archive::xml_oarchive ar(*env.res->data);
+        ar << boost::serialization::make_nvp("Libraries",libraries);
+    }
+    env.res->headers["Content-Type"] = "text/xml";
+    env.res->headers["Content-Length"] = boost::lexical_cast<std::string>(env.res->data->tellp());
+ 
     return true;
 }
