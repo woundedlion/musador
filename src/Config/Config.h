@@ -1,8 +1,10 @@
 #ifndef CONFIG_H_24DF554B_8EF1_40c0_8056_F349BC8E3F45
 #define CONFIG_H_24DF554B_8EF1_40c0_8056_F349BC8E3F45
 
+#include <map>
 #include "Server/HTTP.h"
 #include "Utilities/Singleton.h"
+#include "Utilities/Property.h"
 #include "boost/serialization/nvp.hpp"
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
@@ -17,17 +19,13 @@ namespace Musador
         
         /// Constructor
         HTTPConfig() :
-            documentRoot(),
+            documentRoot(L""),
             addr("0.0.0.0"),
             port(5152),
             requireAuth(false),
             realm(L"")
         {}
-    
-        /// Add an HTTP user to the configuration.
-        /// @param[in] user User information for the new user to add.
-        void addUser(const HTTP::User& user);
-        
+            
         /// Serialize this configuration.
         /// @param[in] ar Destination archive for the serialized data.
         /// @param[in] version The version of the archive. Used by boost::serailization version tracking.
@@ -43,22 +41,22 @@ namespace Musador
         }
 
         /// The root directory for the site, available at http://addr:port/
-        std::wstring documentRoot;
+        Property<std::wstring> documentRoot;
 
         /// The IP Address in dot notation on which to listen for requests to this site.
-        std::string addr;
+        Property<std::string> addr;
 
         /// The port number on which to listen for requests to this site.
-        unsigned short port;
+        Property<unsigned short> port;
 
         /// Specifies whether HTTP Digest authentication is required to access this site.
-        bool requireAuth;
+        Property<bool> requireAuth;
 
         /// Collection of users with credentials to access the site.
-        HTTP::UserCollection users;
+        Property<HTTP::UserCollection> users;
 
         /// Realm name used for HTTP Authentication
-        std::wstring realm;
+        Property<std::wstring> realm;
 
     };
 
@@ -75,18 +73,72 @@ namespace Musador
         /// Serialize this configuration.
         /// @param[in] ar Destination archive for the serialized data.
         /// @param[in] version The version of the archive. Used by boost::serailization version tracking.
-       template<class Archive>
+        template<class Archive>
         void serialize(Archive & ar, const unsigned int version)
         {
             ar & BOOST_SERIALIZATION_NVP(sites);
         }
 
         /// Collection of the sites defined for this server.
-        HTTPSiteCollection sites;
+        Property<HTTPSiteCollection> sites;
 
         /// Used inernally. NOT SERIALIZED.
         /// Pointer to the controller instance which implements application-specific logic
-        Controller * controller;
+        Property<Controller *> controller;
+    };
+
+    /// @class Contains configuration data specific to a music library
+    class LibraryConfig
+    {
+    public:
+
+        /// Serialize the configuration of this Library.
+        /// @param[in] ar Destination archive for the serialized data.
+        /// @param[in] version The version of the archive. Used by boost::serailization version tracking.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version)
+        {
+            ar & BOOST_SERIALIZATION_NVP(id);
+            ar & BOOST_SERIALIZATION_NVP(nickname);
+            ar & BOOST_SERIALIZATION_NVP(dataFile);
+            ar & BOOST_SERIALIZATION_NVP(targets);
+        }
+
+        /// The numeric Library ID.
+        Property<int> id;
+
+        /// User-defined nickname for this Library        
+        Property<std::wstring> nickname;
+        
+        /// path to the data file for this Library
+        Property<std::wstring> dataFile;
+
+        /// List of root target directories whose contents are indexed in this Library
+        Property<std::vector<std::wstring> > targets;
+
+    };
+    /// @class Contains the configuration for the Librarian
+
+    class LibrarianConfig
+    {
+    public:
+        
+        /// Serialize this configuration.
+        /// @param[in] ar Destination archive for the serialized data.
+        /// @param[in] version The version of the archive. Used by boost::serailization version tracking.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version)
+        {
+            ar & BOOST_SERIALIZATION_NVP(dataDir);
+            ar & BOOST_SERIALIZATION_NVP(libraries);
+        }
+
+        /// The path to the application-specific data directory
+        Property<std::wstring> dataDir;
+
+        /// The music libraries known by the system, mapped by ID
+        Property<std::map<int, LibraryConfig> > libraries;
+
     };
 
     /// @class Top-level configuration container. Contains the configuration for the entire system.
@@ -109,10 +161,15 @@ namespace Musador
         void serialize(Archive & ar, const unsigned int version)
         {
             ar & BOOST_SERIALIZATION_NVP(server);
+            ar & BOOST_SERIALIZATION_NVP(librarian);
         }
         
         /// The Server configuration for this application
         ServerConfig server;
+
+        /// The Librarian configuration for this application
+        LibrarianConfig librarian;
+
     };
 
 

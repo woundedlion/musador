@@ -17,7 +17,7 @@ LibrarianController::LibrarianController()
 }
 
 bool 
-LibrarianController::info(HTTP::Env & env)
+LibrarianController::info(HTTP::Env& env)
 {
 	env.res->data.reset(new std::stringstream);
 	env.req->dump(*env.res->data);
@@ -27,7 +27,7 @@ LibrarianController::info(HTTP::Env & env)
 }
 
 bool 
-LibrarianController::config(HTTP::Env & env)
+LibrarianController::config(HTTP::Env& env)
 {
 	env.res->data.reset(new std::stringstream);
 	{
@@ -40,8 +40,16 @@ LibrarianController::config(HTTP::Env & env)
 }
 
 bool
-LibrarianController::index(HTTP::Env & env)
+LibrarianController::index(HTTP::Env& env)
 {
 	std::string& path = env.req->params["path"];
 	return false;
+}
+
+bool
+LibrarianController::stats(HTTP::Env& env)
+{
+    std::string& libID = env.req->params["lib"];
+    
+    return true;
 }

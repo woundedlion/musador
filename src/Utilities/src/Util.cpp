@@ -329,3 +329,16 @@ void Util::WriteInt32(BYTE * buf, INT32 val) {
 	val = ::htonl((u_long)val);
 	::memcpy(buf,(const void *)&val,4);
 }
+
+std::wstring
+Util::pathToDataDir()
+{
+    std::wstring path;
+    wchar_t buf[MAX_PATH];
+    BOOL r = ::SHGetFolderPathW(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, buf);
+    if (S_OK == r)
+    {
+        path = buf;
+    }
+    return path;
+}

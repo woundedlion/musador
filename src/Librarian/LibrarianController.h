@@ -14,9 +14,11 @@ namespace Musador
 
 	private:
 
-		bool info(HTTP::Env & env);
-		bool config(HTTP::Env & env);
-		bool index(HTTP::Env & env);
+		bool info(HTTP::Env& env);
+		bool config(HTTP::Env& env);
+		bool index(HTTP::Env& env);
+        bool stats(HTTP::Env& env);
+
 	};
 
 }

@@ -16,18 +16,20 @@ namespace fs = boost::filesystem;
 Librarian::Librarian() :
 WindowsService(L"Musador Librarian")
 {
-#if _DEBUG
-	Logger::instance()->setLevel(Debug);
-#endif
-
 	Network::instance();
 	MIMEResolver::instance();
 
 	// load config or generate defaults
-	std::wstring cfgPath = L"Librarian.xml";
-	Config * cfg = Config::instance();
-	if (!fs::exists(cfgPath) || !cfg->load(cfgPath))
+    fs::wpath dataPath(Util::pathToDataDir() + L"\\Musador\\");
+    if (!fs::exists(dataPath))
+    {
+        fs::create_directories(dataPath);
+    }
+    std::wstring cfgPath = (dataPath / L"Librarian.xml").file_string();
+    Config * cfg = Config::instance();
+    if (!fs::exists(cfgPath) || !cfg->load(cfgPath))
 	{
+        cfg->librarian.dataDir = dataPath.directory_string();
 		this->configDefaults(*cfg);
 		if (!cfg->save(cfgPath))
 		{
@@ -50,7 +52,6 @@ Librarian::~Librarian()
 
 	Config::destroy();
 	Musador::Network::destroy();
-	Logger::destroy();
 	MIMEResolver::destroy();
 }
 
@@ -76,17 +77,23 @@ Librarian::run(unsigned long argc, wchar_t * argv[])
 void 
 Librarian::configDefaults(Config& cfg)
 {
-	cfg.server.sites.clear();
 	HTTPConfig site;
 	site.addr = "0.0.0.0";
 	site.port = 5152;
-	site.documentRoot = L"html";
+	site.documentRoot = cfg.librarian.dataDir.get() + L"\\html";
 	site.requireAuth = false;
-	HTTP::User u("admin");
-	u.setPassword("password");
-	site.addUser(u);
 	site.realm = L"Musador";
-	cfg.server.sites.push_back(site);
+
+    HTTP::User u("admin");
+    u.setPassword("password");
+    HTTP::UserCollection users;
+    users[u.getUsername()] = u;
+    site.users = users;
+
+    ServerConfig::HTTPSiteCollection sites;
+    sites.push_back(site);
+    cfg.server.sites = sites;
+    
 }
 
 void 

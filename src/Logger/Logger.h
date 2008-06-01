@@ -9,6 +9,7 @@
 #include "Utilities/Util.h"
 #include "Utilities/Singleton.h"
 #include "Utilities/Console.h"
+#include "Utilities/Property.h"
 
 namespace Musador
 {
@@ -114,7 +115,7 @@ namespace Musador
 		std::wstringstream logStream;
 		bool active;
 		bool silent;
-                LogLevel lvl;
+        LogLevel lvl;
 	};
 
 	template <typename T>
@@ -155,7 +156,14 @@ namespace Musador
 	LogWriter log(LogLevel lvl, const std::wstring& sender);
 
 	#define LOG(x) log(x,LOG_SENDER)
+
+    template <typename T>
+    inline LogWriter& operator<<(LogWriter& w, const Property<T>& p)
+    {
+        return w << p.get();
+    }
 }
+
 
 
 #endif

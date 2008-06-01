@@ -176,8 +176,9 @@ HTTP::auth(const Env& env)
 		std::string authInfo = authString.substr(6);
 		std::string username = Util::base64Decode(authInfo);
 		username.erase(username.find_first_of(':'));
-		UserCollection::const_iterator iter = env.cfg->users.find(username);
-		if (iter == env.cfg->users.end())
+        UserCollection users = env.cfg->users;
+		UserCollection::const_iterator iter = users.find(username);
+		if (iter == users.end())
 		{
 			return false;
 		}
@@ -232,8 +233,9 @@ HTTP::auth(const Env& env)
 		// check nc
 
 		// check username
-		UserCollection::const_iterator iter = env.cfg->users.find(authInfo["username"]);
-		if (iter == env.cfg->users.end())
+		UserCollection users = env.cfg->users;
+        UserCollection::const_iterator iter = users.find(authInfo["username"]);
+		if (iter == users.end())
 		{
 			return false;
 		}

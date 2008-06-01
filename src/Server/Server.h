@@ -23,7 +23,7 @@ namespace Musador
 	{
 	public:
 
-		Server(const ServerConfig& cfg);
+		Server(ServerConfig& cfg);
 
 		virtual ~Server();
 
@@ -64,7 +64,7 @@ namespace Musador
 
 		Musador::Network * net;
 
-		const ServerConfig& cfg;
+		ServerConfig& cfg;
 
 		// Collection types
         typedef std::vector<boost::shared_ptr<Connection> > ConnCollection;

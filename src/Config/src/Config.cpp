@@ -39,8 +39,3 @@ Config::save(const std::wstring& path)
 	return true;
 }
 
-void
-HTTPConfig::addUser(const HTTP::User& u)
-{
-	this->users[u.getUsername()] = u;
-}

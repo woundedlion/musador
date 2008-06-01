@@ -21,7 +21,7 @@ namespace fs = boost::filesystem;
 //////////////////////////////////////////////////////////////////////////////////////
 
 // Constructor/Destructor
-Server::Server(const ServerConfig& cfg) :
+Server::Server(ServerConfig& cfg) :
 net(Musador::Network::instance()),
 doRecycle(false),
 doShutdown(false),
@@ -42,17 +42,18 @@ Server::start()
 	LOG(Info) << "Server starting...";
 	
 	// Start listeners
-	for (ServerConfig::HTTPSiteCollection::const_iterator iter = this->cfg.sites.begin(); 
-		iter != this->cfg.sites.end(); ++iter)
+    ServerConfig::HTTPSiteCollection sites = this->cfg.sites;
+	for (ServerConfig::HTTPSiteCollection::const_iterator iter = sites.begin(); 
+		iter != sites.end(); ++iter)
 	{
-		if (!fs::exists(iter->documentRoot))
+        if (!fs::exists(iter->documentRoot.get()))
 		{
 			LOG(Error) << "Document Root does not exist: " << iter->documentRoot;
 		}
 
 		sockaddr_in ep = {0};
 		ep.sin_family = AF_INET;
-		ep.sin_addr.s_addr = ::inet_addr(iter->addr.c_str());
+		ep.sin_addr.s_addr = ::inet_addr(iter->addr.get().c_str());
 		ep.sin_port = ::htons(iter->port);
 
 		HTTP::Env env;

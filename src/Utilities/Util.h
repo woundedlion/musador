@@ -8,6 +8,8 @@
 #include <rpc.h>
 #pragma comment(lib,"Rpcrt4.lib")
 #pragma comment(lib,"ws2_32.lib")
+#include <shlobj.h>
+#pragma comment(lib,"shell32.lib")
 #endif
 
 namespace Util
@@ -55,6 +57,9 @@ namespace Util
 	INT32 ReadInt32(BYTE * buf);
 
 	void WriteInt32(BYTE * buf, INT32 val);
+
+    std::wstring pathToDataDir();
+
 }
 
 #endif

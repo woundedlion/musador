@@ -2,6 +2,8 @@
 #include <iostream>
 #include "Librarian.h"
 #include "Utilities/Console.h"
+#include "Logger/Logger.h"
+#define LOG_SENDER L"Librarian"
 
 BOOL WINAPI sigHandler(DWORD ctrl)
 {
@@ -26,6 +28,12 @@ void usage()
 
 int _tmain(int argc, wchar_t * argv[]) 
 { 
+#if _DEBUG
+    Logger::instance()->setLevel(Debug);
+#else
+    Logger::instance()->setLevel(Info);
+#endif
+
 	int r = 0;
 	try
 	{
@@ -34,11 +42,15 @@ int _tmain(int argc, wchar_t * argv[])
 		{
 			if(boost::iequals(argv[1],L"/install"))
 			{
-				app->install();
+                LOG(Info) << L"Installing Librarian Service...";
+                app->install();
+                LOG(Info) << L"Librarian Service successfully installed.";
 			}
 			else if (boost::iequals(argv[1],L"/uninstall"))
 			{
+                LOG(Info) << L"Uninstalling Librarian Service...";
 				app->uninstall();
+                LOG(Info) << L"Librarian Service successfully uninstalled.";
 			}
 			else if (boost::iequals(argv[1],L"/noservice"))
 			{
@@ -83,9 +95,11 @@ int _tmain(int argc, wchar_t * argv[])
 	}
 	catch (const ServiceException& e)
 	{
-		std::cerr << e.what();
+		LOG(Error) << e.what();
 		r = -1;
 	}
+
+    Logger::destroy();
 	return r;
 }
 
