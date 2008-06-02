@@ -93,7 +93,19 @@ Librarian::configDefaults(Config& cfg)
     ServerConfig::HTTPSiteCollection sites;
     sites.push_back(site);
     cfg.server.sites = sites;
-    
+
+    LibraryConfig lib;
+    lib.id = 0;
+    lib.nickname = L"bighurt";
+    lib.dataFile = cfg.librarian.dataDir.get() + L"\\bighurt.db";
+    std::vector<std::wstring> targets;
+    targets.push_back(L"C:\\music\\library\\Blues");
+    targets.push_back(L"C:\\music\\library\\Classical");
+    targets.push_back(L"C:\\music\\library\\Jazz");
+    lib.targets = targets;
+    LibrarianConfig::LibraryCollection libraries;
+    libraries[lib.id] = lib;
+    cfg.librarian.libraries = libraries;
 }
 
 void 

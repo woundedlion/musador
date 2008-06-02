@@ -1,4 +1,6 @@
+#include <string>
 #include "LibrarianController.h"
+#include "StatsBlock.h"
 #include "Server/HTTP.h"
 #include "boost/lexical_cast.hpp"
 #include "boost/bind.hpp"
@@ -7,6 +9,20 @@
 
 using namespace Musador;
 
+LibrarianController::Error&
+LibrarianController::Error::operator<<(const std::wstring& s)
+{
+    this->errStr << Util::unicodeToUtf8(s);
+    return *this;
+}
+
+LibrarianController::Error&
+LibrarianController::Error::operator<<(const std::string& s)
+{
+    this->errStr << s;
+    return *this;
+}
+
 #define BIND_HANDLER(uri,handler) this->addHandler(uri,boost::bind(&LibrarianController::handler,this,_1))
 
 LibrarianController::LibrarianController()
@@ -14,7 +30,8 @@ LibrarianController::LibrarianController()
 	BIND_HANDLER("/info",info);
 	BIND_HANDLER("/config",config);
 	BIND_HANDLER("/index",index);
-    BIND_HANDLER("/libraries.xml",getLibrariesXML);
+    BIND_HANDLER("/library.xml",getLibraryXML);
+    BIND_HANDLER("/library_stats.xml",getLibraryStatsXML);
 }
 
 bool 
@@ -48,24 +65,116 @@ LibrarianController::index(HTTP::Env& env)
 }
 
 bool
-LibrarianController::stats(HTTP::Env& env)
+LibrarianController::getLibraryStatsXML(HTTP::Env& env)
 {
-    std::string& libID = env.req->params["lib"];
-    
+    env.res->data.reset(new std::stringstream);
+
+    std::string& libIDStr = env.req->params["lib_id"];
+    LibrarianConfig::LibraryCollection libraries = Config::instance()->librarian.libraries;
+    int libID;
+    if (libIDStr.empty())
+    {
+        // Serialize all the libraries
+        std::vector<StatsBlock> stats;
+        for (LibrarianConfig::LibraryCollection::iterator iter = libraries.begin(); iter != libraries.end(); ++iter)
+        {
+            StatsBlock b;
+            b.id = iter->first;
+            b.displayName = iter->second.nickname;
+            b.data[L"sjflksdjlf"] = 8798798;
+            stats.push_back(b);
+        }
+        boost::archive::xml_oarchive ar(*env.res->data);
+        ar << boost::serialization::make_nvp("libraries",stats);
+    }
+    else
+    {
+        // Serialize a single library
+        try 
+        {
+            libID = boost::lexical_cast<int>(libIDStr);
+            LibrarianConfig::LibraryCollection::iterator iter = libraries.find(libID);
+            boost::archive::xml_oarchive ar(*env.res->data);
+            if (iter != libraries.end())
+            {
+                // Good library ID, serialize
+                StatsBlock b;
+                b.id = iter->first;
+                b.displayName = iter->second.nickname;
+                b.data[L"sjflksdjlf"] = 8798798;
+                ar << boost::serialization::make_nvp("library",b);
+            }
+            else
+            {
+                // Library with that ID does not exists
+                Error err;
+                err << "Invalid library ID";
+                ar << boost::serialization::make_nvp("error",err);
+            }
+        }
+        catch (const boost::bad_lexical_cast& e)
+        {
+            // Bad library ID
+            boost::archive::xml_oarchive ar(*env.res->data);
+            Error err;
+            err << "Invalid library ID [" << e.what() << "]";
+            ar << boost::serialization::make_nvp("error",err);        
+        }
+    }
+
+    env.res->headers["Content-Type"] = "text/xml";
+    env.res->headers["Content-Length"] = boost::lexical_cast<std::string>(env.res->data->tellp());
+
     return true;
 }
 
 bool
-LibrarianController::getLibrariesXML(HTTP::Env& env)
+LibrarianController::getLibraryXML(HTTP::Env& env)
 {
     env.res->data.reset(new std::stringstream);
+
+    std::string& libIDStr = env.req->params["lib_id"];
+    LibrarianConfig::LibraryCollection libraries = Config::instance()->librarian.libraries;
+    int libID;
+    if (libIDStr.empty())
     {
-        std::map<int, LibraryConfig> libraries = Config::instance()->librarian.libraries;
+        // Serialize all the libraries
         boost::archive::xml_oarchive ar(*env.res->data);
-        ar << boost::serialization::make_nvp("Libraries",libraries);
+        ar << boost::serialization::make_nvp("libraries",libraries);
     }
+    else
+    {
+        // Serialize a single library
+        try 
+        {
+            libID = boost::lexical_cast<int>(libIDStr);
+            LibrarianConfig::LibraryCollection::iterator iter = libraries.find(libID);
+            boost::archive::xml_oarchive ar(*env.res->data);
+            if (iter != libraries.end())
+            {
+                // Good library ID, serialize
+                ar << boost::serialization::make_nvp("library",*iter);
+            }
+            else
+            {
+                // Library with that ID does not exists
+                Error err;
+                err << "Invalid library ID";
+                ar << boost::serialization::make_nvp("error",err);
+            }
+        }
+        catch (const boost::bad_lexical_cast& e)
+        {
+            // Bad library ID
+            boost::archive::xml_oarchive ar(*env.res->data);
+            Error err;
+            err << "Invalid library ID [" << e.what() << "]";
+            ar << boost::serialization::make_nvp("error",err);        
+        }
+    }
+
     env.res->headers["Content-Type"] = "text/xml";
     env.res->headers["Content-Length"] = boost::lexical_cast<std::string>(env.res->data->tellp());
- 
+
     return true;
 }

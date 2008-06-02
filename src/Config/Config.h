@@ -122,6 +122,8 @@ namespace Musador
     class LibrarianConfig
     {
     public:
+
+        typedef std::map<int,LibraryConfig> LibraryCollection;
         
         /// Serialize this configuration.
         /// @param[in] ar Destination archive for the serialized data.
@@ -137,7 +139,7 @@ namespace Musador
         Property<std::wstring> dataDir;
 
         /// The music libraries known by the system, mapped by ID
-        Property<std::map<int, LibraryConfig> > libraries;
+        Property<LibraryCollection> libraries;
 
     };
 
