@@ -55,7 +55,7 @@ namespace Musador
     /// @class Indexer
     /// @brief Recursively processes a directory tree, indexing all directories and files contained therein.
     /// When run, the Indexer creates a database file and populates it with the collected data.
-    /// In addition to file system data, ID3 meta-data is also parsed and added to the Database.
+    /// In addition to file system data, ID3 meta-data are also parsed and added to the Database.
     class Indexer
     {
     public:
