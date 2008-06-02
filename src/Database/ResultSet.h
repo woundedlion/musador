@@ -7,37 +7,70 @@
 
 class Database;
 
+/// @class A collection of results from a call to Database::select()
 class ResultSet
 {
 public:
-	
-	ResultSet(boost::shared_ptr<Database> db);
 
-	virtual ~ResultSet() {};
+    /// Constructor.
+    /// @param[in] db Shared pointer to the Database from which the ResultSet is drawn.
+    ResultSet(boost::shared_ptr<Database> db);
 
-	boost::shared_ptr<Database> getDb();
+    /// Destructor.
+    virtual ~ResultSet() {};
 
-	virtual unsigned long count() = 0;
-	
-	virtual bool next() = 0;
-	
-	virtual void reset() = 0;
+    /// Get a shared pointer to the Database from which these results come.
+    /// @returns a shared pointer to the Database from which these results come.
+    boost::shared_ptr<Database> getDb();
 
-	virtual int getSize(int iCol) const = 0;
+    /// Get the count of items in the result set.
+    /// @returns the count of items in the result set.
+    virtual unsigned long count() = 0;
 
-	virtual const unsigned char * getBlob(int iCol) const = 0;
-	
-	virtual double getDouble(int iCol) const = 0;
-	
-	virtual int getInt(int iCol) const = 0;
-	
-	virtual __int64 getInt64(int iCol) const = 0;
-	
-	virtual const char * getText(int iCol) const = 0;
-	
+    /// Increment the current row index to the next row in the ResultSet.
+    /// @returns true on success, false if there are no more rows in the ResultSet.
+    virtual bool next() = 0;
+
+    /// Reset the current row index to the first row in the ResultSet
+    virtual void reset() = 0;
+
+    /// Get the size, in bytes, of the data in the specified column of the current row in the ResultSet.
+    /// @param[in] iCol Zero-based integer index of the column in question.
+    /// @returns The size in bytes of the data in the specified column.
+    virtual int getSize(int iCol) const = 0;
+
+    /// Get binary data from the specified column in the current row of the ResultSet.
+    /// @param[in] iCol Zero-based integer index of the column in question.
+    /// @returns a pointer to an array of bytes. 
+    /// @remarks The pointer returned should not be freed by the caller. It is valid until either the
+    /// current row changes via a call to next() or reset() or the ResultSet id deleted.
+    virtual const unsigned char * getBlob(int iCol) const = 0;
+
+    /// Get a double value from the specified column in the current row of the ResultSet.
+    /// @param[in] iCol Zero-based integer index of the column in question.
+    /// @returns the value of the specified column. 
+    virtual double getDouble(int iCol) const = 0;
+
+    /// Get an integer value from the specified column in the current row of the ResultSet.
+    /// @param[in] iCol Zero-based integer index of the column in question.
+    /// @returns the value of the specified column. 
+    virtual int getInt(int iCol) const = 0;
+
+    /// Get a 64-bit integer value from the specified column in the current row of the ResultSet.
+    /// @param[in] iCol Zero-based integer index of the column in question.
+    /// @returns the value of the specified column. 
+    virtual __int64 getInt64(int iCol) const = 0;
+
+    /// Get character data from the specified column in the current row of the ResultSet.
+    /// @param[in] iCol Zero-based integer index of the column in question.
+    /// @returns a pointer to an array of characters. 
+    /// @remarks The pointer returned should not be freed by the caller. It is valid until either the
+    /// current row changes via a call to next() or reset() or the ResultSet id deleted.
+    virtual const char * getText(int iCol) const = 0;
+
 private:
 
-	boost::shared_ptr<Database> db;
+    boost::shared_ptr<Database> db;
 };
 
 #endif
