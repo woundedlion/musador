@@ -7,15 +7,24 @@
 #include "Database/Entity.h"
 #include "EntityFile.h"
 
+/// @class EntityDir
+/// @brief A Database Entity representing a directory.
 class EntityDir : public Entity
 {
 public:
 
-	Column<std::wstring> path;
-	Column<time_t> mtime;
+    /// @brief Constructor.
+    /// @param[in] db A shared pointer to the database instance where this Entity is stored.
+    EntityDir(boost::shared_ptr<Database> db);
 
-	EntityDir(boost::shared_ptr<Database> db);
-	~EntityDir();
+    /// @brief Destructor.
+    ~EntityDir();
+
+    /// @brief The full path to the directory on disk
+    Column<std::wstring> path;
+
+    /// @brief The Last Modified time of the directory
+    Column<time_t> mtime;
 
 };
 

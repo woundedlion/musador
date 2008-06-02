@@ -22,65 +22,105 @@ namespace fs = boost::filesystem;
 namespace Musador
 {
 
-	class IndexerProgress
-	{
-	friend class Indexer;
+    /// @class IndexerProgress
+    /// @brief Container for statistics on the current progress of an Indexer.
+    class IndexerProgress
+    {
+        friend class Indexer;
 
-	public:
+    public:
 
-		IndexerProgress();
-				
-		unsigned int numFiles;
-		unsigned int numDirs;
-		unsigned long long bytes;
-		time_t duration;
-		std::wstring lastPath;
-		bool done;
-	};
+        /// @brief Constructor.
+        IndexerProgress();
 
-	class Indexer
-	{
-	public:
+        /// @brief The number of files which have so far been indexed.
+        unsigned int numFiles;
 
-		boost::signal<void (const IndexerProgress& p)> sigDone;
+        /// @brief The number of directories which have so far been indexed.
+        unsigned int numDirs;
 
-		Indexer(std::wstring dbFilename);
-		~Indexer();
+        /// @brief The total size in bytes if all the files which have so far been indexed.
+        unsigned long long bytes;
 
-		void clearRootTargets();
-		bool addRootTarget(const std::wstring& target);
-		void reindex();
-		void cancel();
-		void waitDone();
-		void runIndexer();
-		IndexerProgress progress() const;
+        /// @brief The duration of the current indexing job.
+        time_t duration;
 
-	private:
+        /// @brief The last full path processed by the Indexer.
+        std::wstring lastPath;
 
-		static enum {
-			ERR_PARSE = 1,
-			ERR_DB = 2,
-		} IndexerError;
+        /// @brief True if the index is complete, false otherwise.
+        bool done;
+    };
 
-		bool initDB();
-		unsigned long addDirectory(const fs::wdirectory_entry& dir);
-		unsigned long addFile(const fs::wdirectory_entry& file, unsigned long parentId);
+    /// @class Indexer
+    /// @brief Recursively processes a directory tree, indexing all directories and files contained therein.
+    /// When run, the Indexer creates a database file and populates it with the collected data.
+    /// In addition to file system data, ID3 meta-data is also parsed and added to the Database.
+    class Indexer
+    {
+    public:
 
-		static const int INVALID_ID = -1;
+        /// @brief Constructor.
+        /// @param[in] The path to the output database file for indices create by this Indexer.
+        Indexer(std::wstring dbFilename);
 
-		std::wstring dbFilename;
-		boost::shared_ptr<Database> db;
+        /// @brief Destructor.
+        ~Indexer();
 
-		Targets targets;
-		Mutex targetsMutex;
+        /// @brief Clear the collection of paths targetted byt his Indexer.
+        void clearRootTargets();
 
-		mutable Mutex progressMutex;
-		IndexerProgress p;
+        /// @brief Add a target diretory to this Indexer.
+        /// @param[in] target The path to a directory to be recursively indexed by this Indexer.
+        /// @returns true if the path was added, false otherwise
+        bool addRootTarget(const std::wstring& target);
 
-		boost::thread * indexThread;
-		Mutex indexThreadMutex;
-		bool canceled;
-	};
+        /// @brief Asynchronously regenerate the full index of this Indexer's targets.
+        /// @remarks Spawns a thread to do the actual indexing and returns immediately.
+        void reindex();
+
+        /// @brief Cancel the current indexing job, if one is in progess.
+        void cancel();
+
+        /// @brief Wait until the current indexing job is done.
+        void waitDone();
+
+        /// @brief Synchronously run an indexing job.
+        /// @remarks Returns when the indexing job is done.
+        void runIndexer();
+
+        /// Get the progress stats for th currently executing indexing job.
+        IndexerProgress progress() const;
+
+        /// boost::signal used by interested parties to connect and receive notification whenever an indexing job completes.
+        boost::signal<void (const IndexerProgress& p)> sigDone;
+
+    private:
+
+        static enum {
+            ERR_PARSE = 1,
+            ERR_DB = 2,
+        } IndexerError;
+
+        bool initDB();
+        unsigned long addDirectory(const fs::wdirectory_entry& dir);
+        unsigned long addFile(const fs::wdirectory_entry& file, unsigned long parentId);
+
+        static const int INVALID_ID = -1;
+
+        std::wstring dbFilename;
+        boost::shared_ptr<Database> db;
+
+        Targets targets;
+        Mutex targetsMutex;
+
+        mutable Mutex progressMutex;
+        IndexerProgress p;
+
+        boost::thread * indexThread;
+        Mutex indexThreadMutex;
+        bool canceled;
+    };
 }
 
 #endif
