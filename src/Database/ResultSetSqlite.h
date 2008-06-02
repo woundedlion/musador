@@ -5,17 +5,18 @@
 
 struct sqlite3_stmt;
 
-/// @class Implements the ResultSet interface for sqlite3 databases.
+/// @class ResultSetSqlite
+/// @brief Implements the ResultSet interface for sqlite3 databases.
 class ResultSetSqlite : public ResultSet
 {
 public:
 
-    /// Constructor.
+    /// @brief Constructor.
     /// @param[in] db Shared pointer to the Database from which the ResultSet is drawn.
     /// @param[in] stmt A pointer to the sqlite3 statement object which is invoked to retrieve the ResultSet.
     ResultSetSqlite(boost::shared_ptr<Database> db, sqlite3_stmt * stmt);
 
-    /// Destructor.
+    /// @brief Destructor.
     ~ResultSetSqlite();
 
     unsigned long count();

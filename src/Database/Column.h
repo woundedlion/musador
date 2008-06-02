@@ -5,48 +5,49 @@
 #include "Utilities/Util.h"
 #include "ResultSet.h"
 
-/// @class Base class for columns in a Database Entity
+/// @class ColumnBase
+/// @brief Base class for columns in a Database Entity
 class ColumnBase
 {
 public:
 
-    /// Constructor.
+    /// @brief Constructor.
     /// @param[in]name The name of the column in the underlying database.
     ColumnBase(std::wstring name) : 
     nameStr(name),
     dirty(false)
     {}
 
-    /// Destructor.
+    /// @brief Destructor.
     virtual ~ColumnBase() 
     {}
 
-    /// Get the name of the Column.
+    /// @brief Get the name of the Column.
     /// @returns a wide-character string containing the name of the Column.
     inline const std::wstring& name()
     {
         return this->nameStr;
     }
 
-    /// Check whether a column is dirty, i.e. has changed since the last save to the database.
+    /// @brief Check whether a column is dirty, i.e. has changed since the last save to the database.
     /// @returns True if the column has changed and requires a write to the databse, false otherwise
     inline bool isDirty()
     {
         return this->dirty;
     }
 
-    /// Set the dirty flag on a column so that it will be written to the database on the next save.
+    /// @brief Set the dirty flag on a column so that it will be written to the database on the next save.
     /// @param d Boolean value used to set the dirty flag for this column.
     inline void setDirty(bool d)
     {
         this->dirty = d;
     }
 
-    /// Write the value contained in this column to the specified output stream.
+    /// @brief Write the value contained in this column to the specified output stream.
     /// @param[in] out The stream to which the value is written.
     virtual void writeValue(std::wstringstream& out) = 0;
 
-    /// Fills this column with the value from a particular column in a ResultSet.
+    /// @brief Fills this column with the value from a particular column in a ResultSet.
     /// @param[in] r A ResultSet containing column data retrieved from the database.
     /// @param[in] iCol Zero-based integer column index into the ResultSet specifying the column from 
     /// which to extract the data.
@@ -59,7 +60,9 @@ private:
 
 };
 
-/// @class Concrete class template for various Column types.
+/// @class Column
+/// @brief Concrete class template for various Column types.
+/// Implements the interface defined in ColumnBase
 template <typename T>
 class Column : public ColumnBase
 {
