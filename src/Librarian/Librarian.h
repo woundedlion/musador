@@ -16,50 +16,65 @@
 using namespace Musador;
 namespace Musador
 {
-	class PipeListener;
+    class PipeListener;
 
-	class Librarian : public WindowsService<Librarian>
-	{
-	friend class WindowsService<Librarian>;
-	public:
+    /// @class Librarian
+    /// @brief The daemon component of the Musador system.
+    /// This module contains the web server, services requests from web clients, manages config data,
+    /// and manages library index files.
+    class Librarian : public WindowsService<Librarian>
+    {
 
-		Librarian();
-		
-		~Librarian();
+        friend class WindowsService<Librarian>;
 
-		int run(unsigned long argc, wchar_t * argv[]);
+    public:
 
-		void index(const std::wstring& outfile,const std::vector<std::wstring>& paths);
+        /// @brief Constructor.
+        Librarian();
 
-		void configDefaults(Config& cfg);
+        /// @brief Destructor.
+        ~Librarian();
 
-	private:
+        /// @brief Run the main thread of the Librarian.
+        /// @note This function will not return until the Librarian is shut down.
+        int run(unsigned long argc, wchar_t * argv[]);
 
-		void onGUIAccept(boost::shared_ptr<IOMsg> msg, boost::any tag);
-		void onGUIMsg(boost::shared_ptr<GUIMsg> msg);
+        /// @brief Run an indexing job on the specified paths, writing index data to the specified output file.
+        /// @note This function behaves synchronously, returning when the indexing job is complete.
+        void index(const std::wstring& outfile,const std::vector<std::wstring>& paths);
 
-		template <typename T>
-		void notifyGUI();
+        /// @brief Populate the provided Config class with default values
+        void configDefaults(Config& cfg);
 
-		boost::shared_ptr<GUIListener> listener;
-		boost::shared_ptr<GUIConnection> gui;
-		boost::shared_ptr<Server> server;
-		LibrarianController controller;
+    private:
 
-	};
+        void onGUIAccept(boost::shared_ptr<IOMsg> msg, boost::any tag);
+        void onGUIMsg(boost::shared_ptr<GUIMsg> msg);
 
-	template <typename T>
-	void Librarian::notifyGUI()
-	{
-		if (NULL != this->gui)
-		{
-			boost::shared_ptr<T> msg(new T());
-			std::stringstream msgData;
-			boost::archive::binary_oarchive ar(msgData);
-			ar & msg;
-			this->gui->beginWrite(msgData);
-		}
-	}
+        template <typename T>
+        void notifyGUI();
+
+        boost::shared_ptr<GUIListener> listener;
+        boost::shared_ptr<GUIConnection> gui;
+        boost::shared_ptr<Server> server;
+        LibrarianController controller;
+
+    };
+
+    /// @brief Send a message to the GUI process.
+    /// @param The type of message to send to the GUI process.
+    template <typename T>
+    void Librarian::notifyGUI()
+    {
+        if (NULL != this->gui)
+        {
+            boost::shared_ptr<T> msg(new T());
+            std::stringstream msgData;
+            boost::archive::binary_oarchive ar(msgData);
+            ar & msg;
+            this->gui->beginWrite(msgData);
+        }
+    }
 
 }
 

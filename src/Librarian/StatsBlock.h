@@ -3,10 +3,14 @@
 
 namespace Musador
 {
+
+    /// @class StatsBlock
+    /// @brief A serializable class containing arbitrary stats name-value pairs
     class StatsBlock
     {
     public:
 
+        /// @brief Collection type for stats data
         typedef std::map<std::wstring,int> StatsCollection;
 
         /// Serialize this StatsBlock.
@@ -20,8 +24,14 @@ namespace Musador
             ar & BOOST_SERIALIZATION_NVP(data);
         }
 
+        /// @brief The numeric id of this StatsBlock.
         int id;
+
+        /// @brief The friendly name for this stats block.
         std::wstring displayName;
+
+        /// @brief The stats data contained within this block.
+        /// This member consists of name-value pairs representing individual stats.
         StatsCollection data;
 
     };
