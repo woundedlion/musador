@@ -1,6 +1,8 @@
 #include "EntityFile.h"
 
-EntityFile::EntityFile(boost::shared_ptr<Database> db) :
+using namespace Musador;
+
+EntityFile::EntityFile(boost::shared_ptr<Database::IDatabase> db) :
 	Entity(db, L"files"),
 	// bind members to column names in the database table
 	filename(L"filename"),

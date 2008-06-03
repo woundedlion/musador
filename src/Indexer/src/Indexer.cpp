@@ -49,9 +49,9 @@ void Indexer::runIndexer()
 
 	try 
 	{
-		this->db.reset(new DatabaseSqlite(this->dbFilename));
+		this->db.reset(new Database::DatabaseSqlite(this->dbFilename));
 	}
-	catch (DatabaseException e)
+	catch (Database::DatabaseException e)
 	{
 		LOG(Critical) << "Error acquiring database " << this->dbFilename << ": " << e.what();
 	}
@@ -172,7 +172,7 @@ unsigned long Indexer::addDirectory(const fs::wdirectory_entry& dir)
 			return Indexer::INVALID_ID;
 		}
 	}
-	catch (DatabaseException e)
+	catch (Database::DatabaseException e)
 	{
 		LOG(Error) << "Database Error " << e.what();
 		return Indexer::INVALID_ID;
@@ -230,7 +230,7 @@ unsigned long Indexer::addFile(const fs::wdirectory_entry& file, unsigned long p
 			return Indexer::INVALID_ID;
 		}
 	}
-	catch (DatabaseException e)
+	catch (Database::DatabaseException e)
 	{
 		LOG(Error) << "Database Error " << e.what();
 		return Indexer::INVALID_ID;
@@ -273,7 +273,7 @@ bool Indexer::initDB()
 						   mtime INTEGER\
 						   )");
 	}
-	catch (DatabaseException e)
+	catch (Database::DatabaseException e)
 	{
 		LOG(Critical) << "Unable to initialize database tables: Error " << e.what();
 		return false;

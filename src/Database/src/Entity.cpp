@@ -2,7 +2,9 @@
 #include "Utilities/Util.h"
 #include "Entity.h"
 
-Entity::Entity(boost::shared_ptr<Database> dbPtr, std::wstring table) :
+using namespace Musador::Database;
+
+Entity::Entity(boost::shared_ptr<IDatabase> dbPtr, std::wstring table) :
 db(dbPtr),
 table(table),
 id(NEW_ROW_ID)
@@ -15,7 +17,8 @@ Entity::~Entity()
 
 }
 
-bool Entity::load(unsigned long id)
+bool 
+Entity::load(unsigned long id)
 {
 	this->id = id;
 	std::wstringstream cond;
@@ -36,7 +39,8 @@ bool Entity::load(unsigned long id)
 	return true;
 }
 
-bool Entity::save()
+bool 
+Entity::save()
 {
 	// INSERT if id is NULL
 	if (NEW_ROW_ID == this->id)
@@ -64,7 +68,8 @@ bool Entity::save()
 	return r;
 }
 
-bool Entity::del()
+bool 
+Entity::del()
 {
 	std::wstringstream cond;
 	cond << L"id=" << this->id;

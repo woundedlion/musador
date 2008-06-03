@@ -1,6 +1,8 @@
 #include "EntityDir.h"
 
-EntityDir::EntityDir(boost::shared_ptr<Database> db) :
+using namespace Musador;
+
+EntityDir::EntityDir(boost::shared_ptr<Database::IDatabase> db) :
 	Entity(db, L"dirs"),
 	// bind members to column names in the database table
 	path(L"path"),

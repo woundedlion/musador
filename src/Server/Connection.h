@@ -11,9 +11,6 @@
 
 namespace Musador
 {
-
-	using namespace Musador;
-
 	class Server;
 
 	typedef AbstractFactory<Connection> ConnectionFactory;

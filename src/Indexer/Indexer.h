@@ -109,7 +109,7 @@ namespace Musador
         static const int INVALID_ID = -1;
 
         std::wstring dbFilename;
-        boost::shared_ptr<Database> db;
+        boost::shared_ptr<Database::IDatabase> db;
 
         Targets targets;
         Mutex targetsMutex;

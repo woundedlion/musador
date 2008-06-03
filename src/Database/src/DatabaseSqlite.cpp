@@ -4,6 +4,8 @@
 #include "DatabaseSqlite.h"
 #include "sqlite/sqlite3.h"
 
+using namespace Musador::Database;
+
 DatabaseSqlite::DatabaseSqlite(std::wstring databaseName) : 
 	dbName(Util::unicodeToUtf8(databaseName.c_str())),
 		db(&DatabaseSqlite::tssCleanup)
@@ -23,22 +25,26 @@ DatabaseSqlite::~DatabaseSqlite()
 	}
 }
 
-bool DatabaseSqlite::txnBegin()
+bool 
+DatabaseSqlite::txnBegin()
 {
 	return this->execute(L"BEGIN");	
 }
 
-bool DatabaseSqlite::txnRollback()
+bool 
+DatabaseSqlite::txnRollback()
 {
 	return this->execute(L"ROLLBACK");	
 }
 
-bool DatabaseSqlite::txnCommit()
+bool 
+DatabaseSqlite::txnCommit()
 {
 	return this->execute(L"COMMIT");	
 }
 
-bool DatabaseSqlite::open()
+bool 
+DatabaseSqlite::open()
 {
 	if (NULL != this->db.get())
 		return false;
@@ -53,7 +59,8 @@ bool DatabaseSqlite::open()
 	return true;
 }
 
-bool DatabaseSqlite::close()
+bool 
+DatabaseSqlite::close()
 {
 	if (NULL == this->db.get())
 		return false;
@@ -68,7 +75,8 @@ bool DatabaseSqlite::close()
 	return true;
 }
 
-void DatabaseSqlite::tssCleanup(sqlite3 * dbPtr)
+void 
+DatabaseSqlite::tssCleanup(sqlite3 * dbPtr)
 {
 	int err;
 	if (dbPtr && SQLITE_OK != (err = ::sqlite3_close(dbPtr)))
@@ -79,7 +87,8 @@ void DatabaseSqlite::tssCleanup(sqlite3 * dbPtr)
 	delete dbPtr;
 }
 
-std::auto_ptr<ResultSet> DatabaseSqlite::select(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions)	
+std::auto_ptr<ResultSet> 
+DatabaseSqlite::select(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions)	
 {
 	std::wstringstream q;
 	q << "SELECT ";
@@ -119,7 +128,8 @@ std::auto_ptr<ResultSet> DatabaseSqlite::select(const std::wstring& table, const
 	return result;
 }
 
- unsigned long DatabaseSqlite::insert(const std::wstring& table,  const std::vector<ColumnBase *>& columns)
+unsigned long 
+DatabaseSqlite::insert(const std::wstring& table,  const std::vector<ColumnBase *>& columns)
 {
 	std::wstringstream q;
 	std::wstringstream valueStr;
@@ -142,7 +152,8 @@ std::auto_ptr<ResultSet> DatabaseSqlite::select(const std::wstring& table, const
 	return (this->execute(q.str()) ? static_cast<unsigned long>(::sqlite3_last_insert_rowid(this->db.get())) : NEW_ROW_ID );
 }
 
-bool DatabaseSqlite::update(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions )
+bool 
+DatabaseSqlite::update(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions )
 {
 	std::wstringstream q;
 	q << "UPDATE " << table << " SET ";
@@ -165,14 +176,16 @@ bool DatabaseSqlite::update(const std::wstring& table, const std::vector<ColumnB
 	return this->execute(q.str());
 }
 
-bool DatabaseSqlite::remove(const std::wstring& table, const std::wstring& conditions)
+bool 
+DatabaseSqlite::remove(const std::wstring& table, const std::wstring& conditions)
 {
 	std::wstringstream q;
 	q << "DELETE FROM " << table << " WHERE " << conditions;
 	return this->execute(q.str());
 }
 
-bool DatabaseSqlite::execute(const std::wstring& q)
+bool 
+DatabaseSqlite::execute(const std::wstring& q)
 {
 	if (NULL == this->db.get())
 		return false;
@@ -187,7 +200,8 @@ bool DatabaseSqlite::execute(const std::wstring& q)
 	return true;
 }
 
-void DatabaseSqlite::err(int errCode, const char * errMsg)
+void 
+DatabaseSqlite::err(int errCode, const char * errMsg)
 {
 	switch (errCode)
 	{

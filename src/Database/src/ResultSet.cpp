@@ -1,11 +1,14 @@
 #include "ResultSet.h"
 
-ResultSet::ResultSet(boost::shared_ptr<Database> dbPtr) :
+using namespace Musador::Database;
+
+ResultSet::ResultSet(boost::shared_ptr<IDatabase> dbPtr) :
 db(dbPtr)
 {
 }
 
-boost::shared_ptr<Database> ResultSet::getDb()
+boost::shared_ptr<IDatabase> 
+ResultSet::getDb()
 {
 	return this->db;
 }

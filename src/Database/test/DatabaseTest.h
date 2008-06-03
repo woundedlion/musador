@@ -16,12 +16,12 @@ public:
 	
 	DatabaseTest()
 	{
-		Musador::Logger::instance();
+		Logger::instance();
 	}
 
 	~DatabaseTest()
 	{
-		Musador::Logger::destroy();
+		Logger::destroy();
 	}
 
 	void setUp() 
@@ -35,7 +35,7 @@ public:
 
 	void testSqliteCreate() 
 	{
-		DatabaseSqlite db(L"testDB.db");
+        Database::DatabaseSqlite db(L"testDB.db");
 
 		try
 		{
@@ -50,7 +50,7 @@ public:
 							   )");
 			LOG(Info) << "Successfully created database tables";
 		}
-		catch (DatabaseException e)
+		catch (Database::DatabaseException e)
 		{
 			LOG(Critical) << "Unable to initialize database tables: Error " << e.what();
 			TS_FAIL(e.what());
@@ -59,12 +59,12 @@ public:
 		LOG(Info) << "testSqliteCreate Success!";
 	}
 
-	class EntityTest : public Entity
+	class EntityTest : public Database::Entity
 	{
 	public:
-		EntityTest(boost::shared_ptr<Database> db) :
+		EntityTest(boost::shared_ptr<Database::IDatabase> db) :
 		// bind Database and Table
-		Entity(db,L"test"),
+		Database::Entity(db,L"test"),
 		// bind Column objects to physical table columns
 		testInt(L"test_int"),
 		testStr(L"test_str"),
@@ -82,18 +82,18 @@ public:
 		
 		~EntityTest() {}
 
-		Column<int> testInt;
-		Column<std::string> testStr;
-		Column<char *> testPchar;
-		Column<std::wstring> testWStr;
-		Column<wchar_t *> testPwchar_t;
+		Database::Column<int> testInt;
+		Database::Column<std::string> testStr;
+		Database::Column<char *> testPchar;
+		Database::Column<std::wstring> testWStr;
+		Database::Column<wchar_t *> testPwchar_t;
 	};
 
 	void testSqliteInsert()
 	{
 
 		// Open database
-		boost::shared_ptr<Database> db(new DatabaseSqlite(L"testDB.db"));
+		boost::shared_ptr<Database::IDatabase> db(new Database::DatabaseSqlite(L"testDB.db"));
 		EntityTest ent(db);
 
 		char charBuf[32];
@@ -127,7 +127,7 @@ public:
 			ent.save();
 			this->entId = ent.getId();
 		}
-		catch (DatabaseException e)
+		catch (Database::DatabaseException e)
 		{
 			LOG(Critical) << "save() failed: " << e.what();
 			TS_FAIL(e.what());
@@ -144,7 +144,7 @@ public:
 		{
 			ent2.load(this->entId);
 		}
-		catch (DatabaseException e)
+		catch (Database::DatabaseException e)
 		{
 			LOG(Critical) << "load() failed: " << e.what();
 			TS_FAIL(e.what());
@@ -162,7 +162,7 @@ public:
 	void testSqliteUpdate()
 	{
 		// Open database
-		boost::shared_ptr<Database> db(new DatabaseSqlite(L"testDB.db"));
+		boost::shared_ptr<Database::IDatabase> db(new Database::DatabaseSqlite(L"testDB.db"));
 		EntityTest ent(db);
 
 		char charBuf[32];
@@ -175,7 +175,7 @@ public:
 		{
 			ent.load(this->entId);
 		}
-		catch (DatabaseException e)
+		catch (Database::DatabaseException e)
 		{
 			LOG(Critical) << "load() failed: " << e.what();
 			TS_FAIL(e.what());
@@ -211,7 +211,7 @@ public:
 		{
 			ent.save();
 		}
-		catch (DatabaseException e)
+		catch (Database::DatabaseException e)
 		{
 			LOG(Critical) << "save() failed: " << e.what();
 			TS_FAIL(e.what());
@@ -228,7 +228,7 @@ public:
 		{
 			ent2.load(ent.getId());
 		}
-		catch (DatabaseException e)
+		catch (Database::DatabaseException e)
 		{
 			LOG(Critical) << "load() failed: " << e.what();
 			TS_FAIL(e.what());
@@ -247,7 +247,7 @@ public:
 	void testSqliteDelete()
 	{
 		// Open database
-		boost::shared_ptr<Database> db(new DatabaseSqlite(L"testDB.db"));
+		boost::shared_ptr<Database::IDatabase> db(new Database::DatabaseSqlite(L"testDB.db"));
 		EntityTest ent(db);
 
 		char charBuf[32];
@@ -260,7 +260,7 @@ public:
 		{
 			ent.load(this->entId);
 		}
-		catch (DatabaseException e)
+		catch (Database::DatabaseException e)
 		{
 			LOG(Critical) << "load() failed: " << e.what();
 			TS_FAIL(e.what());
@@ -273,7 +273,7 @@ public:
 		{
 			ent.del();
 		}
-		catch (DatabaseException e)
+		catch (Database::DatabaseException e)
 		{
 			LOG(Critical) << "del() failed: " << e.what();
 			TS_FAIL(e.what());
@@ -284,7 +284,7 @@ public:
 		{
 			TS_ASSERT(!ent.load(this->entId));
 		}
-		catch (DatabaseException e)
+		catch (Database::DatabaseException e)
 		{
 			LOG(Critical) << "load() failed: " << e.what();
 			TS_FAIL(e.what());

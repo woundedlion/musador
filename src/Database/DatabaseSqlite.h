@@ -9,317 +9,321 @@
 
 struct sqlite3;
 
-/// @class DatabaseSqlite
-/// @brief Implements the Database interface for sqlite3 databases.
-class DatabaseSqlite : public Database
+namespace Musador
 {
-    friend class ResultSetSqlite;
-
-public:
-
-    /// @brief Constructor.
-    /// @param[in] databaseName The path to the database file on disk.
-    DatabaseSqlite(std::wstring databaseName);
-
-    /// @brief Destructor.
-    ~DatabaseSqlite();
-
-    bool txnBegin();
-    bool txnRollback();
-    bool txnCommit();
-
-    std::auto_ptr<ResultSet> select(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions);	
-    unsigned long insert(const std::wstring& table, const std::vector<ColumnBase *>& columns);	
-    bool update(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions );	
-    bool remove(const std::wstring& table, const std::wstring& conditions);
-    bool execute(const std::wstring& q);
-
-private:
-
-    std::string dbName;
-    boost::thread_specific_ptr<sqlite3> db;
-
-    static void tssCleanup(sqlite3 * dbPtr);
-    static void err(int errCode, const char * errMsg = NULL);
-
-    bool open();
-    bool close();
-};
-
-namespace sqlite {
-
-    /// @class ErrUnknown
-    /// @brief Exception type for sqlite-specific errors
-    class ErrUnknown : public DatabaseException
+    namespace Database
     {
-    public:
+        /// @class DatabaseSqlite
+        /// @brief Implements the IDatabase interface for sqlite3 databases.
+        class DatabaseSqlite : public IDatabase
+        {
+            friend class ResultSetSqlite;
 
-        /// @brief Constructor.
-        ErrUnknown() : DatabaseException("Unknown database error") {}
-    };
+        public:
 
-    /// @class ErrSQL
-    /// @brief Exception type for sqlite-specific errors
-    class ErrSQL : public DatabaseException
-    {
-    public:
-        
-        /// @brief Constructor.
-        ErrSQL(const char * errMsg) : DatabaseException(errMsg ? errMsg : "SQL error or missing database" ) {}
-    };
+            /// @brief Constructor.
+            /// @param[in] databaseName The path to the database file on disk.
+            DatabaseSqlite(std::wstring databaseName);
 
-    /// @class ErrInternal
-    /// @brief Exception type for sqlite-specific errors
-    class ErrInternal : public DatabaseException
-    {
-    public:
+            /// @brief Destructor.
+            ~DatabaseSqlite();
 
-        /// @brief Constructor.
-        ErrInternal() : DatabaseException("Internal logic error in database engine") {}
-    };
+            bool txnBegin();
+            bool txnRollback();
+            bool txnCommit();
 
-    /// @class ErrPermission
-    /// @brief Exception type for sqlite-specific errors
-    class ErrPermission : public DatabaseException
-    {
-    public:
+            std::auto_ptr<ResultSet> select(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions);	
+            unsigned long insert(const std::wstring& table, const std::vector<ColumnBase *>& columns);	
+            bool update(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions );	
+            bool remove(const std::wstring& table, const std::wstring& conditions);
+            bool execute(const std::wstring& q);
 
-        /// @brief Constructor.
-        ErrPermission() : DatabaseException("Access permission denied") {}
-    };
+        private:
 
-    /// @class ErrAbort
-    /// @brief Exception type for sqlite-specific errors
-    class ErrAbort : public DatabaseException
-    {
-    public:
+            std::string dbName;
+            boost::thread_specific_ptr<sqlite3> db;
 
-        /// @brief Constructor.
-        ErrAbort() : DatabaseException("Callback routine requested an abor") {}
-    };
+            static void tssCleanup(sqlite3 * dbPtr);
+            static void err(int errCode, const char * errMsg = NULL);
 
-    /// @class ErrBusy
-    /// @brief Exception type for sqlite-specific errors
-    class ErrBusy : public DatabaseException
-    {
-    public:
+            bool open();
+            bool close();
+        };
 
-        /// @brief Constructor.
-        ErrBusy() : DatabaseException("The database file is locked") {}
-    };
+        namespace sqlite {
 
-    /// @class ErrLocked
-    /// @brief Exception type for sqlite-specific errors
-    class ErrLocked : public DatabaseException
-    {
-    public:
+            /// @class ErrUnknown
+            /// @brief Exception type for sqlite-specific errors
+            class ErrUnknown : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrLocked() : DatabaseException("A table in the database is locked") {}
-    };
+                /// @brief Constructor.
+                ErrUnknown() : DatabaseException("Unknown database error") {}
+            };
 
-    /// @class ErrNoMem
-    /// @brief Exception type for sqlite-specific errors
-    class ErrNoMem : public DatabaseException
-    {
-    public:
+            /// @class ErrSQL
+            /// @brief Exception type for sqlite-specific errors
+            class ErrSQL : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrNoMem() : DatabaseException("A memory alloctaion failed") {}
-    };
+                /// @brief Constructor.
+                ErrSQL(const char * errMsg) : DatabaseException(errMsg ? errMsg : "SQL error or missing database" ) {}
+            };
 
-    /// @class ErrReadOnly
-    /// @brief Exception type for sqlite-specific errors
-    class ErrReadOnly : public DatabaseException
-    {
-    public:
+            /// @class ErrInternal
+            /// @brief Exception type for sqlite-specific errors
+            class ErrInternal : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrReadOnly() : DatabaseException("Attempt to write a readonly database") {}
-    };
+                /// @brief Constructor.
+                ErrInternal() : DatabaseException("Internal logic error in database engine") {}
+            };
 
-    /// @class ErrInterrupt
-    /// @brief Exception type for sqlite-specific errors
-    class ErrInterrupt : public DatabaseException
-    {
-    public:
+            /// @class ErrPermission
+            /// @brief Exception type for sqlite-specific errors
+            class ErrPermission : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrInterrupt() : DatabaseException("Operation terminated by interrupt") {}
-    };
+                /// @brief Constructor.
+                ErrPermission() : DatabaseException("Access permission denied") {}
+            };
 
-    /// @class ErrIO
-    /// @brief Exception type for sqlite-specific errors
-    class ErrIO : public DatabaseException
-    {
-    public:
+            /// @class ErrAbort
+            /// @brief Exception type for sqlite-specific errors
+            class ErrAbort : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrIO() : DatabaseException("Disk I/O error occurred") {}
-    };
+                /// @brief Constructor.
+                ErrAbort() : DatabaseException("Callback routine requested an abor") {}
+            };
 
-    /// @class ErrCourrupt
-    /// @brief Exception type for sqlite-specific errors
-    class ErrCorrupt : public DatabaseException
-    {
-    public:
+            /// @class ErrBusy
+            /// @brief Exception type for sqlite-specific errors
+            class ErrBusy : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrCorrupt() : DatabaseException("The database file has been corrupted") {}
-    };
+                /// @brief Constructor.
+                ErrBusy() : DatabaseException("The database file is locked") {}
+            };
 
-    /// @class ErrNotFound
-    /// @brief Exception type for sqlite-specific errors
-    class ErrNotFound : public DatabaseException
-    {
-    public:
+            /// @class ErrLocked
+            /// @brief Exception type for sqlite-specific errors
+            class ErrLocked : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrNotFound() : DatabaseException("Table or record not found") {}
-    };
+                /// @brief Constructor.
+                ErrLocked() : DatabaseException("A table in the database is locked") {}
+            };
 
-    /// @class ErrFull
-    /// @brief Exception type for sqlite-specific errors
-    class ErrFull : public DatabaseException
-    {
-    public:
+            /// @class ErrNoMem
+            /// @brief Exception type for sqlite-specific errors
+            class ErrNoMem : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrFull() : DatabaseException("Insertion failed because database is full") {}
-    };
+                /// @brief Constructor.
+                ErrNoMem() : DatabaseException("A memory alloctaion failed") {}
+            };
 
-    /// @class ErrCantOpen
-    /// @brief Exception type for sqlite-specific errors
-    class ErrCantOpen : public DatabaseException
-    {
-    public:
+            /// @class ErrReadOnly
+            /// @brief Exception type for sqlite-specific errors
+            class ErrReadOnly : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrCantOpen() : DatabaseException("Unable to open the database file") {}
-    };
+                /// @brief Constructor.
+                ErrReadOnly() : DatabaseException("Attempt to write a readonly database") {}
+            };
 
-    /// @class ErrProtocol
-    /// @brief Exception type for sqlite-specific errors
-    class ErrProtocol : public DatabaseException
-    {
-    public:
+            /// @class ErrInterrupt
+            /// @brief Exception type for sqlite-specific errors
+            class ErrInterrupt : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrProtocol() : DatabaseException("Database lock protocol error") {}
-    };
+                /// @brief Constructor.
+                ErrInterrupt() : DatabaseException("Operation terminated by interrupt") {}
+            };
 
-    /// @class ErrEmpty 
-    /// @brief Exception type for sqlite-specific errors
-    class ErrEmpty : public DatabaseException
-    {
-    public:
+            /// @class ErrIO
+            /// @brief Exception type for sqlite-specific errors
+            class ErrIO : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrEmpty() : DatabaseException("Database is empty") {}
-    };
+                /// @brief Constructor.
+                ErrIO() : DatabaseException("Disk I/O error occurred") {}
+            };
 
-    /// @class ErrSchema 
-    /// @brief Exception type for sqlite-specific errors
-    class ErrSchema : public DatabaseException
-    {
-    public:
+            /// @class ErrCourrupt
+            /// @brief Exception type for sqlite-specific errors
+            class ErrCorrupt : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrSchema() : DatabaseException("The database schema changed") {}
-    };
+                /// @brief Constructor.
+                ErrCorrupt() : DatabaseException("The database file has been corrupted") {}
+            };
 
-    /// @class ErrTooBig
-    /// @brief Exception type for sqlite-specific errors
-    class ErrTooBig : public DatabaseException
-    {
-    public:
+            /// @class ErrNotFound
+            /// @brief Exception type for sqlite-specific errors
+            class ErrNotFound : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrTooBig() : DatabaseException("Too much data for one row") {}
-    };
+                /// @brief Constructor.
+                ErrNotFound() : DatabaseException("Table or record not found") {}
+            };
 
-    /// @class ErrConstraint
-    /// @brief Exception type for sqlite-specific errors
-    class ErrConstraint : public DatabaseException
-    {
-    public:
+            /// @class ErrFull
+            /// @brief Exception type for sqlite-specific errors
+            class ErrFull : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrConstraint() : DatabaseException("Abort due to contraint violation") {}
-    };
+                /// @brief Constructor.
+                ErrFull() : DatabaseException("Insertion failed because database is full") {}
+            };
 
-    /// @class ErrMismatch
-    /// @brief Exception type for sqlite-specific errors
-    class ErrMismatch : public DatabaseException
-    {
-    public:
+            /// @class ErrCantOpen
+            /// @brief Exception type for sqlite-specific errors
+            class ErrCantOpen : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrMismatch() : DatabaseException("Data type mismatch") {}
-    };
+                /// @brief Constructor.
+                ErrCantOpen() : DatabaseException("Unable to open the database file") {}
+            };
 
-    /// @class ErrMisuse
-    /// @brief Exception type for sqlite-specific errors
-    class ErrMisuse : public DatabaseException
-    {
-    public:
+            /// @class ErrProtocol
+            /// @brief Exception type for sqlite-specific errors
+            class ErrProtocol : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrMisuse() : DatabaseException("Library used incorrectly") {}
-    };
+                /// @brief Constructor.
+                ErrProtocol() : DatabaseException("Database lock protocol error") {}
+            };
 
-    /// @class ErrNoLFs
-    /// @brief Exception type for sqlite-specific errors
-    class ErrNoLFs : public DatabaseException
-    {
-    public:
+            /// @class ErrEmpty 
+            /// @brief Exception type for sqlite-specific errors
+            class ErrEmpty : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrNoLFs() : DatabaseException("OS features not supported on host") {}
-    };
+                /// @brief Constructor.
+                ErrEmpty() : DatabaseException("Database is empty") {}
+            };
 
-    /// @class ErrAuth
-    /// @brief Exception type for sqlite-specific errors
-    class ErrAuth : public DatabaseException
-    {
-    public:
+            /// @class ErrSchema 
+            /// @brief Exception type for sqlite-specific errors
+            class ErrSchema : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrAuth() : DatabaseException("Authorization denied") {}
-    };
+                /// @brief Constructor.
+                ErrSchema() : DatabaseException("The database schema changed") {}
+            };
 
-    /// @class ErrFormat
-    /// @brief Exception type for sqlite-specific errors
-    class ErrFormat : public DatabaseException
-    {
-    public:
+            /// @class ErrTooBig
+            /// @brief Exception type for sqlite-specific errors
+            class ErrTooBig : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrFormat() : DatabaseException("Auxiliary database format error") {}
-    };
+                /// @brief Constructor.
+                ErrTooBig() : DatabaseException("Too much data for one row") {}
+            };
 
-    /// @class ErrRange
-    /// @brief Exception type for sqlite-specific errors
-    class ErrRange : public DatabaseException
-    {
-    public:
+            /// @class ErrConstraint
+            /// @brief Exception type for sqlite-specific errors
+            class ErrConstraint : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrRange() : DatabaseException("Parameter out of range") {}
-    };
+                /// @brief Constructor.
+                ErrConstraint() : DatabaseException("Abort due to contraint violation") {}
+            };
 
-    /// @class ErrNotDB
-    /// @brief Exception type for sqlite-specific errors
-    class ErrNotDB : public DatabaseException
-    {
-    public:
+            /// @class ErrMismatch
+            /// @brief Exception type for sqlite-specific errors
+            class ErrMismatch : public DatabaseException
+            {
+            public:
 
-        /// @brief Constructor.
-        ErrNotDB() : DatabaseException("File opened that is not a database file") {}
-    };
+                /// @brief Constructor.
+                ErrMismatch() : DatabaseException("Data type mismatch") {}
+            };
 
+            /// @class ErrMisuse
+            /// @brief Exception type for sqlite-specific errors
+            class ErrMisuse : public DatabaseException
+            {
+            public:
+
+                /// @brief Constructor.
+                ErrMisuse() : DatabaseException("Library used incorrectly") {}
+            };
+
+            /// @class ErrNoLFs
+            /// @brief Exception type for sqlite-specific errors
+            class ErrNoLFs : public DatabaseException
+            {
+            public:
+
+                /// @brief Constructor.
+                ErrNoLFs() : DatabaseException("OS features not supported on host") {}
+            };
+
+            /// @class ErrAuth
+            /// @brief Exception type for sqlite-specific errors
+            class ErrAuth : public DatabaseException
+            {
+            public:
+
+                /// @brief Constructor.
+                ErrAuth() : DatabaseException("Authorization denied") {}
+            };
+
+            /// @class ErrFormat
+            /// @brief Exception type for sqlite-specific errors
+            class ErrFormat : public DatabaseException
+            {
+            public:
+
+                /// @brief Constructor.
+                ErrFormat() : DatabaseException("Auxiliary database format error") {}
+            };
+
+            /// @class ErrRange
+            /// @brief Exception type for sqlite-specific errors
+            class ErrRange : public DatabaseException
+            {
+            public:
+
+                /// @brief Constructor.
+                ErrRange() : DatabaseException("Parameter out of range") {}
+            };
+
+            /// @class ErrNotDB
+            /// @brief Exception type for sqlite-specific errors
+            class ErrNotDB : public DatabaseException
+            {
+            public:
+
+                /// @brief Constructor.
+                ErrNotDB() : DatabaseException("File opened that is not a database file") {}
+            };
+
+        }
+    }
 }
-
-
 
 #endif

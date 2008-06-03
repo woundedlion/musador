@@ -17,8 +17,6 @@ typedef boost::thread Thread;
 
 namespace Musador
 {
-	using namespace Musador;
-
 	class Server : public boost::enable_shared_from_this<Server>
 	{
 	public:
