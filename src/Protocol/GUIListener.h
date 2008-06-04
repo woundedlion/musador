@@ -5,17 +5,22 @@
 
 namespace Musador
 {
-	class GUIListener : public PipeListener
-	{
-	public:
+    /// @class GUIListener
+    /// @brief A concrete PipeListener which yields a GUIConnection.
+    class GUIListener : public PipeListener
+    {
+    public:
 
-		GUIListener();
+        /// @brief Constructor.
+        GUIListener();
 
-		boost::shared_ptr<Connection> createConnection();
+        /// @brief Factory method which creates a new GUIConnection.
+        boost::shared_ptr<Connection> createConnection();
 
-		void close() {}
+        /// @brief Close the listener and free any associated resources.
+        void close() {}
 
-	};
+    };
 }
 
 #endif
