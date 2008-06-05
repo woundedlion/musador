@@ -88,14 +88,14 @@ namespace Musador
     bool
     Property<T>::operator==(const Property<T>& rhs) const
     {
-        return this->get() == rhs.get<T>();
+        return this->get() == rhs.get();
     }
 
     template <typename T>
     bool
     Property<T>::operator!=(const Property<T>& rhs) const
     {
-        return this->get() != rhs.get<T>();
+        return this->get() != rhs.get();
     }
 
     template <typename T>

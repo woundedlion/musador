@@ -13,149 +13,201 @@
 
 namespace Musador
 {
-	typedef boost::condition Condition;
-	typedef boost::thread Thread;
-	typedef boost::mutex Mutex;
-	typedef boost::mutex::scoped_lock Guard;
+    typedef boost::condition Condition;
+    typedef boost::thread Thread;
+    typedef boost::mutex Mutex;
+    typedef boost::mutex::scoped_lock Guard;
 
-	typedef enum 
-	{
-		Debug = 0x0100 | 'D',
-		Info = 0x0200 | 'I',
-		Warning = 0x0300 | 'W',
-		Error = 0x0400 | 'E',
-		Critical = 0x0500 | 'C'
-	} LogLevel;
+    /// @brief The various log levels available when writing a message to the logs.
+    typedef enum 
+    {
+        Debug = 0x0100 | 'D',
+        Info = 0x0200 | 'I',
+        Warning = 0x0300 | 'W',
+        Error = 0x0400 | 'E',
+        Critical = 0x0500 | 'C'
+    } LogLevel;
 
+    /// @class LogStatement
+    /// @brief A single Log Statement
     class LogStatement
     {
     public:
 
+        /// @brief Constructor.
+        /// @param[in] lvl One of the members of the LogLevel enumeration indicating the level of this log message.
+        /// @param[in] msg A string containing the actual log message.
         LogStatement(LogLevel lvl, const std::wstring& msg) : lvl(lvl),msg(msg) {}
 
+        /// @brief The LogLevel of this log message.
         LogLevel lvl;
+
+        /// @brief The actual text of this log message.
         std::wstring msg;
     };
 
-    class LogListener
+    /// @class ILogListener
+    /// @brief An interface for classes which accept log messages and write them to some destination.
+    class ILogListener
     {
     public:
 
-        virtual ~LogListener() {}
+        /// @brief Destructor.
+        virtual ~ILogListener() {}
+
+        /// @brief Deliver a log message to this listener.
         virtual void send(const LogStatement& stmt) = 0;
     };
 
-    class ConsoleLogListener : public LogListener
+    /// @class ConsoleLogListener
+    /// @brief A log listener which writes messages to the console.
+    class ConsoleLogListener : public ILogListener
     {
     public:
 
-        ConsoleLogListener();    
-		~ConsoleLogListener();
+        /// @brief Constructor.
+        ConsoleLogListener();  
+
+        /// @brief Destructor.
+        ~ConsoleLogListener();
+
+        /// @brief Deliver a log message to this listener.
         void send(const LogStatement& stmt);
 
     private:
 
         Console console;
-		LogLevel curLevel;
-		
-		static const Console::TextColor LOG_COLOR_DEBUG = Console::COLOR_BLUE_LO;
-		static const Console::TextColor LOG_COLOR_INFO = Console::COLOR_WHITE_LO;
-		static const Console::TextColor LOG_COLOR_WARNING = Console::COLOR_CYAN_HI;
-		static const Console::TextColor LOG_COLOR_ERROR = Console::COLOR_YELLOW_HI;
-		static const Console::TextColor LOG_COLOR_CRITICAL = Console::COLOR_RED_HI;
+        LogLevel curLevel;
 
-	};
+        static const Console::TextColor LOG_COLOR_DEBUG = Console::COLOR_BLUE_LO;
+        static const Console::TextColor LOG_COLOR_INFO = Console::COLOR_WHITE_LO;
+        static const Console::TextColor LOG_COLOR_WARNING = Console::COLOR_CYAN_HI;
+        static const Console::TextColor LOG_COLOR_ERROR = Console::COLOR_YELLOW_HI;
+        static const Console::TextColor LOG_COLOR_CRITICAL = Console::COLOR_RED_HI;
 
-	class Logger : public Singleton<Logger>
-	{
-	friend class LogWriter;
-	public:
-	
-		Logger();
-		
-		~Logger();
+    };
 
-		void shutdown();
+    /// @class Logger
+    /// @brief Singleton logging object.
+    class Logger : public Singleton<Logger>
+    {
+        friend class LogWriter;
 
-		void run();
+    public:
 
-		void setLevel(LogLevel lvl);
+        /// @brief Constructor.
+        Logger();
 
-		LogWriter operator()(LogLevel lvl);
-		LogWriter operator()(LogLevel lvl, const std::string& sender);
-		LogWriter operator()(LogLevel lvl, const std::wstring& sender);
+        /// @brief Destructor.
+        ~Logger();
 
-	private:
+        /// @brief Shut down the Logger.
+        /// This function stops the logging thread and must be called before exit.
+        void shutdown();
 
-		void send(const LogStatement& stmt);
+        /// @brief Set the minimum log level for which messages are displayed.
+        /// Log messages which are below this level will be silently supressed.
+        void setLevel(LogLevel lvl);
 
-		Mutex logLock;
-		Condition logPending;	
-		std::queue<LogStatement> logMessages;
+        /// @brief Get a LogWriter to handle writing a log message.
+        /// @param[in] lvl The level of the log message that the returned writer will write.
+        /// @returns A LogWriter to handle writing a log message.
+        LogWriter operator()(LogLevel lvl);
 
-		LogLevel level;
+        /// @brief Get a LogWriter to handle writing a log message.
+        /// @param[in] lvl The level of the log message that the returned writer will write.
+        /// @param[in] sender A string containing a friendly name for the originator of this log message.
+        /// @returns A LogWriter to handle writing a log message.
+        LogWriter operator()(LogLevel lvl, const std::string& sender);
 
-		Thread * logThread;
-	};
+        /// @brief Get a LogWriter to handle writing a log message.
+        /// @param[in] lvl The level of the log message that the returned writer will write.
+        /// @param[in] sender A string containing a friendly name for the originator of this log message.
+        /// @returns A LogWriter to handle writing a log message.
+        LogWriter operator()(LogLevel lvl, const std::wstring& sender);
 
-	class LogWriter
-	{
-	public:
+    private:
 
-		LogWriter(Logger * logger, LogLevel lvl, const std::wstring& sender);
+        void run();
+        void send(const LogStatement& stmt);
 
-		~LogWriter();
+        Mutex logLock;
+        Condition logPending;	
+        std::queue<LogStatement> logMessages;
 
-		template <typename T>
-		LogWriter& operator<<(const T& msg);
+        LogLevel level;
 
-	private:
+        Thread * logThread;
+    };
 
-		Logger * logger;
-		std::wstringstream logStream;
-		bool active;
-		bool silent;
+    /// @class LogWriter
+    /// @brief Object which collects log message text and sends it to a logger when it goes out of scope.
+    class LogWriter
+    {
+    public:
+
+        /// @Constructor.
+        /// @param[in] logger Pointer to the logger instance to which completed log messages are eventually sent.
+        /// @param[in] sender A string containing a friendly name for the originator of this log message.
+        LogWriter(Logger * logger, LogLevel lvl, const std::wstring& sender);
+
+        /// @brief Destructor.
+        ~LogWriter();
+
+        /// @brief Template function which writes various types to the log stream.
+        /// @param[in] T The type of object to be written to the log.
+        /// @param[in] msg An object of type T to write to the logs.
+        /// @returns A reference to the log stream, allowing operator<<() calls to be chained.
+        template <typename T>
+        LogWriter& operator<<(const T& msg);
+
+    private:
+
+        Logger * logger;
+        std::wstringstream logStream;
+        bool active;
+        bool silent;
         LogLevel lvl;
-	};
+    };
 
-	template <typename T>
-	inline LogWriter& LogWriter::operator<<(const T& msg)
-	{
-		if (!this->silent)
-		{
-			this->active = true;
-			this->logStream << msg;
-		}
-		return (*this);
-	}
+    template <typename T>
+    inline LogWriter& LogWriter::operator<<(const T& msg)
+    {
+        if (!this->silent)
+        {
+            this->active = true;
+            this->logStream << msg;
+        }
+        return (*this);
+    }
 
-	template <>
-	inline LogWriter& LogWriter::operator<<<char>(const char& msg)
-	{
-		if (!this->silent)
-		{
-			this->active = true;
-			this->logStream << Util::utf8ToUnicode(msg);
-		}
-		return (*this);
-	}
+    template <>
+    inline LogWriter& LogWriter::operator<<<char>(const char& msg)
+    {
+        if (!this->silent)
+        {
+            this->active = true;
+            this->logStream << Util::utf8ToUnicode(msg);
+        }
+        return (*this);
+    }
 
-	template <>
-	inline LogWriter& LogWriter::operator<<<std::string>(const std::string& msg)
-	{
-		if (!this->silent)
-		{
-			this->active = true;
-			this->logStream << Util::utf8ToUnicode(msg);
-		}
-		return (*this);
-	}
+    template <>
+    inline LogWriter& LogWriter::operator<<<std::string>(const std::string& msg)
+    {
+        if (!this->silent)
+        {
+            this->active = true;
+            this->logStream << Util::utf8ToUnicode(msg);
+        }
+        return (*this);
+    }
 
-	LogWriter log(LogLevel lvl);
-	LogWriter log(LogLevel lvl, const std::string& sender);
-	LogWriter log(LogLevel lvl, const std::wstring& sender);
+    LogWriter log(LogLevel lvl);
+    LogWriter log(LogLevel lvl, const std::string& sender);
+    LogWriter log(LogLevel lvl, const std::wstring& sender);
 
-	#define LOG(x) log(x,LOG_SENDER)
+#define LOG(x) log(x,LOG_SENDER)
 
     template <typename T>
     inline LogWriter& operator<<(LogWriter& w, const Property<T>& p)

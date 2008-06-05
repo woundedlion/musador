@@ -18,48 +18,48 @@ class ConfigTest : public CxxTest::TestSuite
 {
 public:
 
-	void testConfig()
-	{
-		Config cfg;
+    void testConfig()
+    {
+        Config cfg;
 
-		// populate config object
-		cfg.server.sites.clear();
-		for (int i = 0; i < 10; i++)
-		{
-			HTTPConfig site;
-			site.addr = "111.222.333.444";
-			site.port = 5152 + i;
-			site.documentRoot = L"DOC_ROOT_TEST_";
-			site.documentRoot += boost::lexical_cast<std::wstring>(i);
-			site.requireAuth = (0 == i % 2);
-			cfg.server.sites.push_back(site);
-		}
+        // populate config object
+        ServerConfig::HTTPSiteCollection sites;
+        for (int i = 0; i < 10; i++)
+        {
+            HTTPConfig site;
+            site.addr = "111.222.333.444";
+            site.port = 5152 + i;
+            site.documentRoot = std::wstring(L"DOC_ROOT_TEST_") + boost::lexical_cast<std::wstring>(i);
+            site.requireAuth = (0 == i % 2);
+            sites.push_back(site);
+        }
+        cfg.server.sites = sites;
+        cfg.save(L"ConfigTest.xml");
 
-		cfg.save(L"ConfigTest.xml");
+        // Print config
+        std::wifstream ifs(L"ConfigTest.xml");
+        ifs.seekg(std::ios::beg);
+        while (!ifs.eof())
+        {
+            std::wstring line;
+            getline(ifs,line);
+            std::wcout << line << std::endl;
+        }
+        ifs.close();
 
-		// Print config
-		std::wifstream ifs(L"ConfigTest.xml");
-		ifs.seekg(std::ios::beg);
-		while (!ifs.eof())
-		{
-			std::wstring line;
-			getline(ifs,line);
-			std::wcout << line << std::endl;
-		}
-		ifs.close();
+        Config cfg2;
+        cfg2.load(L"ConfigTest.xml");
 
-		Config cfg2;
-		cfg2.load(L"ConfigTest.xml");
-
-		// check the config object
-		for (int i = 0; i < 10; i++)
-		{
-			BOOST_ASSERT(cfg.server.sites[i].addr ==  cfg2.server.sites[i].addr);
-			BOOST_ASSERT(cfg.server.sites[i].port ==  cfg2.server.sites[i].port);
-			BOOST_ASSERT(cfg.server.sites[i].documentRoot ==  cfg2.server.sites[i].documentRoot);
-			BOOST_ASSERT(cfg.server.sites[i].requireAuth ==  cfg2.server.sites[i].requireAuth);
-		}
-	}
+        // check the config object
+        ServerConfig::HTTPSiteCollection sites2 = cfg2.server.sites;
+        for (int i = 0; i < 10; i++)
+        {
+            BOOST_ASSERT(sites[i].addr ==  sites2[i].addr);
+            BOOST_ASSERT(sites[i].port ==  sites2[i].port);
+            BOOST_ASSERT(sites[i].documentRoot == sites2[i].documentRoot);
+            BOOST_ASSERT(sites[i].requireAuth == sites2[i].requireAuth);
+        }
+    }
 };
 
 #endif
