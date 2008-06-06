@@ -34,7 +34,7 @@ namespace Musador
             virtual bool txnCommit() = 0;
 
             /// @brief Select matching rows from the database. 
-            /// A SQL SELECT statement of the form SELECT <columns> FROM <table> WHERE <conditions> 
+            /// A SQL SELECT statement of the form SELECT [columns] FROM [table] WHERE [conditions] 
             /// is generated from the provided arguments.
             /// @param[in] table The database table from which to select.
             /// @param[in] columns A vector of columns to include in the SELECT statement.
@@ -43,16 +43,15 @@ namespace Musador
             virtual std::auto_ptr<ResultSet> select(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions) = 0;	
 
             /// @brief Insert a row into the database.
-            /// A SQL INSERT statement of the form INSERT INTO <table> (<columns_names>) VALUES (<column_values>) WHERE <consitions>
+            /// A SQL INSERT statement of the form INSERT INTO [table] ([columns_names]) VALUES ([column_values]) WHERE [conditions]
             /// is generated from the provided arguments.
             /// @param[in] table The database table in which to insert.
             /// @param[in] columns A vector of columns with data to include in the INSERT statement.
-            /// @param[in] conditions Condition string used for the WHERE clause in the INSERT statement.
             /// @returns The id value generated for the new row
             virtual unsigned long insert(const std::wstring& table, const std::vector<ColumnBase *>& columns) = 0;	
 
             /// @brief Update rows in the database.
-            /// A SQL UPDATE statement of the form UPDATE <table> SET (<column_name>=<column_value>, ...) WHERE <conditions>
+            /// A SQL UPDATE statement of the form UPDATE [table] SET ([column_name]=[column_value], ...) WHERE [conditions]
             /// is generated from the provided arguments.
             /// @param[in] table The database table on which to update.
             /// @param[in] columns A vector of columns with data to include in the UPDATE statement.
@@ -61,7 +60,7 @@ namespace Musador
             virtual bool update(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions ) = 0;	
 
             /// @brief Delete rows from the database.
-            /// A SQL DELETE statement of the form DELETE FROM <table> WHERE <conditions>
+            /// A SQL DELETE statement of the form DELETE FROM [table] WHERE [conditions]
             /// is generated from the provided arguments.
             /// @param[in] table The database table from which to delete.
             /// @param[in] conditions Condition string used for the WHERE clause in the DELETE statement.

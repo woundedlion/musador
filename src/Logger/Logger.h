@@ -146,8 +146,9 @@ namespace Musador
     {
     public:
 
-        /// @Constructor.
+        /// @brief Constructor.
         /// @param[in] logger Pointer to the logger instance to which completed log messages are eventually sent.
+        /// @param[in] lvl The lof level of messages that this LogWriter will write.
         /// @param[in] sender A string containing a friendly name for the originator of this log message.
         LogWriter(Logger * logger, LogLevel lvl, const std::wstring& sender);
 
@@ -155,7 +156,6 @@ namespace Musador
         ~LogWriter();
 
         /// @brief Template function which writes various types to the log stream.
-        /// @param[in] T The type of object to be written to the log.
         /// @param[in] msg An object of type T to write to the logs.
         /// @returns A reference to the log stream, allowing operator<<() calls to be chained.
         template <typename T>

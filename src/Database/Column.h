@@ -16,7 +16,7 @@ namespace Musador
         public:
 
             /// @brief Constructor.
-            /// @param[in]name The name of the column in the underlying database.
+            /// @param[in] name The name of the column in the underlying database.
             ColumnBase(std::wstring name) : 
               nameStr(name),
                   dirty(false)

@@ -61,7 +61,7 @@ namespace Musador
     public:
 
         /// @brief Constructor.
-        /// @param[in] The path to the output database file for indices create by this Indexer.
+        /// @param[in] dbFilename The path to the output database file for indices create by this Indexer.
         Indexer(std::wstring dbFilename);
 
         /// @brief Destructor.

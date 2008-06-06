@@ -155,11 +155,11 @@ namespace Musador
     public:
 
         /// @brief Load the configuration data contained in the specified file.
-        /// @param[in] The path to the config file
+        /// @param[in] path The path to the config file
         bool load(const std::wstring& path);
 
         /// @brief Save the configuration data to specified file.
-        /// @param[in] The path to the destination file.
+        /// @param[in] path The path to the destination file.
         bool save(const std::wstring& path);
 
         /// @brief Serialize this configuration.

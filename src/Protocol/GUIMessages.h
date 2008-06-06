@@ -28,7 +28,7 @@ namespace Musador
         GUIMsg() {};
 
         /// @brief Constructor.
-        /// @param[in] A member of the GUIMsgType enumeration indicating the type of message to create.
+        /// @param[in] type A member of the GUIMsgType enumeration indicating the type of message to create.
         GUIMsg(GUIMsgType type) : type(type) {}
 
         /// @brief Get the type of this message.
