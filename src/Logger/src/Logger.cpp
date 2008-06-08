@@ -6,6 +6,7 @@
 #include <iostream>
 
 using namespace Musador;
+using namespace Musador::Logging;
 
 template LogWriter& LogWriter::operator<<<std::wstring>(const std::wstring&);
 
@@ -25,13 +26,15 @@ Logger::~Logger()
 	delete this->logThread;
 }
 
-void Logger::shutdown()
+void 
+Logger::shutdown()
 {
 	this->send(LogStatement(Debug,L"SHUTDOWN"));
 	this->logThread->join();
 }
 
-void Logger::run()
+void 
+Logger::run()
 {
     ConsoleLogListener listener;
 	while (true)
@@ -51,27 +54,32 @@ void Logger::run()
 	}
 }
 
-void Logger::setLevel(LogLevel lvl)
+void 
+Logger::setLevel(LogLevel lvl)
 {
 	this->level = lvl;
 }
 
-LogWriter Logger::operator()(LogLevel lvl)
+LogWriter 
+Logger::operator()(LogLevel lvl)
 {
 	return LogWriter(this,lvl,L"");
 }
 
-LogWriter Logger::operator()(LogLevel lvl, const std::string& sender)
+LogWriter 
+Logger::operator()(LogLevel lvl, const std::string& sender)
 {
 	return LogWriter(this,lvl,Util::utf8ToUnicode(sender));
 }
 
-LogWriter Logger::operator()(LogLevel lvl, const std::wstring& sender)
+LogWriter 
+Logger::operator()(LogLevel lvl, const std::wstring& sender)
 {
 	return LogWriter(this,lvl,sender);
 }
 
-void Logger::send(const LogStatement& stmt)
+void 
+Logger::send(const LogStatement& stmt)
 {
 	Guard guard(this->logLock);
 	this->logMessages.push(stmt);
@@ -120,7 +128,8 @@ ConsoleLogListener::~ConsoleLogListener()
 {
 }
 
-void ConsoleLogListener::send(const LogStatement& stmt)
+void 
+ConsoleLogListener::send(const LogStatement& stmt)
 {
         if (stmt.lvl != this->curLevel)
         {
@@ -155,17 +164,20 @@ void ConsoleLogListener::send(const LogStatement& stmt)
 //////////////////////////////////////////////////////////////////////////
 // Convenience free functions
 //////////////////////////////////////////////////////////////////////////
-LogWriter Musador::log(LogLevel lvl)
+LogWriter 
+Logging::log(LogLevel lvl)
 {
 	return (*Logger::instance())(lvl);
 }
 
-LogWriter Musador::log(LogLevel lvl, const std::string& sender)
+LogWriter 
+Logging::log(LogLevel lvl, const std::string& sender)
 {
 	return (*Logger::instance())(lvl,sender);
 }
 
-LogWriter Musador::log(LogLevel lvl, const std::wstring& sender)
+LogWriter 
+Logging::log(LogLevel lvl, const std::wstring& sender)
 {
 	return (*Logger::instance())(lvl,sender);
 }

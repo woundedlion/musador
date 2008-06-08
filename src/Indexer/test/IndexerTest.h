@@ -17,12 +17,12 @@ public:
 	
 	IndexerTest()
 	{
-		Musador::Logger::instance();		
+		Logging::Logger::instance();		
 	}
 
 	~IndexerTest()
 	{
-		Musador::Logger::destroy();
+		Logging::Logger::destroy();
 	}
 
 	void setUp() 

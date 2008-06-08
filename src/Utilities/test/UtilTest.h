@@ -16,12 +16,12 @@ public:
 	
 	UtilTest()
 	{
-		Musador::Logger::instance();		
+        Logging::Logger::instance();		
 	}
 
 	~UtilTest()
 	{
-		Musador::Logger::destroy();
+        Logging::Logger::destroy();
 	}
 
 	void testEscapeQuotes()

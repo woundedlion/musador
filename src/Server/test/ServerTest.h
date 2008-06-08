@@ -22,19 +22,19 @@ public:
 
 	ServerTest()
 	{
-		Musador::Logger::instance();
-		this->net = Musador::Network::instance();
+        Logging::Logger::instance();
+		this->net = Network::instance();
 	}
 
 	~ServerTest()
 	{
-		Musador::Logger::destroy();
-		Musador::Network::destroy();
+        Logging::Logger::destroy();
+		Network::destroy();
 	}
 
 	void setUp() 
 	{
-		Logger::instance()->setLevel(Debug);
+        Logging::Logger::instance()->setLevel(Logging::Debug);
 		Proactor::instance()->start();
 	}
 
@@ -50,7 +50,7 @@ public:
 	void testServerIO()
 	{
 		ServerConfig cfg;
-		Musador::Server s(cfg);
+		Server s(cfg);
 
 		s.start();
 		s.waitForStart();
@@ -180,7 +180,7 @@ public:
 
 private:
 
-	Musador::Network * net;
+	Network * net;
 };
 
 #endif

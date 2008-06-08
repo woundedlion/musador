@@ -29,9 +29,9 @@ void usage()
 int _tmain(int argc, wchar_t * argv[]) 
 { 
 #if _DEBUG
-    Logger::instance()->setLevel(Debug);
+    Musador::Logging::Logger::instance()->setLevel(Musador::Logging::Debug);
 #else
-    Logger::instance()->setLevel(Info);
+    Musador::Logging::Logger::instance()->setLevel(Musador::Logging::Info);
 #endif
 
 	int r = 0;
@@ -99,7 +99,7 @@ int _tmain(int argc, wchar_t * argv[])
 		r = -1;
 	}
 
-    Logger::destroy();
+    Musador::Logging::Logger::destroy();
 	return r;
 }
 

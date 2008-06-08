@@ -16,12 +16,12 @@ public:
 	
 	DatabaseTest()
 	{
-		Logger::instance();
+        Logging::Logger::instance();
 	}
 
 	~DatabaseTest()
 	{
-		Logger::destroy();
+        Logging::Logger::destroy();
 	}
 
 	void setUp() 
