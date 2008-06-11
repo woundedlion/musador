@@ -20,7 +20,7 @@ WindowsService(L"Musador Librarian")
 	MIMEResolver::instance();
 
 	// load config or generate defaults
-    fs::wpath dataPath(Util::pathToDataDir() + L"\\Musador\\");
+    fs::wpath dataPath(Util::pathToDataDir() + L"\\Musador");
     if (!fs::exists(dataPath))
     {
         fs::create_directories(dataPath);
@@ -80,7 +80,7 @@ Librarian::configDefaults(Config& cfg)
 	HTTPConfig site;
 	site.addr = "0.0.0.0";
 	site.port = 5152;
-	site.documentRoot = cfg.librarian.dataDir.get() + L"\\html";
+    site.documentRoot = (fs::wpath(cfg.librarian.dataDir.get()) / L"html").directory_string();
 	site.requireAuth = false;
 	site.realm = L"Musador";
 
@@ -97,7 +97,7 @@ Librarian::configDefaults(Config& cfg)
     LibraryConfig lib;
     lib.id = 0;
     lib.nickname = L"bighurt";
-    lib.dataFile = cfg.librarian.dataDir.get() + L"\\bighurt.db";
+    lib.dataFile = (fs::wpath(cfg.librarian.dataDir.get()) / L"bighurt.db").file_string();
     std::vector<std::wstring> targets;
     targets.push_back(L"C:\\music\\library\\Blues");
     targets.push_back(L"C:\\music\\library\\Classical");

@@ -5,6 +5,7 @@
 #include <vector>
 #include <stdexcept>
 #include <boost/any.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include "Column.h"
 #include "ResultSet.h"
@@ -25,13 +26,13 @@ namespace Musador
             virtual ~IDatabase() {};
 
             /// @brief Begin a transaction on the database.
-            virtual bool txnBegin() = 0;
+            virtual void txnBegin() = 0;
 
             /// @brief Cancel a transaction on the database.
-            virtual bool txnRollback() = 0;
+            virtual void txnRollback() = 0;
 
             /// @brief Finalize a transaction on the database.
-            virtual bool txnCommit() = 0;
+            virtual void txnCommit() = 0;
 
             /// @brief Select matching rows from the database. 
             /// A SQL SELECT statement of the form SELECT [columns] FROM [table] WHERE [conditions] 
@@ -40,7 +41,7 @@ namespace Musador
             /// @param[in] columns A vector of columns to include in the SELECT statement.
             /// @param[in] conditions Condition string used for the WHERE clause in the SELECT statement.
             /// @returns A smart pointer to a ResultSet containing the matching rows.
-            virtual std::auto_ptr<ResultSet> select(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions) = 0;	
+            virtual boost::shared_ptr<ResultSet> select(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions) = 0;	
 
             /// @brief Insert a row into the database.
             /// A SQL INSERT statement of the form INSERT INTO [table] ([columns_names]) VALUES ([column_values]) WHERE [conditions]
@@ -56,21 +57,20 @@ namespace Musador
             /// @param[in] table The database table on which to update.
             /// @param[in] columns A vector of columns with data to include in the UPDATE statement.
             /// @param[in] conditions Condition string used for the WHERE clause in the UPDATE statement.
-            /// @returns true if the query succeeded, false otherwise
-            virtual bool update(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions ) = 0;	
+            virtual void update(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions ) = 0;	
 
             /// @brief Delete rows from the database.
             /// A SQL DELETE statement of the form DELETE FROM [table] WHERE [conditions]
             /// is generated from the provided arguments.
             /// @param[in] table The database table from which to delete.
             /// @param[in] conditions Condition string used for the WHERE clause in the DELETE statement.
-            /// @returns true if the query succeeded, false otherwise
-            virtual bool remove(const std::wstring& table, const std::wstring& conditions) = 0;
+            virtual void remove(const std::wstring& table, const std::wstring& conditions) = 0;
 
             /// @brief Execute an arbitrary SQL query on the database.
             /// @param[in] q A string containing the query to execute.
-            /// @returns true if the query succeeded, false otherwise
-            virtual bool execute(const std::wstring& q) = 0;
+            /// @returns For a SQL SELECT statement, returns a smart pointer to a ResultSet containing matching rows, if any.
+            /// For all other statements, a pointer to an empty ResultSet is returned.
+            virtual boost::shared_ptr<ResultSet> execute(const std::wstring& q) = 0;
 
         protected:
 

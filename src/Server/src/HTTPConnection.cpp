@@ -312,10 +312,24 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
 	}
 
 	// otherwise try to map the request to a command
-	if (env.controller && env.controller->exec(env))
+	if (env.controller)
 	{
-		post_event(EvtReqDone());
-		return;
+        try 
+        {
+            if (env.controller->exec(env))
+            {
+                post_event(EvtReqDone());
+                return;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            res.status = 500;
+            res.reason = "Internal Server Error: ";
+            res.reason += e.what();
+            post_event(EvtReqError());
+            return;		
+        }
 	}
 
 	// otherwise 404

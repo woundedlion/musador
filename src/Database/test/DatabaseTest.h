@@ -35,19 +35,19 @@ public:
 
 	void testSqliteCreate() 
 	{
-        Database::DatabaseSqlite db(L"testDB.db");
+		boost::shared_ptr<Database::IDatabase> db(new Database::DatabaseSqlite(L"testDB.db"));
 
 		try
 		{
-			db.execute(L"DROP TABLE IF EXISTS test");
-			db.execute(L"CREATE TABLE test (\
-							   id INTEGER PRIMARY KEY AUTOINCREMENT,\
-							   test_int INTEGER,\
-							   test_str TEXT,\
-							   test_pchar TEXT,\
-							   test_wstr TEXT,\
-							   test_pwchar_t TEXT\
-							   )");
+			db->execute(L"DROP TABLE IF EXISTS test");
+			db->execute(L"CREATE TABLE test ("\
+                        L"id INTEGER PRIMARY KEY AUTOINCREMENT,"\
+                        L"test_int INTEGER,"\
+                        L"test_str TEXT,"\
+                        L"test_pchar TEXT,"\
+                        L"test_wstr TEXT,"\
+                        L"test_pwchar_t TEXT"\
+                        L")");
 			LOG(Info) << "Successfully created database tables";
 		}
 		catch (Database::DatabaseException e)
@@ -282,7 +282,7 @@ public:
 		// Now a load should fail
 		try
 		{
-			TS_ASSERT(!ent.load(this->entId));
+			ent.load(this->entId);
 		}
 		catch (Database::DatabaseException e)
 		{

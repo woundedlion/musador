@@ -28,15 +28,15 @@ namespace Musador
             /// @brief Destructor.
             ~DatabaseSqlite();
 
-            bool txnBegin();
-            bool txnRollback();
-            bool txnCommit();
+            void txnBegin();
+            void txnRollback();
+            void txnCommit();
 
-            std::auto_ptr<ResultSet> select(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions);	
+            boost::shared_ptr<ResultSet> select(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions);	
             unsigned long insert(const std::wstring& table, const std::vector<ColumnBase *>& columns);	
-            bool update(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions );	
-            bool remove(const std::wstring& table, const std::wstring& conditions);
-            bool execute(const std::wstring& q);
+            void update(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions );	
+            void remove(const std::wstring& table, const std::wstring& conditions);
+            boost::shared_ptr<ResultSet> execute(const std::wstring& q);
 
         private:
 

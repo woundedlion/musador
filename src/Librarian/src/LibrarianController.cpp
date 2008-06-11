@@ -1,5 +1,6 @@
 #include <string>
 #include "LibrarianController.h"
+#include "Library.h"
 #include "StatsBlock.h"
 #include "Server/HTTP.h"
 #include "boost/lexical_cast.hpp"
@@ -78,14 +79,11 @@ LibrarianController::getLibraryStatsXML(HTTP::Env& env)
         std::vector<StatsBlock> stats;
         for (LibrarianConfig::LibraryCollection::iterator iter = libraries.begin(); iter != libraries.end(); ++iter)
         {
-            StatsBlock b;
-            b.id = iter->first;
-            b.displayName = iter->second.nickname;
-            b.data[L"sjflksdjlf"] = 8798798;
-            stats.push_back(b);
+            Library lib(iter->second);
+            stats.push_back(lib.getCountsByGenre());
         }
         boost::archive::xml_oarchive ar(*env.res->data);
-        ar << boost::serialization::make_nvp("libraries",stats);
+        ar << boost::serialization::make_nvp("libraries", stats);
     }
     else
     {
@@ -98,11 +96,8 @@ LibrarianController::getLibraryStatsXML(HTTP::Env& env)
             if (iter != libraries.end())
             {
                 // Good library ID, serialize
-                StatsBlock b;
-                b.id = iter->first;
-                b.displayName = iter->second.nickname;
-                b.data[L"sjflksdjlf"] = 8798798;
-                ar << boost::serialization::make_nvp("library",b);
+                Library lib(iter->second);
+                ar << boost::serialization::make_nvp("library", lib.getCountsByGenre());
             }
             else
             {

@@ -31,18 +31,15 @@ namespace Musador
 
             /// @brief Populate this Entity instance with data from the specified row in the database.
             /// @param[in] id The numeric ID of the row in the database used to populate this Entity.
-            /// @returns true on success, false otherwise
-            virtual bool load(unsigned long id);
+            virtual void load(unsigned long id);
 
             /// @brief Insert or Update the corresponding row in the database with the values contained in this Entity.
             /// Note that only fields which have been changed (marked dirty) will be included
             /// in the save.
-            /// @returns true on success, false otherwise
-            virtual bool save();
+            virtual void save();
 
             /// @brief Delete the corresponding row from the database, as specified by table name and ID.
-            /// @returns true on success, false otherwise
-            virtual bool del();
+            virtual void del();
 
         protected:
 
