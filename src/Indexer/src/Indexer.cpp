@@ -258,12 +258,28 @@ bool Indexer::initDB()
                            bitrate INTEGER,\
                            status_id INTEGER\
                            )");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(genre)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(parent_id)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(filename)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(size)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(mtime)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(artist)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(title)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(album)");
+        //this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(track)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(genre)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(length)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(bitrate)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(status_id)");
+
         this->db->execute(L"DROP TABLE IF EXISTS dirs");
         this->db->execute(L"CREATE TABLE dirs (\
                            id INTEGER PRIMARY KEY AUTOINCREMENT,\
                            path TEXT,\
                            mtime INTEGER\
                            )");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON dirs(path)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON dirs(mtime)");
     }
     catch (Database::DatabaseException e)
     {
