@@ -42,8 +42,11 @@ namespace Musador
         /// @brief The total size in bytes if all the files which have so far been indexed.
         unsigned long long bytes;
 
-        /// @brief The duration of the current indexing job.
-        time_t duration;
+        /// @brief The start time of the indexing job.
+        clock_t startTime;
+
+        /// @brief The current time of the indexing job.
+        clock_t curTime;
 
         /// @brief The last full path processed by the Indexer.
         std::wstring lastPath;
@@ -103,6 +106,7 @@ namespace Musador
         } IndexerError;
 
         bool initDB();
+        bool indexDB();
         unsigned long addDirectory(const fs::wdirectory_entry& dir);
         unsigned long addFile(const fs::wdirectory_entry& file, unsigned long parentId);
 

@@ -35,7 +35,7 @@ public:
 
 	static void indexDoneSlot(const Musador::IndexerProgress& p)
 	{
-		LOG(Info) << "Indexing of " << p.numFiles << " files in " << p.numDirs << " directories (" << Util::bytesToString(p.bytes) << ") completed in " << p.duration << " seconds";
+        LOG(Info) << "Indexing of " << p.numFiles << " files in " << p.numDirs << " directories (" << Util::bytesToString(p.bytes) << ") completed in " << (std::clock() - p.startTime) / CLOCKS_PER_SEC << " seconds";
 	}
 
 	void testIndexer() 

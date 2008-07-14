@@ -58,9 +58,6 @@ void Indexer::runIndexer()
 
     this->initDB();
 
-    time_t startTime;
-    ::time(&startTime);
-
     this->db->txnBegin();
 
     this->canceled = false;
@@ -118,7 +115,6 @@ void Indexer::runIndexer()
     {
         // Finalize progress counts
         Guard lock(this->progressMutex);
-        this->p.duration = static_cast<time_t>(::difftime(::time(NULL),startTime));
         this->p.done = true;
     }
 
@@ -137,6 +133,7 @@ void Indexer::reindex()
         this->p.numDirs = static_cast<unsigned int>(this->targets.size());
         this->p.numFiles = 0;
         this->p.bytes = 0;
+        this->p.startTime = std::clock();
     }
 
     Guard lock(this->indexThreadMutex);
@@ -242,6 +239,22 @@ bool Indexer::initDB()
 {
     try
     {
+        this->db->execute(L"DROP INDEX IF EXISTS files.genre");
+        this->db->execute(L"DROP INDEX IF EXISTS files.parent_id");
+        this->db->execute(L"DROP INDEX IF EXISTS files.filename");
+        this->db->execute(L"DROP INDEX IF EXISTS files.size");
+        this->db->execute(L"DROP INDEX IF EXISTS files.mtime");
+        this->db->execute(L"DROP INDEX IF EXISTS files.artist");
+        this->db->execute(L"DROP INDEX IF EXISTS files.title");
+        this->db->execute(L"DROP INDEX IF EXISTS files.album");
+        this->db->execute(L"DROP INDEX IF EXISTS files.genre");
+        this->db->execute(L"DROP INDEX IF EXISTS files.length");
+        this->db->execute(L"DROP INDEX IF EXISTS files.bitrate");
+        this->db->execute(L"DROP INDEX IF EXISTS files.status_id");
+
+        this->db->execute(L"DROP INDEX IF EXISTS dirs.path");
+        this->db->execute(L"DROP INDEX IF EXISTS dirs.mtime");
+
         this->db->execute(L"DROP TABLE IF EXISTS files");
         this->db->execute(L"CREATE TABLE files (\
                            id INTEGER PRIMARY KEY AUTOINCREMENT,\
@@ -258,19 +271,6 @@ bool Indexer::initDB()
                            bitrate INTEGER,\
                            status_id INTEGER\
                            )");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(genre)");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(parent_id)");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(filename)");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(size)");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(mtime)");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(artist)");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(title)");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(album)");
-        //this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(track)");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(genre)");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(length)");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(bitrate)");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(status_id)");
 
         this->db->execute(L"DROP TABLE IF EXISTS dirs");
         this->db->execute(L"CREATE TABLE dirs (\
@@ -278,8 +278,6 @@ bool Indexer::initDB()
                            path TEXT,\
                            mtime INTEGER\
                            )");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON dirs(path)");
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON dirs(mtime)");
     }
     catch (Database::DatabaseException e)
     {
@@ -291,10 +289,43 @@ bool Indexer::initDB()
     return true;
 }
 
+bool
+Indexer::indexDB()
+{
+    try
+    {
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(genre)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS parent_id ON files(parent_id)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS filename ON files(filename)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS size ON files(size)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS mtime ON files(mtime)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS artist ON files(artist)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS title ON files(title)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS album ON files(album)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(genre)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS length ON files(length)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS bitrate ON files(bitrate)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS status_id ON files(status_id)");
+
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS path ON dirs(path)");
+        this->db->execute(L"CREATE INDEX IF NOT EXISTS mtime ON dirs(mtime)");
+    }
+    catch (Database::DatabaseException e)
+    {
+        LOG(Critical) << "Unable to index database tables: Error " << e.what();
+        return false;
+    }
+
+    LOG(Info) << "Indexed database tables";
+    return true;
+
+}
+
 IndexerProgress Indexer::progress() const
 {
     Guard progressGuard(this->progressMutex);
     IndexerProgress r(this->p);
+    r.curTime = std::clock();
     return r;
 }
 
@@ -306,7 +337,8 @@ IndexerProgress::IndexerProgress() :
 numFiles(0),
 numDirs(0),
 bytes(0),
-duration(0),
+startTime(0),
+curTime(0),
 lastPath(L""),
 done(false)
 {

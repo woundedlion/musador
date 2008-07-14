@@ -99,9 +99,7 @@ Librarian::configDefaults(Config& cfg)
     lib.nickname = L"bighurt";
     lib.dataFile = (fs::wpath(cfg.librarian.dataDir.get()) / L"bighurt.db").file_string();
     std::vector<std::wstring> targets;
-    targets.push_back(L"C:\\music\\library\\Blues");
-    targets.push_back(L"C:\\music\\library\\Classical");
-    targets.push_back(L"C:\\music\\library\\Jazz");
+    targets.push_back(L"C:\\music\\~tagged");
     lib.targets = targets;
     LibrarianConfig::LibraryCollection libraries;
     libraries[lib.id] = lib;
@@ -126,7 +124,8 @@ Librarian::index(const std::wstring& outfile,const std::vector<std::wstring>& pa
 	indexer.waitDone();
 
 	IndexerProgress p = indexer.progress();
-	LOG(Info) << "Indexing of " << p.numFiles << " files in " << p.numDirs << " directories (" << Util::bytesToString(p.bytes) << ") completed in " << p.duration << " seconds";
+    unsigned int duration = (std::clock() - p.startTime) / CLOCKS_PER_SEC;
+    LOG(Info) << "\n" "Indexing of " << p.numFiles << " files in " << p.numDirs << " directories (" << Util::bytesToString(p.bytes) << ") completed in " << duration << " seconds";
 }
 
 void
