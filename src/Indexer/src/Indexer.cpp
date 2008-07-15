@@ -24,6 +24,7 @@ dbFilename(dbFilename)
 
 Indexer::~Indexer()
 {
+    this->cancel();
 }
 
 void Indexer::clearRootTargets()
@@ -106,11 +107,11 @@ void Indexer::runIndexer()
                 // Add file to database
                 if (Indexer::INVALID_ID == this->addFile(*iter,parentId))
                     continue;
-
             }
         }			
     }
     this->db->txnCommit();
+    this->indexDB();
 
     {
         // Finalize progress counts
@@ -123,10 +124,24 @@ void Indexer::runIndexer()
     this->sigDone(this->p);
 }
 
+bool
+Indexer::isRunning()
+{
+    Guard lock(this->indexThreadMutex);
+    if (NULL == this->indexThread)
+    {
+        return false;
+    }
+    return true;
+}
+
 void Indexer::reindex()
 {
-    this->cancel();
-    this->waitDone();
+    if (this->isRunning())
+    {
+        LOG(Error) << "Indexer is already running.";
+        return;
+    }
 
     {
         Guard lock(this->progressMutex);
@@ -142,6 +157,7 @@ void Indexer::reindex()
 
 void Indexer::waitDone()
 {
+    // TODO: implement cond variable
     Guard lock(this->indexThreadMutex);
     if (NULL != this->indexThread)
     {
@@ -154,6 +170,7 @@ void Indexer::waitDone()
 void Indexer::cancel()
 {
     this->canceled = true;
+    this->waitDone();
 }
 
 unsigned long Indexer::addDirectory(const fs::wdirectory_entry& dir)

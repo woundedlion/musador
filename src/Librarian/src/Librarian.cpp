@@ -37,7 +37,8 @@ WindowsService(L"Musador Librarian")
 		}
 	}
 
-	cfg->server.controller = &this->controller;
+    this->controller.reset(new LibrarianController());
+	cfg->server.controller = this->controller.get();
 
 	this->server.reset(new Server(cfg->server));
 

@@ -29,7 +29,7 @@ namespace Musador
             
         /// @brief Serialize this configuration.
         /// @param[in] ar Destination archive for the serialized data.
-        /// @param[in] version The version of the archive. Used by boost::serailization version tracking.
+        /// @param[in] version The version of the archive. Used by boost::serialization version tracking.
         template<class Archive>
         void serialize(Archive & ar, const unsigned int version)
         {
@@ -74,7 +74,7 @@ namespace Musador
 
         /// @brief Serialize this configuration.
         /// @param[in] ar Destination archive for the serialized data.
-        /// @param[in] version The version of the archive. Used by boost::serailization version tracking.
+        /// @param[in] version The version of the archive. Used by boost::serialization version tracking.
         template<class Archive>
         void serialize(Archive & ar, const unsigned int version)
         {
@@ -97,7 +97,7 @@ namespace Musador
 
         /// @brief Serialize the configuration of this Library.
         /// @param[in] ar Destination archive for the serialized data.
-        /// @param[in] version The version of the archive. Used by boost::serailization version tracking.
+        /// @param[in] version The version of the archive. Used by boost::serialization version tracking.
         template<class Archive>
         void serialize(Archive & ar, const unsigned int version)
         {
@@ -128,10 +128,11 @@ namespace Musador
     public:
 
         typedef std::map<int,LibraryConfig> LibraryCollection;
-        
+        static const int LOCAL_LIB_ID = 0;
+
         /// @brief Serialize this configuration.
         /// @param[in] ar Destination archive for the serialized data.
-        /// @param[in] version The version of the archive. Used by boost::serailization version tracking.
+        /// @param[in] version The version of the archive. Used by boost::serialization version tracking.
         template<class Archive>
         void serialize(Archive & ar, const unsigned int version)
         {
@@ -164,7 +165,7 @@ namespace Musador
 
         /// @brief Serialize this configuration.
         /// @param[in] ar Destination archive for the serialized data.
-        /// @param[in] version The version of the archive. Used by boost::serailization version tracking.
+        /// @param[in] version The version of the archive. Used by boost::serialization version tracking.
         template<class Archive>
         void serialize(Archive & ar, const unsigned int version)
         {

@@ -57,7 +57,7 @@ namespace Musador
         boost::shared_ptr<GUIListener> listener;
         boost::shared_ptr<GUIConnection> gui;
         boost::shared_ptr<Server> server;
-        LibrarianController controller;
+        boost::shared_ptr<LibrarianController> controller;
 
     };
 

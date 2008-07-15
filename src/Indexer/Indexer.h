@@ -8,6 +8,9 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/signal.hpp>
 #include <boost/smart_ptr.hpp>
+#include "boost/serialization/nvp.hpp"
+#include <boost/serialization/vector.hpp>
+
 
 #include "Database/Database.h"
 
@@ -32,6 +35,21 @@ namespace Musador
 
         /// @brief Constructor.
         IndexerProgress();
+
+        /// @brief Serialize this IndexerProgress.
+        /// @param[in] ar Destination archive for the serialized data.
+        /// @param[in] version The version of the archive. Used by boost::serialization version tracking.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version)
+        {
+            ar & BOOST_SERIALIZATION_NVP(numFiles);
+            ar & BOOST_SERIALIZATION_NVP(numDirs);
+            ar & BOOST_SERIALIZATION_NVP(bytes);
+            ar & BOOST_SERIALIZATION_NVP(startTime);
+            ar & BOOST_SERIALIZATION_NVP(curTime);
+            ar & BOOST_SERIALIZATION_NVP(lastPath);
+            ar & BOOST_SERIALIZATION_NVP(done);
+        }
 
         /// @brief The number of files which have so far been indexed.
         unsigned int numFiles;
@@ -59,7 +77,7 @@ namespace Musador
     /// @brief Recursively processes a directory tree, indexing all directories and files contained therein.
     /// When run, the Indexer creates a database file and populates it with the collected data.
     /// In addition to file system data, ID3 meta-data are also parsed and added to the Database.
-    class Indexer
+    class Indexer : public boost::noncopyable
     {
     public:
 
@@ -92,10 +110,15 @@ namespace Musador
         /// @remarks Returns when the indexing job is done.
         void runIndexer();
 
-        /// Get the progress stats for th currently executing indexing job.
+        /// @brief Get the progress stats for the currently executing indexing job.
+        /// @returns An IndexerProgress object containing a snapshot of the indexing job's progress.
         IndexerProgress progress() const;
 
-        /// boost::signal used by interested parties to connect and receive notification whenever an indexing job completes.
+        /// @brief Get the running status of the indexer.
+        /// @returns True if the indexer is currently running, false otherwise.
+        bool isRunning();
+
+        /// @brief boost::signal used by interested parties to connect and receive notification whenever an indexing job completes.
         boost::signal<void (const IndexerProgress& p)> sigDone;
 
     private:
