@@ -9,14 +9,17 @@
 #include "taglib/Tag.h"
 #include "Utilities/MIMEResolver.h"
 #include "boost/bind.hpp"
-
+#include "Utilities/StreamException.h"
 #include "Logger/Logger.h"
 #define LOG_SENDER L"Indexer"
 
+#define CHECK_CANCELED if (this->canceled) throw IndexException() << "Index canceled.";
+
 using namespace Musador;
 
+class IndexException : public StreamException<IndexException>{};
+
 Indexer::Indexer(std::wstring dbFilename) :
-indexThread(NULL),
 canceled(false),
 dbFilename(dbFilename)
 {
@@ -25,6 +28,7 @@ dbFilename(dbFilename)
 Indexer::~Indexer()
 {
     this->cancel();
+    this->waitDone();
 }
 
 void Indexer::clearRootTargets()
@@ -57,70 +61,87 @@ void Indexer::runIndexer()
         LOG(Critical) << "Error acquiring database " << this->dbFilename << ": " << e.what();
     }
 
-    this->initDB();
-
-    this->db->txnBegin();
-
-    this->canceled = false;
-    for (TargetsIter targIter = this->targets.begin(); targIter != this->targets.end(); targIter++)
+    try
     {
-        if (canceled)
-        {
-            break;
-        }
+        this->initDB();
 
-        unsigned long parentId = NULL;
-        unsigned long newId = Indexer::INVALID_ID;
+        this->db->txnBegin();
 
-        LOG(Info) << "Indexing Target: " << targIter->string();
-        // Add top-level target directory to database
-        fs::wdirectory_entry dir(*targIter);
-        if (Indexer::INVALID_ID == (newId = this->addDirectory(dir)))
+        for (TargetsIter targIter = this->targets.begin(); targIter != this->targets.end(); targIter++)
         {
-            LOG(Error) << "Failed to index " << targIter->string() << ". Skipping...";
-            continue;
-        }
-        else
-        {
-            parentId = newId;
-        }
+            unsigned long parentId = NULL;
+            unsigned long newId = Indexer::INVALID_ID;
 
-        fs::wrecursive_directory_iterator end_iter;
-        for (fs::wrecursive_directory_iterator iter(*targIter); iter != end_iter; iter++)
-        {
-            if (fs::is_directory(*iter))
+            LOG(Info) << "Indexing Target: " << targIter->string();
+            // Add top-level target directory to database
+            fs::wdirectory_entry dir(*targIter);
+
+            CHECK_CANCELED
+
+            if (Indexer::INVALID_ID == (newId = this->addDirectory(dir)))
             {
-                // Add directory to database
-                if (Indexer::INVALID_ID == (newId = this->addDirectory(*iter)))
-                {
-                    continue;
-                }
-                else
-                {
-                    parentId = newId;
-                }
+                LOG(Error) << "Failed to index " << targIter->string() << ". Skipping...";
+                continue;
             }
-            else if (fs::is_regular(*iter))
+            else
             {
-                if (!MIMEResolver::instance()->valid(iter->path().leaf()))
-                    continue;
-                // Add file to database
-                if (Indexer::INVALID_ID == this->addFile(*iter,parentId))
-                    continue;
+                parentId = newId;
             }
-        }			
+
+            fs::wrecursive_directory_iterator end_iter;
+            for (fs::wrecursive_directory_iterator iter(*targIter); iter != end_iter; iter++)
+            {
+                CHECK_CANCELED
+
+                if (fs::is_directory(*iter))
+                {
+                    // Add directory to database
+                    if (Indexer::INVALID_ID == (newId = this->addDirectory(*iter)))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        parentId = newId;
+                    }
+                }
+                else if (fs::is_regular(*iter))
+                {
+                    if (!MIMEResolver::instance()->valid(iter->path().leaf()))
+                    {
+                        continue;
+                    }
+                    // Add file to database
+                    if (Indexer::INVALID_ID == this->addFile(*iter,parentId))
+                    {
+                        continue;
+                    }
+                }
+            }			
+        }
+
+        CHECK_CANCELED
+
+        this->indexDB();
+        {
+            // Finalize progress counts
+            Guard lock(this->progressMutex);
+            this->p.done = true;
+        }
     }
-    this->db->txnCommit();
-    this->indexDB();
-
+    catch(const std::runtime_error& e)
     {
-        // Finalize progress counts
-        Guard lock(this->progressMutex);
-        this->p.done = true;
+        LOG(Info) << e.what();
+        this->canceled = true;
+        this->db->txnRollback();
+    }
+
+    if (!this->canceled)
+    {
+        this->db->txnCommit();
     }
 
     this->db.reset();
-
     this->sigDone(this->p);
 }
 
@@ -128,16 +149,18 @@ bool
 Indexer::isRunning()
 {
     Guard lock(this->indexThreadMutex);
-    if (NULL == this->indexThread)
+    if (NULL != this->indexThread)
     {
-        return false;
+        return !this->indexThread->timed_join(boost::posix_time::milliseconds(0));
     }
-    return true;
+    return false;
 }
 
 void Indexer::reindex()
 {
-    if (this->isRunning())
+    Guard lock(this->indexThreadMutex);
+    this->canceled = false;
+    if (this->indexThread && !this->indexThread->timed_join(boost::posix_time::milliseconds(0)))
     {
         LOG(Error) << "Indexer is already running.";
         return;
@@ -151,26 +174,21 @@ void Indexer::reindex()
         this->p.startTime = std::clock();
     }
 
-    Guard lock(this->indexThreadMutex);
-    this->indexThread = new boost::thread(boost::bind(&Indexer::runIndexer,this));
+    this->indexThread.reset(new boost::thread(boost::bind(&Indexer::runIndexer,this)));
 }
 
 void Indexer::waitDone()
 {
-    // TODO: implement cond variable
     Guard lock(this->indexThreadMutex);
     if (NULL != this->indexThread)
     {
         this->indexThread->join();
-        delete this->indexThread;
-        this->indexThread = NULL;
     }
 }
 
 void Indexer::cancel()
 {
     this->canceled = true;
-    this->waitDone();
 }
 
 unsigned long Indexer::addDirectory(const fs::wdirectory_entry& dir)
@@ -311,21 +329,36 @@ Indexer::indexDB()
 {
     try
     {
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(genre)");
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS parent_id ON files(parent_id)");
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS filename ON files(filename)");
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS size ON files(size)");
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS mtime ON files(mtime)");
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS artist ON files(artist)");
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS title ON files(title)");
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS album ON files(album)");
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(genre)");
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS length ON files(length)");
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS bitrate ON files(bitrate)");
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS status_id ON files(status_id)");
+        CHECK_CANCELED
 
         this->db->execute(L"CREATE INDEX IF NOT EXISTS path ON dirs(path)");
+        CHECK_CANCELED
         this->db->execute(L"CREATE INDEX IF NOT EXISTS mtime ON dirs(mtime)");
+        CHECK_CANCELED
     }
     catch (Database::DatabaseException e)
     {

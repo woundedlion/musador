@@ -144,8 +144,8 @@ namespace Musador
         mutable Mutex progressMutex;
         IndexerProgress p;
 
-        boost::thread * indexThread;
         Mutex indexThreadMutex;
+        boost::scoped_ptr<boost::thread> indexThread;
         bool canceled;
     };
 }
