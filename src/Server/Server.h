@@ -27,7 +27,7 @@ namespace Musador
 
         void start();
 
-        void acceptConnections(	boost::shared_ptr<Listener> listener, 
+        void acceptConnections(	boost::shared_ptr<IO::Listener> listener, 
             boost::any tag = NULL);
 
         void waitForStart();
@@ -38,9 +38,9 @@ namespace Musador
 
         void restart();
 
-        void onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag);
+        void onAccept(boost::shared_ptr<IO::Msg> msg, boost::any tag);
 
-        void onError(boost::shared_ptr<IOMsgError> msgErr);
+        void onError(boost::shared_ptr<IO::MsgError> msgErr);
 
         Session & getSession(const std::string& key);
 
@@ -55,9 +55,9 @@ namespace Musador
 
     private:
 
-        void addConnection(boost::shared_ptr<Connection> conn);
-        void removeConnection(boost::shared_ptr<Connection> conn);
-        void killConnection(boost::shared_ptr<Connection> conn);
+        void addConnection(boost::shared_ptr<IO::Connection> conn);
+        void removeConnection(boost::shared_ptr<IO::Connection> conn);
+        void killConnection(boost::shared_ptr<IO::Connection> conn);
         void killConnections();
 
         Musador::Network * net;
@@ -65,8 +65,8 @@ namespace Musador
         ServerConfig& cfg;
 
         // Collection types
-        typedef std::vector<boost::shared_ptr<Connection> > ConnCollection;
-        typedef std::vector<boost::shared_ptr<Listener> > ListenerCollection;
+        typedef std::vector<boost::shared_ptr<IO::Connection> > ConnCollection;
+        typedef std::vector<boost::shared_ptr<IO::Listener> > ListenerCollection;
         typedef std::map<std::string, boost::shared_ptr<Session> > SessionCollection;
 
         ConnCollection conns;

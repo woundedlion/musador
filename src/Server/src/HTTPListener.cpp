@@ -9,7 +9,7 @@ HTTPListener::HTTPListener(const sockaddr_in& localEP) :
 SocketListener(localEP,SOCK_STREAM,IPPROTO_TCP)
 {}
 
-boost::shared_ptr<Connection>
+boost::shared_ptr<IO::Connection>
 HTTPListener::createConnection()
 {
     SOCKET s;
@@ -20,7 +20,7 @@ HTTPListener::createConnection()
     catch (const NetworkException& e)
     {
         LOG(Error) << e.what();
-        return boost::shared_ptr<Connection>();
+        return boost::shared_ptr<IO::Connection>();
     }
 
     boost::shared_ptr<HTTPConnection> conn(new HTTPConnection());

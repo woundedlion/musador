@@ -9,7 +9,7 @@ GUIListener::GUIListener() :
 PipeListener(GUI_PIPE_NAME)
 {}
 
-boost::shared_ptr<Connection>
+boost::shared_ptr<IO::Connection>
 GUIListener::createConnection()
 {
     boost::shared_ptr<GUIConnection> conn(new GUIConnection());

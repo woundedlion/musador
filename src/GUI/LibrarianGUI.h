@@ -65,7 +65,7 @@ namespace Musador
         void onRunning();
         void connectService();
 
-        void onServiceConnect(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
+        void onServiceConnect(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL);
         void onServiceMsg(boost::shared_ptr<GUIMsg> msg);
 
         void onTrayMenu();

@@ -35,13 +35,13 @@ public:
     void setUp() 
     {
         Logging::Logger::instance()->setLevel(Logging::Debug);
-        Proactor::instance()->start();
+        IO::Proactor::instance()->start();
     }
 
     void tearDown()
     {
-        Proactor::instance()->stop();
-        Proactor::instance()->destroy();
+        IO::Proactor::instance()->stop();
+        IO::Proactor::instance()->destroy();
     }
 
 
@@ -59,7 +59,7 @@ public:
         localEP.sin_family = AF_INET;
         localEP.sin_addr.s_addr = ::inet_addr("0.0.0.0");
         localEP.sin_port = ::htons(5152);
-        boost::shared_ptr<Listener> listener(new EchoListener(localEP));
+        boost::shared_ptr<IO::Listener> listener(new EchoListener(localEP));
         s.acceptConnections(listener);
 
         const int BANK_COUNT = 10;
@@ -95,12 +95,12 @@ public:
     class EchoClient
     {
     public:
-    void onRead(boost::shared_ptr<IOMsgReadComplete> msgRead)
+    void onRead(boost::shared_ptr<MsgReadComplete> msgRead)
     {
 
     }
 
-    void onWrite(boost::shared_ptr<IOMsgWriteComplete> msgWrite)
+    void onWrite(boost::shared_ptr<MsgWriteComplete> msgWrite)
     {
 
     }

@@ -5,13 +5,13 @@
 
 namespace Musador
 {
-    class EchoListener : public SocketListener
+    class EchoListener : public IO::SocketListener
     {
     public:
 
         EchoListener(const sockaddr_in& localEP);
 
-        boost::shared_ptr<Connection> createConnection();
+        boost::shared_ptr<IO::Connection> createConnection();
     };
 }
 

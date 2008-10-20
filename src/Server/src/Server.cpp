@@ -61,7 +61,7 @@ Server::start()
         env.controller = this->cfg.controller;
         env.server = this->shared_from_this();
 
-        boost::shared_ptr<Listener> listener(new HTTPListener(ep));
+        boost::shared_ptr<IO::Listener> listener(new HTTPListener(ep));
         this->acceptConnections(listener, env);
     }
 
@@ -131,7 +131,7 @@ Server::restart()
 }
 
 void 
-Server::acceptConnections(boost::shared_ptr<Listener> listener, 
+Server::acceptConnections(boost::shared_ptr<IO::Listener> listener, 
                           boost::any tag /* = NULL */)
 {
 
@@ -143,13 +143,13 @@ Server::acceptConnections(boost::shared_ptr<Listener> listener,
 
 
 void 
-Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
+Server::onAccept(boost::shared_ptr<IO::Msg> msg, boost::any tag)
 {
     switch (msg->getType())
     {
-    case IO_SOCKET_ACCEPT_COMPLETE:
+    case IO::MSG_SOCKET_ACCEPT_COMPLETE:
         {
-            boost::shared_ptr<IOMsgSocketAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgSocketAcceptComplete>(msg));
+            boost::shared_ptr<IO::MsgSocketAcceptComplete> msgAccept(boost::shared_static_cast<IO::MsgSocketAcceptComplete>(msg));
 
             // Do another async accept
             msgAccept->listener->beginAccept(boost::bind(&Server::onAccept,this,_1,_2),tag);
@@ -158,7 +158,7 @@ Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
             this->addConnection(msgAccept->conn);
         }
         break;
-    case IO_ERROR:
+    case IO::MSG_ERROR:
         {
             // TODO: reschedule the accept on an error?
         }
@@ -167,7 +167,7 @@ Server::onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag)
 }
 
 void 
-Server::onError(boost::shared_ptr<IOMsgError> msgErr)
+Server::onError(boost::shared_ptr<IO::MsgError> msgErr)
 {
     // Kill the connection
     if (NULL != msgErr->err)
@@ -190,7 +190,7 @@ Server::getSession(const std::string& key)
 }
 
 void 
-Server::addConnection(boost::shared_ptr<Connection> conn)
+Server::addConnection(boost::shared_ptr<IO::Connection> conn)
 {
     LOG(Info) << "Connected: " << conn->toString();
     Guard lock(this->connsMutex);
@@ -198,7 +198,7 @@ Server::addConnection(boost::shared_ptr<Connection> conn)
 }
 
 void 
-Server::removeConnection(boost::shared_ptr<Connection> conn)
+Server::removeConnection(boost::shared_ptr<IO::Connection> conn)
 {
     Guard lock(this->connsMutex);
     for (ConnCollection::iterator iter = this->conns.begin(); iter!= this->conns.end(); ++iter)
@@ -210,7 +210,7 @@ Server::removeConnection(boost::shared_ptr<Connection> conn)
 }
 
 void 
-Server::killConnection(boost::shared_ptr<Connection> conn)
+Server::killConnection(boost::shared_ptr<IO::Connection> conn)
 {
     this->removeConnection(conn);
 }

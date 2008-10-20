@@ -4,6 +4,7 @@
 #include "Logger/Logger.h"
 #define LOG_SENDER L"I/O"
 using namespace Musador;
+using namespace Musador::IO;
 
 SocketListener::SocketListener(const sockaddr_in& localEP, 
                                int socketType /* = SOCK_STREAM */, 

@@ -11,6 +11,7 @@
 #define LOG_SENDER L"I/O"
 
 using namespace Musador;
+using namespace Musador::IO;
 
 Proactor::Proactor() :
 #ifdef WIN32
@@ -61,24 +62,24 @@ void Proactor::runIO()
 
                 switch(ctx->msg->getType())
                 {
-                case IO_SOCKET_ACCEPT_COMPLETE:
+                case MSG_SOCKET_ACCEPT_COMPLETE:
                     this->completeSocketAccept(ctx, nBytes);
                     break;
-                case IO_PIPE_ACCEPT_COMPLETE:
+                case MSG_PIPE_ACCEPT_COMPLETE:
                     this->completePipeAccept(ctx);
                     break;
-                case IO_SOCKET_CONNECT_COMPLETE:
+                case MSG_SOCKET_CONNECT_COMPLETE:
                     break;
-                case IO_PIPE_CONNECT_COMPLETE:
+                case MSG_PIPE_CONNECT_COMPLETE:
                     this->completePipeConnect(ctx);
                     break;
-                case IO_READ_COMPLETE:
+                case MSG_READ_COMPLETE:
                     this->completeRead(ctx, nBytes);
                     break;
-                case IO_WRITE_COMPLETE:
+                case MSG_WRITE_COMPLETE:
                     this->completeWrite(ctx, nBytes);
                     break;
-                case IO_ERROR:
+                case MSG_ERROR:
                     // notify the handler
                     if (NULL != ctx->handler)
                     {
@@ -106,7 +107,7 @@ void Proactor::runIO()
                     // notify the handler
                     if (NULL != ctx->handler)
                     {
-                        boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+                        boost::shared_ptr<MsgError> msgErr(new MsgError());
                         msgErr->conn = ctx->msg->conn;
                         msgErr->err = err;
                         ctx->handler(msgErr,ctx->tag);
@@ -169,7 +170,7 @@ Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
     ::CreateIoCompletionPort(reinterpret_cast<HANDLE>(listener->getSocket()), this->iocp, listener->getSocket(), NULL);
 
     // Create the completion data
-    boost::shared_ptr<IOMsgSocketAcceptComplete> msgAccept(new IOMsgSocketAcceptComplete());
+    boost::shared_ptr<MsgSocketAcceptComplete> msgAccept(new MsgSocketAcceptComplete());
     msgAccept->listener = listener;
     boost::shared_ptr<Connection> conn(listener->createConnection());
     if (NULL == conn) 
@@ -208,7 +209,7 @@ Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
             }
 
             // Schedule notification
-            boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+            boost::shared_ptr<MsgError> msgErr(new MsgError());
             msgErr->conn = conn;
             msgErr->err = err;
             ctx->msg = msgErr;
@@ -245,7 +246,7 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
     ::CreateIoCompletionPort(hPipe, this->iocp, reinterpret_cast<ULONG_PTR>(hPipe), NULL);
 
     // Create the completion data
-    boost::shared_ptr<IOMsgPipeAcceptComplete> msgAccept(new IOMsgPipeAcceptComplete());
+    boost::shared_ptr<MsgPipeAcceptComplete> msgAccept(new MsgPipeAcceptComplete());
     msgAccept->listener = listener;
     boost::shared_ptr<PipeConnection> conn(boost::shared_static_cast<PipeConnection>(listener->createConnection()));
     conn->setPipe(hPipe);
@@ -272,7 +273,7 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
             LOG(Error) << "ConnectNamedPipe() failed: " << err;
 
             // Schedule notification
-            boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+            boost::shared_ptr<MsgError> msgErr(new MsgError());
             msgErr->conn = conn;
             msgErr->err = err;
             ctx->msg = msgErr;
@@ -292,7 +293,7 @@ Proactor::completeSocketAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned lo
     sockaddr_in * remoteAddr;
     int localAddrSize = 0;
     int remoteAddrSize = 0;
-    boost::shared_ptr<IOMsgSocketAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgSocketAcceptComplete>(ctx->msg));
+    boost::shared_ptr<MsgSocketAcceptComplete> msgAccept(boost::shared_static_cast<MsgSocketAcceptComplete>(ctx->msg));
     this->fnGetAcceptExSockaddrs(	msgAccept->buf.get(), 
         0,
         sizeof(sockaddr_in) + 16,
@@ -329,7 +330,7 @@ Proactor::completePipeAccept(boost::shared_ptr<CompletionCtx> ctx)
     PipeConnection& conn = static_cast<PipeConnection&>(*ctx->msg->conn);
     LOG(Debug) << "Accept completed: " << conn.toString();
 
-    boost::shared_ptr<IOMsgPipeAcceptComplete> msgAccept(boost::shared_static_cast<IOMsgPipeAcceptComplete>(ctx->msg));
+    boost::shared_ptr<MsgPipeAcceptComplete> msgAccept(boost::shared_static_cast<MsgPipeAcceptComplete>(ctx->msg));
 
     // notify the handler
     if (NULL != ctx->handler)
@@ -347,7 +348,7 @@ Proactor::beginConnect(boost::shared_ptr<PipeConnection> conn,
                        const std::wstring& dest, 
                        boost::any tag /* = NULL */)
 {
-    boost::shared_ptr<IOMsgPipeConnectComplete> msgConnect(new IOMsgPipeConnectComplete());
+    boost::shared_ptr<MsgPipeConnectComplete> msgConnect(new MsgPipeConnectComplete());
 
     // Create completion context to send off into asynchronous land
     msgConnect->conn = conn;
@@ -375,7 +376,7 @@ Proactor::beginConnect(boost::shared_ptr<PipeConnection> conn,
         LOG(Error) << "CreateFile() failed to open name pipe: " << conn->getName() << " [" << err << "]";
 
         // Schedule notification
-        boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+        boost::shared_ptr<MsgError> msgErr(new MsgError());
         msgErr->conn = conn;
         msgErr->err = err;
         ctx->msg = msgErr;
@@ -396,7 +397,7 @@ Proactor::completePipeConnect(boost::shared_ptr<CompletionCtx> ctx)
     // Associate the socket with the IO completion port
     ::CreateIoCompletionPort(conn.getPipe(), this->iocp, reinterpret_cast<ULONG_PTR>(conn.getPipe()), NULL);
 
-    boost::shared_ptr<IOMsgPipeConnectComplete> msgConnect(boost::shared_static_cast<IOMsgPipeConnectComplete>(ctx->msg));
+    boost::shared_ptr<MsgPipeConnectComplete> msgConnect(boost::shared_static_cast<MsgPipeConnectComplete>(ctx->msg));
 
     // notify the handler
     if (NULL != ctx->handler)
@@ -408,7 +409,7 @@ Proactor::completePipeConnect(boost::shared_ptr<CompletionCtx> ctx)
 void 
 Proactor::beginRead(boost::shared_ptr<SocketConnection> conn, 
                     EventHandler handler, 
-                    boost::shared_ptr<IOMsgReadComplete> msgRead, 
+                    boost::shared_ptr<MsgReadComplete> msgRead, 
                     boost::any tag /* = NULL */)
 {
     if (msgRead->MAX == msgRead->len)
@@ -450,7 +451,7 @@ Proactor::beginRead(boost::shared_ptr<SocketConnection> conn,
             }
 
             // Schedule notification
-            boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+            boost::shared_ptr<MsgError> msgErr(new MsgError());
             msgErr->conn = conn;
             msgErr->err = err;
             ctx->msg = msgErr;
@@ -465,7 +466,7 @@ Proactor::beginRead(boost::shared_ptr<SocketConnection> conn,
 void 
 Proactor::beginRead(boost::shared_ptr<PipeConnection> conn, 
                     EventHandler handler, 
-                    boost::shared_ptr<IOMsgReadComplete> msgRead, 
+                    boost::shared_ptr<MsgReadComplete> msgRead, 
                     boost::any tag /* = NULL */)
 {
     if (msgRead->MAX == msgRead->len)
@@ -496,7 +497,7 @@ Proactor::beginRead(boost::shared_ptr<PipeConnection> conn,
             LOG(Error) << "ReadFile() failed on pipe " << conn->getPipe() << " [" << err << "]";
 
             // Schedule notification
-            boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+            boost::shared_ptr<MsgError> msgErr(new MsgError());
             msgErr->conn = conn;
             msgErr->err = err;
             ctx->msg = msgErr;
@@ -510,7 +511,7 @@ Proactor::beginRead(boost::shared_ptr<PipeConnection> conn,
 void 
 Proactor::completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes)
 {
-    boost::shared_ptr<IOMsgReadComplete> msgRead(boost::shared_static_cast<IOMsgReadComplete>(ctx->msg));
+    boost::shared_ptr<MsgReadComplete> msgRead(boost::shared_static_cast<MsgReadComplete>(ctx->msg));
     msgRead->len += nBytes;
 
     if (0 == nBytes)
@@ -519,7 +520,7 @@ Proactor::completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long nByte
         // notify the handler
         if (NULL != ctx->handler)
         {
-            boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+            boost::shared_ptr<MsgError> msgErr(new MsgError());
             msgErr->conn = msgRead->conn;
             msgErr->err = static_cast<int>(::WSAGetLastError());
             ctx->handler(msgErr,ctx->tag);
@@ -540,7 +541,7 @@ Proactor::completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long nByte
 void 
 Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn, 
                      EventHandler handler, 
-                     boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
+                     boost::shared_ptr<MsgWriteComplete> msgWrite, 
                      boost::any tag /* = NULL */)
 {
     // Create completion context to send off into asynchronous land
@@ -576,7 +577,7 @@ Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn,
             }
 
             // Schedule notification
-            boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+            boost::shared_ptr<MsgError> msgErr(new MsgError());
             msgErr->conn = conn;
             msgErr->err = err;
             ctx->msg = msgErr;
@@ -590,7 +591,7 @@ Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn,
 void 
 Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn, 
                      EventHandler handler, 
-                     boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
+                     boost::shared_ptr<MsgWriteComplete> msgWrite, 
                      boost::any tag /* = NULL */)
 {
     // Create completion context to send off into asynchronous land
@@ -617,7 +618,7 @@ Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn,
             LOG(Error) << "WriteFile() failed on " << conn->toString() << " [" << err << "]";
 
             // Schedule notification
-            boost::shared_ptr<IOMsgError> msgErr(new IOMsgError());
+            boost::shared_ptr<MsgError> msgErr(new MsgError());
             msgErr->conn = conn;
             msgErr->err = err;
             ctx->msg = msgErr;
@@ -631,7 +632,7 @@ Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn,
 void 
 Proactor::completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes)
 {
-    boost::shared_ptr<IOMsgWriteComplete> msgWrite(boost::shared_static_cast<IOMsgWriteComplete>(ctx->msg));
+    boost::shared_ptr<MsgWriteComplete> msgWrite(boost::shared_static_cast<MsgWriteComplete>(ctx->msg));
     msgWrite->off += nBytes;
     if (msgWrite->off < msgWrite->len)
     {

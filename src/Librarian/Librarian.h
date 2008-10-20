@@ -48,7 +48,7 @@ namespace Musador
 
     private:
 
-        void onGUIAccept(boost::shared_ptr<IOMsg> msg, boost::any tag);
+        void onGUIAccept(boost::shared_ptr<IO::Msg> msg, boost::any tag);
         void onGUIMsg(boost::shared_ptr<GUIMsg> msg);
 
         template <typename T>

@@ -10,44 +10,47 @@
 
 namespace Musador
 {
-    class PipeConnection : public Connection, public boost::enable_shared_from_this<PipeConnection>
+    namespace IO
     {
-    public:
+        class PipeConnection : public Connection, public boost::enable_shared_from_this<PipeConnection>
+        {
+        public:
 
-        PipeConnection(const std::wstring& name);
+            PipeConnection(const std::wstring& name);
 
-        ~PipeConnection();
+            ~PipeConnection();
 
-        void close();
+            void close();
 
-        void beginConnect(boost::any tag = NULL);
+            void beginConnect(boost::any tag = NULL);
 
-        void beginRead(boost::any tag = NULL);
-        void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead, boost::any tag = NULL);
+            void beginRead(boost::any tag = NULL);
+            void beginRead(boost::shared_ptr<MsgReadComplete> msgRead, boost::any tag = NULL);
 
-        void beginWrite(boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
-            boost::any tag = NULL);
-        void beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag = NULL);
-        void beginWrite(std::istream& dataStream, boost::any tag = NULL);
-        void beginWrite(const std::string& str, boost::any tag = NULL);
+            void beginWrite(boost::shared_ptr<MsgWriteComplete> msgWrite, 
+                boost::any tag = NULL);
+            void beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag = NULL);
+            void beginWrite(std::istream& dataStream, boost::any tag = NULL);
+            void beginWrite(const std::string& str, boost::any tag = NULL);
 
-        std::string toString();
+            std::string toString();
 
-        std::wstring getName();
+            std::wstring getName();
 
-        HANDLE getPipe();
+            HANDLE getPipe();
 
-        void setPipe(HANDLE pipe);
+            void setPipe(HANDLE pipe);
 
-    protected:
+        protected:
 
-        std::string friendlyName();
-        void waitForListener(EventHandler handler, boost::any tag = NULL);
+            std::string friendlyName();
+            void waitForListener(EventHandler handler, boost::any tag = NULL);
 
-        std::wstring name;
-        HANDLE pipe;
+            std::wstring name;
+            HANDLE pipe;
 
-    };
+        };
+    }
 }
 
 #endif

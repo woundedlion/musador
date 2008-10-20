@@ -9,138 +9,141 @@
 
 namespace Musador
 {
-    class Connection;
-    class Listener;
-
-    enum IOMsgType
+    namespace IO
     {
-        IO_SOCKET_ACCEPT_COMPLETE,
-        IO_PIPE_ACCEPT_COMPLETE,
-        IO_WRITE_COMPLETE,
-        IO_READ_COMPLETE,
-        IO_SOCKET_CONNECT_COMPLETE,
-        IO_PIPE_CONNECT_COMPLETE,
-        IO_ERROR,
-        IO_SHUTDOWN
-    };
+        class Connection;
+        class Listener;
 
-    class IOMsg
-    {
-    public:
-
-        IOMsg(IOMsgType type) : type(type) {}
-
-        inline IOMsgType getType() { return type; }
-
-        boost::shared_ptr<Connection> conn;
-
-    private: 
-
-        IOMsgType type;
-    };
-
-    class IOMsgShutdown : public IOMsg
-    {
-    public:
-        inline IOMsgShutdown() : IOMsg(IO_SHUTDOWN) {}
-    };
-
-    class IOMsgWriteComplete : public IOMsg
-    {
-    public:
-
-        inline IOMsgWriteComplete() : IOMsg(IO_WRITE_COMPLETE),
-            buf(new char[IOMsgWriteComplete::MAX]),
-            len(0),
-            off(0)
+        enum MsgType
         {
-        }
+            MSG_SOCKET_ACCEPT_COMPLETE,
+            MSG_PIPE_ACCEPT_COMPLETE,
+            MSG_WRITE_COMPLETE,
+            MSG_READ_COMPLETE,
+            MSG_SOCKET_CONNECT_COMPLETE,
+            MSG_PIPE_CONNECT_COMPLETE,
+            MSG_ERROR,
+            MSG_SHUTDOWN
+        };
 
-        boost::shared_array<char> buf;
-        unsigned long len;
-        unsigned long off;
-        static const int MAX = 4096;
-    };
-
-    class IOMsgReadComplete : public IOMsg
-    {
-    public:
-
-        inline IOMsgReadComplete() : IOMsg(IO_READ_COMPLETE),
-            buf(new char[IOMsgReadComplete::MAX]),
-            len(0),
-            off(0)
+        class Msg
         {
-        }
+        public:
 
-        boost::shared_array<char> buf;
-        unsigned long len;
-        unsigned long off;
-        static const int MAX = 4096;
-    };
+            Msg(MsgType type) : type(type) {}
 
-    class IOMsgSocketAcceptComplete : public IOMsg
-    {
-    public:
+            inline MsgType getType() { return type; }
 
-        inline IOMsgSocketAcceptComplete() : IOMsg(IO_SOCKET_ACCEPT_COMPLETE),
-            buf(new char[2 * (sizeof(sockaddr_in) + 16)]),
-            len(0),
-            off(0)
+            boost::shared_ptr<Connection> conn;
+
+        private: 
+
+            MsgType type;
+        };
+
+        class MsgShutdown : public Msg
         {
-        }
+        public:
+            inline MsgShutdown() : Msg(MSG_SHUTDOWN) {}
+        };
 
-        boost::shared_ptr<Listener> listener;
-        boost::shared_array<char> buf;
-        unsigned long len;
-        unsigned long off;
-    };
-
-    class IOMsgPipeAcceptComplete : public IOMsg
-    {
-    public:
-
-        inline IOMsgPipeAcceptComplete() : IOMsg(IO_PIPE_ACCEPT_COMPLETE)
+        class MsgWriteComplete : public Msg
         {
-        }
+        public:
 
-        boost::shared_ptr<Listener> listener;
-    };
+            inline MsgWriteComplete() : Msg(MSG_WRITE_COMPLETE),
+                buf(new char[MsgWriteComplete::MAX]),
+                len(0),
+                off(0)
+            {
+            }
 
-    class IOMsgSocketConnectComplete : public IOMsg
-    {
-    public:
+            boost::shared_array<char> buf;
+            unsigned long len;
+            unsigned long off;
+            static const int MAX = 4096;
+        };
 
-        inline IOMsgSocketConnectComplete() : IOMsg(IO_SOCKET_CONNECT_COMPLETE)
+        class MsgReadComplete : public Msg
         {
-        }
-    };
+        public:
 
-    class IOMsgPipeConnectComplete : public IOMsg
-    {
-    public:
+            inline MsgReadComplete() : Msg(MSG_READ_COMPLETE),
+                buf(new char[MsgReadComplete::MAX]),
+                len(0),
+                off(0)
+            {
+            }
 
-        inline IOMsgPipeConnectComplete() : IOMsg(IO_PIPE_CONNECT_COMPLETE)
+            boost::shared_array<char> buf;
+            unsigned long len;
+            unsigned long off;
+            static const int MAX = 4096;
+        };
+
+        class MsgSocketAcceptComplete : public Msg
         {
-        }
-    };
+        public:
 
-    class IOMsgError : public IOMsg
-    {
-    public:
+            inline MsgSocketAcceptComplete() : Msg(MSG_SOCKET_ACCEPT_COMPLETE),
+                buf(new char[2 * (sizeof(sockaddr_in) + 16)]),
+                len(0),
+                off(0)
+            {
+            }
 
-        inline IOMsgError() : IOMsg(IO_ERROR),
-            err(0)
+            boost::shared_ptr<Listener> listener;
+            boost::shared_array<char> buf;
+            unsigned long len;
+            unsigned long off;
+        };
+
+        class MsgPipeAcceptComplete : public Msg
         {
-        }
+        public:
 
-        int err;
-        boost::any tag;
+            inline MsgPipeAcceptComplete() : Msg(MSG_PIPE_ACCEPT_COMPLETE)
+            {
+            }
 
-    };
+            boost::shared_ptr<Listener> listener;
+        };
 
-    typedef boost::function2<void, boost::shared_ptr<IOMsg>, boost::any> EventHandler;
+        class MsgSocketConnectComplete : public Msg
+        {
+        public:
 
+            inline MsgSocketConnectComplete() : Msg(MSG_SOCKET_CONNECT_COMPLETE)
+            {
+            }
+        };
+
+        class MsgPipeConnectComplete : public Msg
+        {
+        public:
+
+            inline MsgPipeConnectComplete() : Msg(MSG_PIPE_CONNECT_COMPLETE)
+            {
+            }
+        };
+
+        class MsgError : public Msg
+        {
+        public:
+
+            inline MsgError() : Msg(MSG_ERROR),
+                err(0)
+            {
+            }
+
+            int err;
+            boost::any tag;
+
+        };
+
+        typedef boost::function2<void, boost::shared_ptr<Msg>, boost::any> EventHandler;
+
+    }
 }
 
 #include "Connection.h"

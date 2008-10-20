@@ -85,7 +85,7 @@ DatabaseSqlite::tssCleanup(sqlite3 * dbPtr)
         DatabaseSqlite::err(err);
     }
 
-    delete dbPtr;
+//    delete dbPtr;
 }
 
 boost::shared_ptr<ResultSet>

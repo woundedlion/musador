@@ -32,7 +32,7 @@ HTTPConnection::~HTTPConnection()
 }
 
 void 
-HTTPConnection::onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*= NULL*/)
+HTTPConnection::onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /*= NULL*/)
 {
     this->env = boost::any_cast<HTTP::Env>(tag);
     this->env.req = &this->fsm.req;
@@ -43,41 +43,41 @@ HTTPConnection::onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*
 }
 
 void 
-HTTPConnection::onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*= NULL*/)
+HTTPConnection::onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /*= NULL*/)
 {
     switch (msg->getType())
     {
-    case IO_READ_COMPLETE:
+    case IO::MSG_READ_COMPLETE:
         {
-            boost::shared_ptr<IOMsgReadComplete> & msgRead = boost::shared_static_cast<IOMsgReadComplete>(msg);
+            boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
             Guard lock(this->fsmMutex);
             this->fsm.process_event(HTTP::EvtReadComplete(msgRead));
         }
         break;
 
-    case IO_ERROR:
+    case IO::MSG_ERROR:
         {
-            this->env.server->onError(boost::shared_static_cast<IOMsgError>(msg));
+            this->env.server->onError(boost::shared_static_cast<IO::MsgError>(msg));
         }
         break;
     }
 }
 
 void 
-HTTPConnection::onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*= NULL*/)
+HTTPConnection::onWriteComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /*= NULL*/)
 {
     switch (msg->getType())
     {
-    case IO_WRITE_COMPLETE:
+    case IO::MSG_WRITE_COMPLETE:
         {
-            boost::shared_ptr<IOMsgWriteComplete> & msgWrite = boost::shared_static_cast<IOMsgWriteComplete>(msg);
+            boost::shared_ptr<IO::MsgWriteComplete> & msgWrite = boost::shared_static_cast<IO::MsgWriteComplete>(msg);
             Guard lock(this->fsmMutex);
             this->fsm.process_event(HTTP::EvtWriteComplete(msgWrite));
         }
         break;
-    case IO_ERROR:
+    case IO::MSG_ERROR:
         {
-            this->env.server->onError(boost::shared_static_cast<IOMsgError>(msg));
+            this->env.server->onError(boost::shared_static_cast<IO::MsgError>(msg));
         }
         break;
     }

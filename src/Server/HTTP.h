@@ -87,8 +87,8 @@ namespace Musador
             ~Request();
 
             void clear();
-            void sendHeaders(Connection& conn);
-            void sendBody(Connection& conn);
+            void sendHeaders(IO::Connection& conn);
+            void sendBody(IO::Connection& conn);
             void dump(std::ostream& info);
 
             std::string requestURI;
@@ -113,8 +113,8 @@ namespace Musador
             ~Response();
 
             void clear();
-            void sendHeaders(Connection& conn);
-            void sendBody(Connection& conn);
+            void sendHeaders(IO::Connection& conn);
+            void sendBody(IO::Connection& conn);
 
             std::string protocol;
             int status;
@@ -126,7 +126,7 @@ namespace Musador
         //////////////////////////////////////////////////////////////////////
         /// Env
         //////////////////////////////////////////////////////////////////////
-        class Env : public ConnectionCtx
+        class Env : public IO::ConnectionCtx
         {
         public:
 

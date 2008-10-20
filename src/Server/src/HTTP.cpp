@@ -317,7 +317,7 @@ HTTP::Request::dump(std::ostream &info) {
 }
 
 void 
-HTTP::Request::sendHeaders(Connection& conn) {
+HTTP::Request::sendHeaders(IO::Connection& conn) {
     std::stringstream reqData;
     reqData << method << " " << requestURI << "?" << queryString << " " << protocol << "\r\n";
     std::map<std::string,std::string>::iterator hdr;
@@ -330,7 +330,7 @@ HTTP::Request::sendHeaders(Connection& conn) {
 }
 
 void 
-HTTP::Request::sendBody(Connection& conn) {
+HTTP::Request::sendBody(IO::Connection& conn) {
     conn.beginWrite(*(this->data));
 }
 
@@ -358,7 +358,7 @@ HTTP::Response::clear()
 }
 
 void 
-HTTP::Response::sendHeaders(Connection& conn) 
+HTTP::Response::sendHeaders(IO::Connection& conn) 
 {
     std::stringstream responseData;
     responseData << protocol << " " << status << " " << reason << "\r\n";
@@ -372,7 +372,7 @@ HTTP::Response::sendHeaders(Connection& conn)
 }
 
 void 
-HTTP::Response::sendBody(Connection& conn) {
+HTTP::Response::sendBody(IO::Connection& conn) {
     conn.beginWrite(*this->data);
 }
 

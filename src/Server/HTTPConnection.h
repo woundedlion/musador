@@ -45,15 +45,15 @@ namespace Musador
         struct EvtOpen : sc::event<EvtOpen> {};
         struct EvtReadComplete : sc::event<EvtReadComplete> 
         {
-            EvtReadComplete(boost::shared_ptr<IOMsgReadComplete> msgRead) : msgRead(msgRead) {}
-            boost::shared_ptr<IOMsgReadComplete> msgRead;
+            EvtReadComplete(boost::shared_ptr<IO::MsgReadComplete> msgRead) : msgRead(msgRead) {}
+            boost::shared_ptr<IO::MsgReadComplete> msgRead;
         };
         struct EvtReqDone : sc::event<EvtReqDone> {};
         struct EvtReqError : sc::event<EvtReqError> {};
         struct EvtWriteComplete : sc::event<EvtWriteComplete> 
         {
-            EvtWriteComplete(boost::shared_ptr<IOMsgWriteComplete> msgWrite) : msgWrite(msgWrite) {}
-            boost::shared_ptr<IOMsgWriteComplete> msgWrite;
+            EvtWriteComplete(boost::shared_ptr<IO::MsgWriteComplete> msgWrite) : msgWrite(msgWrite) {}
+            boost::shared_ptr<IO::MsgWriteComplete> msgWrite;
         };
         struct EvtClose : sc::event<EvtClose> {};
         struct EvtKeepAlive : sc::event<EvtKeepAlive> {};
@@ -166,7 +166,7 @@ namespace Musador
     }
 
 
-    class HTTPConnection : public SocketConnection, public boost::enable_shared_from_this<HTTPConnection>
+    class HTTPConnection : public IO::SocketConnection, public boost::enable_shared_from_this<HTTPConnection>
     {
     public:
 
@@ -174,13 +174,13 @@ namespace Musador
 
         ~HTTPConnection();
 
-        void onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
+        void onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL);
 
-        void onConnectComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) {}
+        void onConnectComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL) {}
 
-        void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
+        void onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL);
 
-        void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
+        void onWriteComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL);
 
         HTTP::Env& getEnv();
 

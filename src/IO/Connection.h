@@ -13,42 +13,43 @@ namespace Musador
 {
     class Server;
 
-    typedef AbstractFactory<Connection> ConnectionFactory;
-
-    class ConnectionCtx
+    namespace IO
     {
-    };
+        typedef AbstractFactory<Connection> ConnectionFactory;
 
-    class Connection
-    {
-    public:
+        class ConnectionCtx
+        {
+        };
 
-        virtual ~Connection() {};
+        class Connection
+        {
+        public:
 
-        virtual void beginConnect(boost::any tag = NULL) = 0;
+            virtual ~Connection() {};
 
-        virtual void beginRead(boost::any tag = NULL) = 0;
-        virtual void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead, 
-            boost::any tag = NULL) = 0;
+            virtual void beginConnect(boost::any tag = NULL) = 0;
 
-        virtual void beginWrite(boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
-            boost::any tag = NULL) = 0;
-        virtual void beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag = NULL) = 0;
-        virtual void beginWrite(std::istream& dataStream, boost::any tag = NULL) = 0;
-        virtual void beginWrite(const std::string& str, boost::any tag = NULL) = 0;
+            virtual void beginRead(boost::any tag = NULL) = 0;
+            virtual void beginRead(boost::shared_ptr<MsgReadComplete> msgRead, 
+                boost::any tag = NULL) = 0;
 
-        virtual void close() = 0;
+            virtual void beginWrite(boost::shared_ptr<MsgWriteComplete> msgWrite, 
+                boost::any tag = NULL) = 0;
+            virtual void beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag = NULL) = 0;
+            virtual void beginWrite(std::istream& dataStream, boost::any tag = NULL) = 0;
+            virtual void beginWrite(const std::string& str, boost::any tag = NULL) = 0;
 
-        virtual std::string toString() = 0;
+            virtual void close() = 0;
 
-        virtual void onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;
-        virtual void onConnectComplete(boost::shared_ptr<IOMsg>, boost::any tag = NULL) = 0;		
-        virtual void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;
-        virtual void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) = 0;
+            virtual std::string toString() = 0;
 
-    };
+            virtual void onAcceptComplete(boost::shared_ptr<Msg> msg, boost::any tag = NULL) = 0;
+            virtual void onConnectComplete(boost::shared_ptr<Msg>, boost::any tag = NULL) = 0;		
+            virtual void onReadComplete(boost::shared_ptr<Msg> msg, boost::any tag = NULL) = 0;
+            virtual void onWriteComplete(boost::shared_ptr<Msg> msg, boost::any tag = NULL) = 0;
 
-
+        };
+    }
 }
 
 #endif

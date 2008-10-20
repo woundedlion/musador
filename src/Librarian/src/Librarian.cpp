@@ -43,13 +43,13 @@ WindowsService(L"Musador Librarian")
     this->server.reset(new Server(cfg->server));
 
     // Start 2 worker threads
-    Proactor::instance()->start(2);
+    IO::Proactor::instance()->start(2);
 }
 
 Librarian::~Librarian()
 {
-    Proactor::instance()->stop();
-    Proactor::destroy();
+    IO::Proactor::instance()->stop();
+    IO::Proactor::destroy();
 
     Config::destroy();
     Musador::Network::destroy();
@@ -130,13 +130,13 @@ Librarian::index(const std::wstring& outfile,const std::vector<std::wstring>& pa
 }
 
 void
-Librarian::onGUIAccept(boost::shared_ptr<IOMsg> msg, boost::any /*tag = NULL*/)
+Librarian::onGUIAccept(boost::shared_ptr<IO::Msg> msg, boost::any /*tag = NULL*/)
 {
     switch (msg->getType())
     {
-    case IO_PIPE_ACCEPT_COMPLETE:
+    case IO::MSG_PIPE_ACCEPT_COMPLETE:
         {
-            boost::shared_ptr<IOMsgPipeAcceptComplete>& msgAccept = boost::shared_static_cast<IOMsgPipeAcceptComplete>(msg);
+            boost::shared_ptr<IO::MsgPipeAcceptComplete>& msgAccept = boost::shared_static_cast<IO::MsgPipeAcceptComplete>(msg);
 
             this->gui = boost::shared_static_cast<GUIConnection>(msgAccept->conn);
             this->gui->setHandler(boost::bind(&Librarian::onGUIMsg,this,_1));
@@ -150,9 +150,9 @@ Librarian::onGUIAccept(boost::shared_ptr<IOMsg> msg, boost::any /*tag = NULL*/)
 
         }
         break;
-    case IO_ERROR:
+    case IO::MSG_ERROR:
         {
-            boost::shared_ptr<IOMsgError> msgErr(boost::shared_static_cast<IOMsgError>(msg));
+            boost::shared_ptr<IO::MsgError> msgErr(boost::shared_static_cast<IO::MsgError>(msg));
             LOG(Error) << "Error accepting GUI Connection: " << msgErr->err;
         }
         break;

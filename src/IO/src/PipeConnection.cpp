@@ -6,6 +6,7 @@
 #include "Logger/Logger.h"
 #define LOG_SENDER L"I/O"
 using namespace Musador;
+using namespace Musador::IO;
 
 PipeConnection::PipeConnection(const std::wstring& name) :
 name(name),
@@ -42,13 +43,13 @@ PipeConnection::beginRead(boost::any tag /*= NULL*/)
 }
 
 void 
-PipeConnection::beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead, boost::any tag /*= NULL*/)
+PipeConnection::beginRead(boost::shared_ptr<MsgReadComplete> msgRead, boost::any tag /*= NULL*/)
 {
     Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&Connection::onReadComplete,this,_1,_2), msgRead, tag);
 }
 
 void 
-PipeConnection::beginWrite(boost::shared_ptr<IOMsgWriteComplete> msgWrite, boost::any tag /* = NULL */)
+PipeConnection::beginWrite(boost::shared_ptr<MsgWriteComplete> msgWrite, boost::any tag /* = NULL */)
 {
     Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), msgWrite, tag);
 }
@@ -62,8 +63,8 @@ PipeConnection::beginWrite(boost::shared_array<char> data, unsigned int len, boo
 void 
 PipeConnection::beginWrite(std::istream& dataStream, boost::any tag /*= NULL*/)
 {
-    boost::shared_array<char> data(new char[IOMsgWriteComplete::MAX]);
-    dataStream.read(data.get(),IOMsgWriteComplete::MAX);
+    boost::shared_array<char> data(new char[MsgWriteComplete::MAX]);
+    dataStream.read(data.get(),MsgWriteComplete::MAX);
     int len = dataStream.gcount();
     Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), data, len, tag);
 }

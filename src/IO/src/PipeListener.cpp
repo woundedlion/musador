@@ -5,6 +5,7 @@
 #define LOG_SENDER L"I/O"
 
 using namespace Musador;
+using namespace Musador::IO;
 
 PipeListener::PipeListener(const std::wstring& name) :
 name(name)

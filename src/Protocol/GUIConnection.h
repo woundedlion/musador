@@ -12,7 +12,7 @@ namespace Musador
     /// @class GUIConnection
     /// @brief A concrete PipeConnection implementing the protocol for communications between 
     /// the Librarian service and the LibrarianGUI process.
-    class GUIConnection : public PipeConnection
+    class GUIConnection : public IO::PipeConnection
     {
 
     public:
@@ -23,22 +23,22 @@ namespace Musador
         /// @brief Handler invoked when an asynchronous read operation completes.
         /// @param[in] msg A message indicating the result of the asynchronous read operation.
         /// @param[in] tag User-defined value passed in when the original asynchronous read operation was initiated.
-        void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
+        void onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL);
 
         /// @brief Handler invoked when an asynchronous write operation completes.
         /// @param[in] msg A message indicating the result of the asynchronous write operation.
         /// @param[in] tag User-defined value passed in when the original asynchronous write operation was initiated.
-        void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
+        void onWriteComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL);
 
         /// @brief Handler invoked when an asynchronous accept operation completes.
         /// @param[in] msg A message indicating the result of the asynchronous accept operation.
         /// @param[in] tag User-defined value passed in when the original asynchronous accept operation was initiated.
-        void onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL); 
+        void onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL); 
 
         /// @brief Handler invoked when an asynchronous connect operation completes.
         /// @param[in] msg A message indicating the result of the asynchronous connect operation.
         /// @param[in] tag User-defined value passed in when the original asynchronous connect operation was initiated.
-        void onConnectComplete(boost::shared_ptr<IOMsg>, boost::any tag = NULL);
+        void onConnectComplete(boost::shared_ptr<IO::Msg>, boost::any tag = NULL);
 
         /// @brief Register a function to process GUI Messages received over the connection.
         /// @param[in] handler A GUIHandler fucntion which will be invoked whenever a GUIMsg is received over the connection.

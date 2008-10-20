@@ -5,6 +5,7 @@
 #include "Logger/Logger.h"
 #define LOG_SENDER L"I/O"
 using namespace Musador;
+using namespace Musador::IO;
 
 SocketConnection::SocketConnection()
 {
@@ -23,14 +24,14 @@ SocketConnection::beginRead(boost::any tag /* = NULL */)
 }
 
 void 
-SocketConnection::beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead, boost::any tag /* = NULL */)
+SocketConnection::beginRead(boost::shared_ptr<MsgReadComplete> msgRead, boost::any tag /* = NULL */)
 {
     Proactor::instance()->beginRead(this->shared_from_this(), boost::bind(&Connection::onReadComplete,this,_1,_2), msgRead);
 }
 
 inline
 void 
-SocketConnection::beginWrite(boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
+SocketConnection::beginWrite(boost::shared_ptr<MsgWriteComplete> msgWrite, 
                              boost::any tag /* = NULL */)
 {
     Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), msgWrite, tag);
@@ -46,8 +47,8 @@ SocketConnection::beginWrite(boost::shared_array<char> data, unsigned int len, b
 void 
 SocketConnection::beginWrite(std::istream& dataStream, boost::any tag /* = NULL */)
 {
-    boost::shared_array<char> data(new char[IOMsgWriteComplete::MAX]);
-    dataStream.read(data.get(),IOMsgWriteComplete::MAX);
+    boost::shared_array<char> data(new char[MsgWriteComplete::MAX]);
+    dataStream.read(data.get(),MsgWriteComplete::MAX);
     int len = dataStream.gcount();
     Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), data, len);
 }

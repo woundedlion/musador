@@ -18,7 +18,7 @@ LibrarianGUI::LibrarianGUI() :
 WinApp(L"Musador Librarian"),
 trayIcon(NULL)
 {
-    Proactor::instance()->start();
+    IO::Proactor::instance()->start();
     TimerQueue::instance()->start();
 
     this->trayMenu.insertItem(0,ENABLE,L"Enable");
@@ -28,8 +28,8 @@ trayIcon(NULL)
 
 LibrarianGUI::~LibrarianGUI()
 {
-    Proactor::instance()->stop();
-    Proactor::destroy();
+    IO::Proactor::instance()->stop();
+    IO::Proactor::destroy();
     TimerQueue::instance()->stop();
     TimerQueue::destroy();
 }

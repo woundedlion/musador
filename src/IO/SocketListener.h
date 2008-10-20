@@ -9,36 +9,38 @@
 
 namespace Musador
 {
-    class ConnectionCtx;
-
-    class SocketListener : public Listener, public boost::enable_shared_from_this<SocketListener>
+    namespace IO
     {
-    public:
+        class ConnectionCtx;
 
-        SocketListener(const sockaddr_in& localEP, 
-            int socketType = SOCK_STREAM, 
-            int socketProto = IPPROTO_TCP);
+        class SocketListener : public Listener, public boost::enable_shared_from_this<SocketListener>
+        {
+        public:
 
-        ~SocketListener();
+            SocketListener(const sockaddr_in& localEP, 
+                int socketType = SOCK_STREAM, 
+                int socketProto = IPPROTO_TCP);
 
-        void beginAccept(EventHandler handler, boost::any tag = NULL);
+            ~SocketListener();
 
-        void close();
+            void beginAccept(EventHandler handler, boost::any tag = NULL);
 
-        SOCKET getSocket();
+            void close();
 
-    private:
+            SOCKET getSocket();
 
-        SOCKET sock;
-        sockaddr_in localEP;
+        private:
 
-    };
+            SOCKET sock;
+            sockaddr_in localEP;
 
-    inline SOCKET SocketListener::getSocket()
-    {
-        return this->sock;
+        };
+
+        inline SOCKET SocketListener::getSocket()
+        {
+            return this->sock;
+        }
     }
 }
-
 
 #endif
