@@ -14,51 +14,51 @@ class IndexerTest : public CxxTest::TestSuite
 {
 
 public:
-	
-	IndexerTest()
-	{
-		Logging::Logger::instance();		
-	}
 
-	~IndexerTest()
-	{
-		Logging::Logger::destroy();
-	}
+    IndexerTest()
+    {
+        Logging::Logger::instance();		
+    }
 
-	void setUp() 
-	{
-	}
+    ~IndexerTest()
+    {
+        Logging::Logger::destroy();
+    }
 
-	void tearDown()
-	{
-	}
+    void setUp() 
+    {
+    }
 
-	static void indexDoneSlot(const Musador::IndexerProgress& p)
-	{
+    void tearDown()
+    {
+    }
+
+    static void indexDoneSlot(const Musador::IndexerProgress& p)
+    {
         LOG(Info) << "Indexing of " << p.numFiles << " files in " << p.numDirs << " directories (" << Util::bytesToString(p.bytes) << ") completed in " << (std::clock() - p.startTime) / CLOCKS_PER_SEC << " seconds";
-	}
+    }
 
-	void testIndexer() 
-	{
-		LOG(Info) << " IndexerTest begin...";
+    void testIndexer() 
+    {
+        LOG(Info) << " IndexerTest begin...";
 
-		Musador::Indexer indexer(L"testIndexer.db");
+        Musador::Indexer indexer(L"testIndexer.db");
 
-		boost::signals::scoped_connection conn = indexer.sigDone.connect(&IndexerTest::indexDoneSlot);
-		indexer.clearRootTargets();
+        boost::signals::scoped_connection conn = indexer.sigDone.connect(&IndexerTest::indexDoneSlot);
+        indexer.clearRootTargets();
 
-//		indexer.addRootTarget(L"C:\\Music\\library\\Classical");
-//		indexer.addRootTarget(L"C:\\Music\\library\\Latin");
-//		indexer.addRootTarget(L"c:\\music\\library\\Blues");
-//		indexer.addRootTarget(L"c:\\music\\library\\Reggae");
-//		indexer.addRootTarget(L"c:\\music\\library\\Jazz");
-//		indexer.addRootTarget(L"c:\\music");
-//		indexer.addRootTarget(L"c:\\Program Files\\Newsleecher\\downloads");
+        //		indexer.addRootTarget(L"C:\\Music\\library\\Classical");
+        //		indexer.addRootTarget(L"C:\\Music\\library\\Latin");
+        //		indexer.addRootTarget(L"c:\\music\\library\\Blues");
+        //		indexer.addRootTarget(L"c:\\music\\library\\Reggae");
+        //		indexer.addRootTarget(L"c:\\music\\library\\Jazz");
+        //		indexer.addRootTarget(L"c:\\music");
+        //		indexer.addRootTarget(L"c:\\Program Files\\Newsleecher\\downloads");
 
-		indexer.reindex();
-		indexer.waitDone();	
-	
-		LOG(Info) << " IndexerTest end...";
-	}
+        indexer.reindex();
+        indexer.waitDone();	
+
+        LOG(Info) << " IndexerTest end...";
+    }
 
 };

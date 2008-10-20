@@ -12,53 +12,53 @@
 namespace Musador
 {
 
-	typedef boost::mutex Mutex;
-	typedef boost::mutex::scoped_lock Guard;
+    typedef boost::mutex Mutex;
+    typedef boost::mutex::scoped_lock Guard;
 
-	typedef boost::function<void ()> TimerHandler;
+    typedef boost::function<void ()> TimerHandler;
 
-	class Timer
-	{
-		friend class TimerQueue;
+    class Timer
+    {
+        friend class TimerQueue;
 
-	public:
+    public:
 
-		void cancel();
-	
-	private:
+        void cancel();
 
-		Timer(unsigned int intervalMs, TimerHandler handler, bool once, boost::any tag);
+    private:
 
-		unsigned int timeoutMs;
-		TimerHandler handler;
-		unsigned int repeatInterval;
-		boost::any tag;
-	};
+        Timer(unsigned int intervalMs, TimerHandler handler, bool once, boost::any tag);
 
-	class TimerQueue : public Singleton<TimerQueue>
-	{
-	public:
+        unsigned int timeoutMs;
+        TimerHandler handler;
+        unsigned int repeatInterval;
+        boost::any tag;
+    };
 
-		TimerQueue();
+    class TimerQueue : public Singleton<TimerQueue>
+    {
+    public:
 
-		~TimerQueue();
+        TimerQueue();
 
-		boost::shared_ptr<Timer> createTimer(unsigned int intervalMs, TimerHandler handler, bool once = true, boost::any tag = NULL);
+        ~TimerQueue();
 
-		void start();
+        boost::shared_ptr<Timer> createTimer(unsigned int intervalMs, TimerHandler handler, bool once = true, boost::any tag = NULL);
 
-		void stop();
+        void start();
 
-		void run();
+        void stop();
 
-	private:
+        void run();
 
-		typedef std::multimap<unsigned int, boost::shared_ptr<Timer> > TimerCollection;
-		boost::mutex timersMutex;
-		TimerCollection timers;
-		std::auto_ptr<boost::thread> timerThread;
-		bool doShutdown;
-	};
+    private:
+
+        typedef std::multimap<unsigned int, boost::shared_ptr<Timer> > TimerCollection;
+        boost::mutex timersMutex;
+        TimerCollection timers;
+        std::auto_ptr<boost::thread> timerThread;
+        bool doShutdown;
+    };
 
 }
 

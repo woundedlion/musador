@@ -9,49 +9,49 @@
 namespace Musador
 {
 
-	class SocketConnection : public Connection, public boost::enable_shared_from_this<SocketConnection>
-	{
-	public:
+    class SocketConnection : public Connection, public boost::enable_shared_from_this<SocketConnection>
+    {
+    public:
 
-		SocketConnection();
+        SocketConnection();
 
-		~SocketConnection();
+        ~SocketConnection();
 
-		void close();
+        void close();
 
-		virtual void beginConnect(boost::any tag = NULL) {}
+        virtual void beginConnect(boost::any tag = NULL) {}
 
-		void beginRead(boost::any tag = NULL);
-		void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead,
-                               boost::any tag = NULL);
+        void beginRead(boost::any tag = NULL);
+        void beginRead(boost::shared_ptr<IOMsgReadComplete> msgRead,
+            boost::any tag = NULL);
 
-		void beginWrite(boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
-				boost::any tag = NULL);
-		void beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag = NULL);
-		void beginWrite(std::istream& dataStream, boost::any tag = NULL);
-		void beginWrite(const std::string& str, boost::any tag = NULL);
+        void beginWrite(boost::shared_ptr<IOMsgWriteComplete> msgWrite, 
+            boost::any tag = NULL);
+        void beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag = NULL);
+        void beginWrite(std::istream& dataStream, boost::any tag = NULL);
+        void beginWrite(const std::string& str, boost::any tag = NULL);
 
-		std::string toString();
+        std::string toString();
 
-		SOCKET getSocket();
+        SOCKET getSocket();
 
-		void setSocket(SOCKET sock);
+        void setSocket(SOCKET sock);
 
-		sockaddr_in getLocalEP();
+        sockaddr_in getLocalEP();
 
-		void setLocalEP(sockaddr_in localEP);
+        void setLocalEP(sockaddr_in localEP);
 
-		sockaddr_in getRemoteEP();
+        sockaddr_in getRemoteEP();
 
-		void setRemoteEP(sockaddr_in localEP);
+        void setRemoteEP(sockaddr_in localEP);
 
-	protected:
+    protected:
 
-		sockaddr_in localEP;
-		sockaddr_in remoteEP;
-		SOCKET sock;
+        sockaddr_in localEP;
+        sockaddr_in remoteEP;
+        SOCKET sock;
 
-	};
+    };
 }
 
 #endif

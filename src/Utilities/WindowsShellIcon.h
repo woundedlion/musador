@@ -14,17 +14,17 @@ public:
 
     WindowsShellIcon(HWND hWnd, UINT uCallbackMsg);
 
-	~WindowsShellIcon();
-    
+    ~WindowsShellIcon();
+
     void setIcon(const Icon& icon);
 
-	void setToolTip(const std::wstring& toolTip);
+    void setToolTip(const std::wstring& toolTip);
 
-	void show();
+    void show();
 
-	void hide();
+    void hide();
 
-	UINT getID();
+    UINT getID();
 
 private:
 
@@ -33,8 +33,8 @@ private:
     bool visible;
     HWND hWnd;
 
-	NOTIFYICONDATAW nid;
-	
+    NOTIFYICONDATAW nid;
+
 };
 
 #endif

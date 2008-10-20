@@ -17,47 +17,47 @@ namespace Musador
     class HTTPConfig
     {
     public:
-        
+
         /// @brief Constructor
         HTTPConfig() :
-            documentRoot(L""),
-            addr("0.0.0.0"),
-            port(5152),
-            requireAuth(false),
-            realm(L"")
-        {}
-            
-        /// @brief Serialize this configuration.
-        /// @param[in] ar Destination archive for the serialized data.
-        /// @param[in] version The version of the archive. Used by boost::serialization version tracking.
-        template<class Archive>
-        void serialize(Archive & ar, const unsigned int version)
-        {
-            ar & BOOST_SERIALIZATION_NVP(documentRoot);
-            ar & BOOST_SERIALIZATION_NVP(addr);
-            ar & BOOST_SERIALIZATION_NVP(port);
-            ar & BOOST_SERIALIZATION_NVP(requireAuth);
-            ar & BOOST_SERIALIZATION_NVP(users);
-            ar & BOOST_SERIALIZATION_NVP(realm);
-        }
+          documentRoot(L""),
+              addr("0.0.0.0"),
+              port(5152),
+              requireAuth(false),
+              realm(L"")
+          {}
 
-        /// @brief The root directory for the site, available at http://addr:port/
-        Property<std::wstring> documentRoot;
+          /// @brief Serialize this configuration.
+          /// @param[in] ar Destination archive for the serialized data.
+          /// @param[in] version The version of the archive. Used by boost::serialization version tracking.
+          template<class Archive>
+          void serialize(Archive & ar, const unsigned int version)
+          {
+              ar & BOOST_SERIALIZATION_NVP(documentRoot);
+              ar & BOOST_SERIALIZATION_NVP(addr);
+              ar & BOOST_SERIALIZATION_NVP(port);
+              ar & BOOST_SERIALIZATION_NVP(requireAuth);
+              ar & BOOST_SERIALIZATION_NVP(users);
+              ar & BOOST_SERIALIZATION_NVP(realm);
+          }
 
-        /// @brief The IP Address in dot notation on which to listen for requests to this site.
-        Property<std::string> addr;
+          /// @brief The root directory for the site, available at http://addr:port/
+          Property<std::wstring> documentRoot;
 
-        /// @brief The port number on which to listen for requests to this site.
-        Property<unsigned short> port;
+          /// @brief The IP Address in dot notation on which to listen for requests to this site.
+          Property<std::string> addr;
 
-        /// @brief Specifies whether HTTP Digest authentication is required to access this site.
-        Property<bool> requireAuth;
+          /// @brief The port number on which to listen for requests to this site.
+          Property<unsigned short> port;
 
-        /// @brief Collection of users with credentials to access the site.
-        Property<HTTP::UserCollection> users;
+          /// @brief Specifies whether HTTP Digest authentication is required to access this site.
+          Property<bool> requireAuth;
 
-        /// @brief Realm name used for HTTP Authentication
-        Property<std::wstring> realm;
+          /// @brief Collection of users with credentials to access the site.
+          Property<HTTP::UserCollection> users;
+
+          /// @brief Realm name used for HTTP Authentication
+          Property<std::wstring> realm;
 
     };
 
@@ -68,7 +68,7 @@ namespace Musador
     class ServerConfig
     {
     public:
-        
+
         /// @brief Collection type for HTTPConfig instances.
         typedef std::vector<HTTPConfig> HTTPSiteCollection;
 
@@ -112,7 +112,7 @@ namespace Musador
 
         /// @brief User-defined nickname for this Library        
         Property<std::wstring> nickname;
-        
+
         /// @brief path to the data file for this Library
         Property<std::wstring> dataFile;
 
@@ -172,7 +172,7 @@ namespace Musador
             ar & BOOST_SERIALIZATION_NVP(server);
             ar & BOOST_SERIALIZATION_NVP(librarian);
         }
-        
+
         /// @brief The Server configuration for this application
         ServerConfig server;
 

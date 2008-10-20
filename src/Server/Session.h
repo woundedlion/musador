@@ -10,53 +10,53 @@
 namespace Musador
 {
 
-	typedef boost::mutex Mutex;
-	typedef boost::mutex::scoped_lock Guard;
-	//////////////////////////////////////////////////////////////////////
-	/// Session
-	//////////////////////////////////////////////////////////////////////
+    typedef boost::mutex Mutex;
+    typedef boost::mutex::scoped_lock Guard;
+    //////////////////////////////////////////////////////////////////////
+    /// Session
+    //////////////////////////////////////////////////////////////////////
 
-	class Session : public boost::noncopyable
-	{
-	public:
+    class Session : public boost::noncopyable
+    {
+    public:
 
-		Session();
+        Session();
 
-		virtual ~Session();
+        virtual ~Session();
 
-		template <typename T>
-		T get(const std::string& key)
-		{
-			Guard lock(this->lock);
-			StoreType::iterator iter = this->store.find(key);
-			if (iter != this->store.end())
-			{
-				return boost::any_cast<T>(iter->second);
-			}
-			else
-			{
-				return T();
-			}
-		}
+        template <typename T>
+        T get(const std::string& key)
+        {
+            Guard lock(this->lock);
+            StoreType::iterator iter = this->store.find(key);
+            if (iter != this->store.end())
+            {
+                return boost::any_cast<T>(iter->second);
+            }
+            else
+            {
+                return T();
+            }
+        }
 
-		template <typename T>
-		void set(const std::string& key, T value)
-		{
-			Guard lock(this->lock);
-			this->store[key] = value;
-		}
+        template <typename T>
+        void set(const std::string& key, T value)
+        {
+            Guard lock(this->lock);
+            this->store[key] = value;
+        }
 
-		void clear();
+        void clear();
 
 
-	protected:
+    protected:
 
-		typedef std::map<std::string,boost::any> StoreType;
+        typedef std::map<std::string,boost::any> StoreType;
 
-		Mutex lock;
-		StoreType store;
+        Mutex lock;
+        StoreType store;
 
-	};
+    };
 
 }
 

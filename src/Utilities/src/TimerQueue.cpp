@@ -19,7 +19,7 @@ tag(tag)
 void
 Timer::cancel()
 {
- // TODO: implement timer cancelation
+    // TODO: implement timer cancelation
 }
 
 TimerQueue::TimerQueue() :
@@ -30,26 +30,26 @@ doShutdown(false)
 
 TimerQueue::~TimerQueue()
 {
-	Guard lock(this->timersMutex);
-	this->timers.clear();
+    Guard lock(this->timersMutex);
+    this->timers.clear();
 }
 
 boost::shared_ptr<Timer> 
 TimerQueue::createTimer(unsigned int intervalMs, TimerHandler handler, bool once, boost::any tag)
 {
-	boost::shared_ptr<Timer> timer(new Timer(intervalMs, handler, once, tag));
-	Guard lock(this->timersMutex);
-	this->timers.insert(std::make_pair(intervalMs, timer));	
-	return timer;
+    boost::shared_ptr<Timer> timer(new Timer(intervalMs, handler, once, tag));
+    Guard lock(this->timersMutex);
+    this->timers.insert(std::make_pair(intervalMs, timer));	
+    return timer;
 }
 
 void
 TimerQueue::run()
 {
-	TimerCollection::iterator iter;
-	while (!this->doShutdown)
-	{
-		std::vector<TimerCollection::iterator> expired;
+    TimerCollection::iterator iter;
+    while (!this->doShutdown)
+    {
+        std::vector<TimerCollection::iterator> expired;
         {
             Guard lock(this->timersMutex);
             // Scan the TimerCollection
@@ -83,19 +83,19 @@ TimerQueue::run()
                 this->timers.erase(*iter);
             }
         }
-		::Sleep(10);
-	}
+        ::Sleep(10);
+    }
 }
 
 void
 TimerQueue::start()
 {
-	this->timerThread.reset(new boost::thread(boost::bind(&TimerQueue::run,this)));
+    this->timerThread.reset(new boost::thread(boost::bind(&TimerQueue::run,this)));
 }
 
 void
 TimerQueue::stop()
 {
-	this->doShutdown = true;
-	this->timerThread->join();
+    this->doShutdown = true;
+    this->timerThread->join();
 }

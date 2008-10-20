@@ -17,61 +17,61 @@ template <class T>
 class WindowsService : public Singleton<T>
 {
 public:
-	
-	WindowsService(const tstring& svcName);
-	
-	~WindowsService();
 
-	void install();
+    WindowsService(const tstring& svcName);
 
-	void uninstall();
+    ~WindowsService();
 
-	void serviceStart();
+    void install();
 
-	void stop();
+    void uninstall();
 
-	void start();
+    void serviceStart();
 
-	void terminate();
+    void stop();
 
-	static void WINAPI runThunk(DWORD argc, LPTSTR argv[])
-	{
-		T::instance()->_run(argc, argv);
-	}
+    void start();
 
-	static void WINAPI ctrlThunk(DWORD opCode)
-	{
-		T::instance()->_ctrl(opCode);
-	}
+    void terminate();
 
-	void waitForStop();
+    static void WINAPI runThunk(DWORD argc, LPTSTR argv[])
+    {
+        T::instance()->_run(argc, argv);
+    }
 
-	virtual int run(unsigned long argc, LPTSTR argv[]) = 0;
+    static void WINAPI ctrlThunk(DWORD opCode)
+    {
+        T::instance()->_ctrl(opCode);
+    }
 
-	virtual void ctrl(DWORD opCode) {} // Override this member function to hook user-defined control opcodes
+    void waitForStop();
+
+    virtual int run(unsigned long argc, LPTSTR argv[]) = 0;
+
+    virtual void ctrl(DWORD opCode) {} // Override this member function to hook user-defined control opcodes
 
 private:
 
-	tstring svcName;
-	SERVICE_STATUS_HANDLE hStatus;
-	SERVICE_STATUS status;
-	HANDLE evtStop;
-	HANDLE evtSrc;
-	SC_HANDLE hSvc;
+    tstring svcName;
+    SERVICE_STATUS_HANDLE hStatus;
+    SERVICE_STATUS status;
+    HANDLE evtStop;
+    HANDLE evtSrc;
+    SC_HANDLE hSvc;
 
-	void _run(DWORD argc, LPTSTR argv[]);
-	void _ctrl(DWORD opCode);
-	void setStatus(DWORD dwCurrentState,DWORD dwWin32ExitCode,DWORD dwWaitHint);
-	void logEvent(WORD wType, const tstring& msg);
+    void _run(DWORD argc, LPTSTR argv[]);
+    void _ctrl(DWORD opCode);
+    void setStatus(DWORD dwCurrentState,DWORD dwWin32ExitCode,DWORD dwWaitHint);
+    void logEvent(WORD wType, const tstring& msg);
 };
 
 class ServiceException : public StreamException<ServiceException>
 {
 public:
 
-	ServiceException() {}
+    ServiceException() {}
 
-	~ServiceException() {}
+    ~ServiceException() {}
 
 };
 
@@ -83,15 +83,15 @@ WindowsService<T>::WindowsService(const tstring& svcName) :
 svcName(svcName),
 hSvc(NULL)
 {
-	this->evtStop = ::CreateEvent(NULL,TRUE,FALSE,NULL);
-	this->evtSrc = ::RegisterEventSource(NULL,this->svcName.c_str());
+    this->evtStop = ::CreateEvent(NULL,TRUE,FALSE,NULL);
+    this->evtSrc = ::RegisterEventSource(NULL,this->svcName.c_str());
 }
 
 template <class T>
 WindowsService<T>::~WindowsService()
 {
-	::CloseHandle(this->evtStop);
-	::DeregisterEventSource(this->evtSrc);
+    ::CloseHandle(this->evtStop);
+    ::DeregisterEventSource(this->evtSrc);
 }
 
 template <class T>
@@ -102,22 +102,22 @@ void WindowsService<T>::install()
 
     if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
     {
-		throw ServiceException() << "Cannot install service: " << ::GetLastError();
+        throw ServiceException() << "Cannot install service: " << ::GetLastError();
     }
 
     // Get a handle to the SCM database.  
-	schSCManager = ::OpenSCManager( 
+    schSCManager = ::OpenSCManager( 
         NULL,                    // local computer
         NULL,                    // ServicesActive database 
         SC_MANAGER_ALL_ACCESS);  // full access rights 
- 
+
     if (NULL == schSCManager) 
     {
-		throw ServiceException() << "OpenSCManager failed: " << ::GetLastError();
+        throw ServiceException() << "OpenSCManager failed: " << ::GetLastError();
     }
 
     // Create the service
-	this->hSvc = ::CreateService( 
+    this->hSvc = ::CreateService( 
         schSCManager,              // SCM database 
         this->svcName.c_str(),     // name of service 
         this->svcName.c_str(),		// service name to display 
@@ -131,27 +131,27 @@ void WindowsService<T>::install()
         NULL,                      // no dependencies 
         NULL,                      // LocalSystem account 
         NULL);                     // no password 
- 
-	
+
+
     if (this->hSvc == NULL) 
     {
-		::CloseServiceHandle(schSCManager);
-		throw ServiceException() << "CreateService failed: " << ::GetLastError();
+        ::CloseServiceHandle(schSCManager);
+        throw ServiceException() << "CreateService failed: " << ::GetLastError();
     }
-	
-	// Start the service
-	try
-	{
-		this->start();
-	}
-	catch (const ServiceException& e)
-	{
-		this->logEvent(EVENTLOG_INFORMATION_TYPE,Util::utf8ToUnicode(e.what()));
-	}
 
-	
-	::CloseServiceHandle(this->hSvc); 
-	::CloseServiceHandle(schSCManager);
+    // Start the service
+    try
+    {
+        this->start();
+    }
+    catch (const ServiceException& e)
+    {
+        this->logEvent(EVENTLOG_INFORMATION_TYPE,Util::utf8ToUnicode(e.what()));
+    }
+
+
+    ::CloseServiceHandle(this->hSvc); 
+    ::CloseServiceHandle(schSCManager);
 }
 
 template <class T>
@@ -162,193 +162,193 @@ void WindowsService<T>::uninstall()
 
     if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
     {
-		throw ServiceException() << "Cannot uninstall service: " << ::GetLastError();
+        throw ServiceException() << "Cannot uninstall service: " << ::GetLastError();
     }
 
     // Get a handle to the SCM database.  
-	schSCManager = ::OpenSCManager( 
+    schSCManager = ::OpenSCManager( 
         NULL,                    // local computer
         NULL,                    // ServicesActive database 
         SC_MANAGER_ALL_ACCESS);  // full access rights 
- 
+
     if (NULL == schSCManager) 
     {
-		throw ServiceException() << "OpenSCManager failed: " << ::GetLastError();
+        throw ServiceException() << "OpenSCManager failed: " << ::GetLastError();
     }
 
     // Delete the service
-	this->hSvc = ::OpenService( 
+    this->hSvc = ::OpenService( 
         schSCManager,           // SCM database 
         this->svcName.c_str(),  // name of service 
-		DELETE | SERVICE_STOP );				// access
+        DELETE | SERVICE_STOP );				// access
 
     if (this->hSvc == NULL) 
     {
-		::CloseServiceHandle(schSCManager);
-		throw ServiceException() << "The specified service is not installed. (" << ::GetLastError() << ")";
+        ::CloseServiceHandle(schSCManager);
+        throw ServiceException() << "The specified service is not installed. (" << ::GetLastError() << ")";
     }
 
-	// Stop the service
-	try
-	{
-		this->terminate();
-	}
-	catch (const ServiceException& e)
-	{
-		this->logEvent(EVENTLOG_INFORMATION_TYPE,Util::utf8ToUnicode(e.what()));
-	}
+    // Stop the service
+    try
+    {
+        this->terminate();
+    }
+    catch (const ServiceException& e)
+    {
+        this->logEvent(EVENTLOG_INFORMATION_TYPE,Util::utf8ToUnicode(e.what()));
+    }
 
-	BOOL r = ::DeleteService(this->hSvc);
+    BOOL r = ::DeleteService(this->hSvc);
 
-	::CloseServiceHandle(this->hSvc); 
-	::CloseServiceHandle(schSCManager);
+    ::CloseServiceHandle(this->hSvc); 
+    ::CloseServiceHandle(schSCManager);
 
-	if (!r)
-	{
-		throw ServiceException() << "The specified service could not be deleted. (" << ::GetLastError() << ")";
-	}
+    if (!r)
+    {
+        throw ServiceException() << "The specified service could not be deleted. (" << ::GetLastError() << ")";
+    }
 
-	return;
+    return;
 }
 
 template <class T>
 void WindowsService<T>::serviceStart()
 {
-		SERVICE_TABLE_ENTRY dispatchTable[] = 
-		{ 
-			{ const_cast<wchar_t *>(this->svcName.c_str()),&WindowsService::runThunk}, 
-			{ NULL, NULL } 
-		}; 
-	 
-		if (!::StartServiceCtrlDispatcher( dispatchTable )) 
-		{ 
-			DWORD err = ::GetLastError();
-			throw ServiceException() << "StartServiceCtrlDispatcher() failed: " << err; 
-		} 
+    SERVICE_TABLE_ENTRY dispatchTable[] = 
+    { 
+        { const_cast<wchar_t *>(this->svcName.c_str()),&WindowsService::runThunk}, 
+        { NULL, NULL } 
+    }; 
+
+    if (!::StartServiceCtrlDispatcher( dispatchTable )) 
+    { 
+        DWORD err = ::GetLastError();
+        throw ServiceException() << "StartServiceCtrlDispatcher() failed: " << err; 
+    } 
 }
 
 template <class T>
 void WindowsService<T>::stop()
 {
-	::SetEvent(this->evtStop);
+    ::SetEvent(this->evtStop);
 }
 
 template <class T>
 void WindowsService<T>::start()
 {
-	if (NULL == this->hSvc)
-	{
-		SC_HANDLE schSCManager;
-		TCHAR szPath[MAX_PATH];
+    if (NULL == this->hSvc)
+    {
+        SC_HANDLE schSCManager;
+        TCHAR szPath[MAX_PATH];
 
-		if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
-		{
-			throw ServiceException() << "Cannot launch service: " << ::GetLastError();
-		}
+        if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
+        {
+            throw ServiceException() << "Cannot launch service: " << ::GetLastError();
+        }
 
-		// Get a handle to the SCM database.  
-		schSCManager = ::OpenSCManager( 
-			NULL,                    // local computer
-			NULL,                    // ServicesActive database 
-			SC_MANAGER_ALL_ACCESS);  // full access rights 
+        // Get a handle to the SCM database.  
+        schSCManager = ::OpenSCManager( 
+            NULL,                    // local computer
+            NULL,                    // ServicesActive database 
+            SC_MANAGER_ALL_ACCESS);  // full access rights 
 
-		if (NULL == schSCManager) 
-		{
-			throw ServiceException() << "OpenSCManager failed: " << ::GetLastError();
-		}
+        if (NULL == schSCManager) 
+        {
+            throw ServiceException() << "OpenSCManager failed: " << ::GetLastError();
+        }
 
-		// Open the service
-		this->hSvc = ::OpenService( 
-			schSCManager,           // SCM database 
-			this->svcName.c_str(),  // name of service 
-			SERVICE_START );	// access
+        // Open the service
+        this->hSvc = ::OpenService( 
+            schSCManager,           // SCM database 
+            this->svcName.c_str(),  // name of service 
+            SERVICE_START );	// access
 
-		if (this->hSvc == NULL) 
-		{
-			::CloseServiceHandle(schSCManager);
-			throw ServiceException() << "The specified service is not installed. (" << ::GetLastError() << ")";
-		}
+        if (this->hSvc == NULL) 
+        {
+            ::CloseServiceHandle(schSCManager);
+            throw ServiceException() << "The specified service is not installed. (" << ::GetLastError() << ")";
+        }
 
-	}
+    }
 
-	// Start the Service through the SCM
-	if (0 == ::StartService(this->hSvc, 0, NULL))
-	{
-		if (::GetLastError() == ERROR_SERVICE_ALREADY_RUNNING)
-		{
-			throw ServiceAlreadyStartedException();
-		}
-		else
-		{
-			throw ServiceException() << "The service could not be started. (" << ::GetLastError() << ")";
-		}
-	}
+    // Start the Service through the SCM
+    if (0 == ::StartService(this->hSvc, 0, NULL))
+    {
+        if (::GetLastError() == ERROR_SERVICE_ALREADY_RUNNING)
+        {
+            throw ServiceAlreadyStartedException();
+        }
+        else
+        {
+            throw ServiceException() << "The service could not be started. (" << ::GetLastError() << ")";
+        }
+    }
 }
 
 template <class T>
 void WindowsService<T>::terminate()
 {
-	// Stop the Service through the SCM
-	SERVICE_STATUS st;
-	if (0 == ::ControlService(this->hSvc, SERVICE_CONTROL_STOP, &st))
-	{
-		throw ServiceException() << "The service could not be stopped. (" << ::GetLastError() << ")";
-	}
+    // Stop the Service through the SCM
+    SERVICE_STATUS st;
+    if (0 == ::ControlService(this->hSvc, SERVICE_CONTROL_STOP, &st))
+    {
+        throw ServiceException() << "The service could not be stopped. (" << ::GetLastError() << ")";
+    }
 }
 
 template <class T>
 void WindowsService<T>::waitForStop()
 {
-	::WaitForSingleObject(this->evtStop,INFINITE);
+    ::WaitForSingleObject(this->evtStop,INFINITE);
 }
 
 template <class T>
 void WindowsService<T>::_run(DWORD argc, LPTSTR argv[])
 {
-	this->hStatus = ::RegisterServiceCtrlHandler(this->svcName.c_str(),&WindowsService::ctrlThunk);
-	if (!this->hStatus)
-	{
-		throw ServiceException() << "RegisterServiceCtrlHandler() failed: " << ::GetLastError();
-	}
-	this->status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-	this->status.dwServiceSpecificExitCode = 0;
-	this->setStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
+    this->hStatus = ::RegisterServiceCtrlHandler(this->svcName.c_str(),&WindowsService::ctrlThunk);
+    if (!this->hStatus)
+    {
+        throw ServiceException() << "RegisterServiceCtrlHandler() failed: " << ::GetLastError();
+    }
+    this->status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    this->status.dwServiceSpecificExitCode = 0;
+    this->setStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
 
-	::ResetEvent(this->evtStop);
+    ::ResetEvent(this->evtStop);
 
-	this->setStatus(SERVICE_RUNNING, NO_ERROR, 0);
-	unsigned long err = this->run(argc, argv);
-	if (0 == err)
-		this->setStatus(SERVICE_STOPPED, NO_ERROR, 0);
-	else
-		this->setStatus(SERVICE_STOPPED, ERROR_SERVICE_SPECIFIC_ERROR, 0);
+    this->setStatus(SERVICE_RUNNING, NO_ERROR, 0);
+    unsigned long err = this->run(argc, argv);
+    if (0 == err)
+        this->setStatus(SERVICE_STOPPED, NO_ERROR, 0);
+    else
+        this->setStatus(SERVICE_STOPPED, ERROR_SERVICE_SPECIFIC_ERROR, 0);
 }
 
 template <class T>
 void WindowsService<T>::_ctrl(DWORD opCode)
 {
-	switch(opCode) 
-	{
-	case SERVICE_CONTROL_STOP:
-		this->setStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
-		this->stop();
-		this->ctrl(opCode);
-		return;
-	case SERVICE_CONTROL_INTERROGATE: 
-	default:
-		this->ctrl(opCode);
-		break;
-   } 
+    switch(opCode) 
+    {
+    case SERVICE_CONTROL_STOP:
+        this->setStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
+        this->stop();
+        this->ctrl(opCode);
+        return;
+    case SERVICE_CONTROL_INTERROGATE: 
+    default:
+        this->ctrl(opCode);
+        break;
+    } 
 
-   this->setStatus(this->status.dwCurrentState, NO_ERROR, 0);
+    this->setStatus(this->status.dwCurrentState, NO_ERROR, 0);
 }
 
 template <class T>
 void WindowsService<T>::setStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint)
 {
-	static DWORD dwCheckPoint = 1;
+    static DWORD dwCheckPoint = 1;
 
-	this->status.dwCurrentState = dwCurrentState;
+    this->status.dwCurrentState = dwCurrentState;
     this->status.dwWin32ExitCode = dwWin32ExitCode;
     this->status.dwWaitHint = dwWaitHint;
 
@@ -357,26 +357,26 @@ void WindowsService<T>::setStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode, D
     else this->status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
 
     if ( (dwCurrentState == SERVICE_RUNNING) ||
-           (dwCurrentState == SERVICE_STOPPED) )
+        (dwCurrentState == SERVICE_STOPPED) )
         this->status.dwCheckPoint = 0;
     else this->status.dwCheckPoint = dwCheckPoint++;
 
-	::SetServiceStatus( this->hStatus, &this->status );
+    ::SetServiceStatus( this->hStatus, &this->status );
 }
 
 template <class T>
 void WindowsService<T>::logEvent(WORD wType, const tstring& msg)
 {
-	const TCHAR * message = msg.c_str();
-	::ReportEvent(	this->evtSrc,
-					wType,	// Type
-                    0,		// Category
-                    NULL,	// event ID
-                    NULL,   // sid
-                    1,		// Num Strings
-                    0,		// raw data size
-                    &message,	// strings
-                    NULL) ;	// rawdata
+    const TCHAR * message = msg.c_str();
+    ::ReportEvent(	this->evtSrc,
+        wType,	// Type
+        0,		// Category
+        NULL,	// event ID
+        NULL,   // sid
+        1,		// Num Strings
+        0,		// raw data size
+        &message,	// strings
+        NULL) ;	// rawdata
 }
 
 #endif

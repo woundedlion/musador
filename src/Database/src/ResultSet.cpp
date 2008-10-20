@@ -10,5 +10,5 @@ db(dbPtr)
 boost::shared_ptr<IDatabase> 
 ResultSet::getDb()
 {
-	return this->db;
+    return this->db;
 }

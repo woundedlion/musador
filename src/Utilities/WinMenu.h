@@ -7,44 +7,44 @@
 namespace Musador
 {
 
-	class MenuItem
-	{
-	public:
+    class MenuItem
+    {
+    public:
 
-		DWORD id;
-		std::wstring text;
-		bool sep;
-		bool checked;
-		bool enabled;
-	};
+        DWORD id;
+        std::wstring text;
+        bool sep;
+        bool checked;
+        bool enabled;
+    };
 
-	class WinMenu
-	{
-	public:
+    class WinMenu
+    {
+    public:
 
-		WinMenu();
-		
-		~WinMenu();
-	
-		void insertItem(UINT pos, WORD id, const std::wstring& text, bool enabled = true, bool checked = false);
+        WinMenu();
 
-		void insertSep(UINT pos, WORD id);
+        ~WinMenu();
 
-		void updateItem(WORD oldID, WORD newID, const std::wstring& text, bool enabled = true, bool checked = false);
+        void insertItem(UINT pos, WORD id, const std::wstring& text, bool enabled = true, bool checked = false);
 
-//		void removeItem(WORD id);
+        void insertSep(UINT pos, WORD id);
 
-		operator HMENU();		
-		
-//		void insertSubMenu(DWORD id, const std::wstring& text, WinMenu& subMenu, int pos);
+        void updateItem(WORD oldID, WORD newID, const std::wstring& text, bool enabled = true, bool checked = false);
 
-		void popupAtCursor(HWND owner);
+        //		void removeItem(WORD id);
 
-	private:
+        operator HMENU();		
 
-		HMENU hMenu;
+        //		void insertSubMenu(DWORD id, const std::wstring& text, WinMenu& subMenu, int pos);
 
-	};
+        void popupAtCursor(HWND owner);
+
+    private:
+
+        HMENU hMenu;
+
+    };
 
 }
 

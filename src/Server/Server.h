@@ -17,73 +17,73 @@ typedef boost::thread Thread;
 
 namespace Musador
 {
-	class Server : public boost::enable_shared_from_this<Server>
-	{
-	public:
+    class Server : public boost::enable_shared_from_this<Server>
+    {
+    public:
 
-		Server(ServerConfig& cfg);
+        Server(ServerConfig& cfg);
 
-		virtual ~Server();
+        virtual ~Server();
 
-		void start();
+        void start();
 
-		void acceptConnections(	boost::shared_ptr<Listener> listener, 
-								boost::any tag = NULL);
+        void acceptConnections(	boost::shared_ptr<Listener> listener, 
+            boost::any tag = NULL);
 
-		void waitForStart();
+        void waitForStart();
 
-		void stop();
+        void stop();
 
-		void waitForStop();
+        void waitForStop();
 
-		void restart();
+        void restart();
 
-		void onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag);
+        void onAccept(boost::shared_ptr<IOMsg> msg, boost::any tag);
 
-		void onError(boost::shared_ptr<IOMsgError> msgErr);
+        void onError(boost::shared_ptr<IOMsgError> msgErr);
 
-		Session & getSession(const std::string& key);
+        Session & getSession(const std::string& key);
 
-		/*
-		bool authReq(const Request& request, const StateStore& session);
-		bool authIp(const std::string& ip);
-		bool serveFile(const Request& request, const std::string& queryString, std::map<std::string,std::string> args, const Response& response);
-		int getConnectionCount();
-		virtual std::string getAuthRealm(const std::string& uri) = 0;
-		virtual bool isValidUser(const std::string& username) = 0;
-		*/
+        /*
+        bool authReq(const Request& request, const StateStore& session);
+        bool authIp(const std::string& ip);
+        bool serveFile(const Request& request, const std::string& queryString, std::map<std::string,std::string> args, const Response& response);
+        int getConnectionCount();
+        virtual std::string getAuthRealm(const std::string& uri) = 0;
+        virtual bool isValidUser(const std::string& username) = 0;
+        */
 
-	private:
+    private:
 
-		void addConnection(boost::shared_ptr<Connection> conn);
-		void removeConnection(boost::shared_ptr<Connection> conn);
-		void killConnection(boost::shared_ptr<Connection> conn);
-		void killConnections();
+        void addConnection(boost::shared_ptr<Connection> conn);
+        void removeConnection(boost::shared_ptr<Connection> conn);
+        void killConnection(boost::shared_ptr<Connection> conn);
+        void killConnections();
 
-		Musador::Network * net;
+        Musador::Network * net;
 
-		ServerConfig& cfg;
+        ServerConfig& cfg;
 
-		// Collection types
+        // Collection types
         typedef std::vector<boost::shared_ptr<Connection> > ConnCollection;
-		typedef std::vector<boost::shared_ptr<Listener> > ListenerCollection;
-		typedef std::map<std::string, boost::shared_ptr<Session> > SessionCollection;
+        typedef std::vector<boost::shared_ptr<Listener> > ListenerCollection;
+        typedef std::map<std::string, boost::shared_ptr<Session> > SessionCollection;
 
-		ConnCollection conns;
-		Mutex connsMutex;
+        ConnCollection conns;
+        Mutex connsMutex;
 
-		volatile bool doRecycle;
+        volatile bool doRecycle;
         volatile bool doShutdown;
 
-		ListenerCollection listeners;
+        ListenerCollection listeners;
 
-		SessionCollection sessions;
-		Mutex sessionsMutex;
+        SessionCollection sessions;
+        Mutex sessionsMutex;
 
-		bool running;
-		Mutex runningMutex;
+        bool running;
+        Mutex runningMutex;
         Condition runningCV;
-	};
+    };
 }
 
 #endif

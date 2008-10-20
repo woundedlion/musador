@@ -19,34 +19,34 @@ connRetries(0)
 void
 GUIConnection::onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /* = NULL */)
 {
-	switch (msg->getType())
-	{
-	case IO_READ_COMPLETE:
-		if (NULL != this->handler)
-		{
-			boost::shared_ptr<IOMsgReadComplete> & msgRead = boost::shared_static_cast<IOMsgReadComplete>(msg);
-			// parse the messsage(s)
-			std::stringbuf msgData;
-			msgData.pubsetbuf(0,0);
-			msgData.str(std::string(msgRead->buf.get(),msgRead->len));
-			boost::archive::binary_iarchive ar(msgData);
-			boost::shared_ptr<GUIMsg> msgGUI;
-			ar & msgGUI; // deserialize
-			this->handler(msgGUI);
-		}				
+    switch (msg->getType())
+    {
+    case IO_READ_COMPLETE:
+        if (NULL != this->handler)
+        {
+            boost::shared_ptr<IOMsgReadComplete> & msgRead = boost::shared_static_cast<IOMsgReadComplete>(msg);
+            // parse the messsage(s)
+            std::stringbuf msgData;
+            msgData.pubsetbuf(0,0);
+            msgData.str(std::string(msgRead->buf.get(),msgRead->len));
+            boost::archive::binary_iarchive ar(msgData);
+            boost::shared_ptr<GUIMsg> msgGUI;
+            ar & msgGUI; // deserialize
+            this->handler(msgGUI);
+        }				
 
-		// keep reading more messages
-		this->beginRead();
-		break;
-	case IO_ERROR:
-		if (NULL != this->handler)
+        // keep reading more messages
+        this->beginRead();
+        break;
+    case IO_ERROR:
+        if (NULL != this->handler)
         {
             boost::shared_ptr<GUIMsg> msgGUI(new GUIMsgDisabledNotify());
             this->handler(msgGUI);
         }
         this->beginConnect();
-		break;
-	}
+        break;
+    }
 }
 
 void
@@ -63,19 +63,19 @@ GUIConnection::onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /*=
 void 
 GUIConnection::onConnectComplete(boost::shared_ptr<IOMsg> msg, boost::any tag /* = NULL */)
 {
-	switch (msg->getType())
-	{
-	case IO_PIPE_CONNECT_COMPLETE:
-		this->beginRead();
-		break;
-	case IO_ERROR:
+    switch (msg->getType())
+    {
+    case IO_PIPE_CONNECT_COMPLETE:
+        this->beginRead();
+        break;
+    case IO_ERROR:
         TimerQueue::instance()->createTimer(500, boost::bind(&PipeConnection::beginConnect,this,tag));
-		break;
-	}
+        break;
+    }
 }
 
 void
 GUIConnection::setHandler(const GUIHandler& handler)
 {
-	this->handler = handler;
+    this->handler = handler;
 }

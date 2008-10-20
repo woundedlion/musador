@@ -13,54 +13,54 @@ class UtilTest : public CxxTest::TestSuite
 {
 
 public:
-	
-	UtilTest()
-	{
+
+    UtilTest()
+    {
         Logging::Logger::instance();		
-	}
+    }
 
-	~UtilTest()
-	{
+    ~UtilTest()
+    {
         Logging::Logger::destroy();
-	}
+    }
 
-	void testEscapeQuotes()
-	{
-		LOG(Info) << "Util::esacpeQuotes test begin...";
-		TS_ASSERT(Util::escapeQuotes(L"") == L"");
-		TS_ASSERT(Util::escapeQuotes(L"'") == L"''");
-		TS_ASSERT(Util::escapeQuotes(L"abcdef") == L"abcdef");
-		TS_ASSERT(Util::escapeQuotes(L"abcdef's") == L"abcdef''s");
-		TS_ASSERT(Util::escapeQuotes(L"abcdef'") == L"abcdef''");
-		TS_ASSERT(Util::escapeQuotes(L"'abcdef") == L"''abcdef");
-		TS_ASSERT(Util::escapeQuotes(L"'TESTING''TESTING'") == L"''TESTING''''TESTING''");
-		LOG(Info) << "Util::escapeQuotes test end...";
-	}
+    void testEscapeQuotes()
+    {
+        LOG(Info) << "Util::esacpeQuotes test begin...";
+        TS_ASSERT(Util::escapeQuotes(L"") == L"");
+        TS_ASSERT(Util::escapeQuotes(L"'") == L"''");
+        TS_ASSERT(Util::escapeQuotes(L"abcdef") == L"abcdef");
+        TS_ASSERT(Util::escapeQuotes(L"abcdef's") == L"abcdef''s");
+        TS_ASSERT(Util::escapeQuotes(L"abcdef'") == L"abcdef''");
+        TS_ASSERT(Util::escapeQuotes(L"'abcdef") == L"''abcdef");
+        TS_ASSERT(Util::escapeQuotes(L"'TESTING''TESTING'") == L"''TESTING''''TESTING''");
+        LOG(Info) << "Util::escapeQuotes test end...";
+    }
 
-	void setUp() 
-	{
-	}
+    void setUp() 
+    {
+    }
 
-	void tearDown()
-	{
-	}
+    void tearDown()
+    {
+    }
 
-	int timerTicks;
+    int timerTicks;
 
-	void gotTimer()
-	{
-		LOG(Info) << "Got Timer";
-		++timerTicks;
-	}
+    void gotTimer()
+    {
+        LOG(Info) << "Got Timer";
+        ++timerTicks;
+    }
 
-	void testTimerQueue()
-	{
-		TimerQueue::instance()->start();
-		this->timerTicks = 0;	
-		TimerQueue::instance()->createTimer(1000, boost::bind(&UtilTest::gotTimer,this),false,123);
-		::Sleep(4500);
-		TS_ASSERT(this->timerTicks == 4);
-		TimerQueue::instance()->stop();
-		TimerQueue::destroy();
-	}
+    void testTimerQueue()
+    {
+        TimerQueue::instance()->start();
+        this->timerTicks = 0;	
+        TimerQueue::instance()->createTimer(1000, boost::bind(&UtilTest::gotTimer,this),false,123);
+        ::Sleep(4500);
+        TS_ASSERT(this->timerTicks == 4);
+        TimerQueue::instance()->stop();
+        TimerQueue::destroy();
+    }
 };

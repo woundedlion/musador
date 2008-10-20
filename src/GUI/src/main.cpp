@@ -4,9 +4,9 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 { 
-	Musador::LibrarianGUI gui;
-	gui.run();
-	return 0;
+    Musador::LibrarianGUI gui;
+    gui.run();
+    return 0;
 }
 
 

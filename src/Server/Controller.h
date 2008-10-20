@@ -6,30 +6,30 @@
 
 namespace Musador
 {
-	namespace HTTP
-	{
-		class Env;
-	}
+    namespace HTTP
+    {
+        class Env;
+    }
 
-	class Controller
-	{
-	public:
+    class Controller
+    {
+    public:
 
-		typedef boost::function1<bool, HTTP::Env &> Handler;
+        typedef boost::function1<bool, HTTP::Env &> Handler;
 
-		virtual ~Controller() {}
+        virtual ~Controller() {}
 
-		virtual bool exec(HTTP::Env& env);	
+        virtual bool exec(HTTP::Env& env);	
 
-		void addHandler(const std::string& requestURI, Handler handler);
+        void addHandler(const std::string& requestURI, Handler handler);
 
-	private:
+    private:
 
-		typedef std::map<std::string,Handler> HandlerMap;
+        typedef std::map<std::string,Handler> HandlerMap;
 
-		HandlerMap handlers;
+        HandlerMap handlers;
 
-	};
+    };
 
 }
 

@@ -16,6 +16,6 @@ Session::~Session()
 void 
 Session::clear() 
 {
-	Guard(this->lock);
-	this->store.clear();
+    Guard(this->lock);
+    this->store.clear();
 }

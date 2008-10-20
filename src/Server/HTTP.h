@@ -27,147 +27,147 @@ typedef boost::mutex::scoped_lock Guard;
 
 namespace Musador
 {
-	class HTTPConfig;
-	class Controller;
+    class HTTPConfig;
+    class Controller;
 
-	namespace HTTP
-	{
+    namespace HTTP
+    {
 
-		//////////////////////////////////////////////////////////////////////
-		/// User
-		//////////////////////////////////////////////////////////////////////
-		class User
-		{
-		public:
+        //////////////////////////////////////////////////////////////////////
+        /// User
+        //////////////////////////////////////////////////////////////////////
+        class User
+        {
+        public:
 
-			User();
+            User();
 
-			User(const std::string& username);
+            User(const std::string& username);
 
-			std::string getUsername() const;
-			
-			void setUsername(std::string& username);
+            std::string getUsername() const;
 
-			std::string getPassword() const;
+            void setUsername(std::string& username);
 
-			void setPassword(const std::string& password);
+            std::string getPassword() const;
 
-			template<class Archive>
-			void serialize(Archive & ar, const unsigned int version)
-			{
-				ar & BOOST_SERIALIZATION_NVP(username);
-				ar & BOOST_SERIALIZATION_NVP(password);
-			}
+            void setPassword(const std::string& password);
 
-		private:
+            template<class Archive>
+            void serialize(Archive & ar, const unsigned int version)
+            {
+                ar & BOOST_SERIALIZATION_NVP(username);
+                ar & BOOST_SERIALIZATION_NVP(password);
+            }
 
-			std::string username;
-			std::string password;
+        private:
 
-		};
+            std::string username;
+            std::string password;
 
-		typedef std::map<std::string,User> UserCollection;	
-		typedef std::map<std::string,std::string> HeaderCollection;
-		typedef std::map<std::string,std::string> ParamCollection;
-		typedef std::map<std::string,std::string> CookieCollection;	
+        };
 
-		//////////////////////////////////////////////////////////////////////
-		/// Cookie free functions
-		//////////////////////////////////////////////////////////////////////
-		void parseCookie(const std::string& cookieStr, CookieCollection& cookies);
+        typedef std::map<std::string,User> UserCollection;	
+        typedef std::map<std::string,std::string> HeaderCollection;
+        typedef std::map<std::string,std::string> ParamCollection;
+        typedef std::map<std::string,std::string> CookieCollection;	
 
-		//////////////////////////////////////////////////////////////////////
-		/// Request
-		//////////////////////////////////////////////////////////////////////
-		class Request 
-		{
-		public:
+        //////////////////////////////////////////////////////////////////////
+        /// Cookie free functions
+        //////////////////////////////////////////////////////////////////////
+        void parseCookie(const std::string& cookieStr, CookieCollection& cookies);
 
-			Request();
-			~Request();
+        //////////////////////////////////////////////////////////////////////
+        /// Request
+        //////////////////////////////////////////////////////////////////////
+        class Request 
+        {
+        public:
 
-			void clear();
-			void sendHeaders(Connection& conn);
-			void sendBody(Connection& conn);
-			void dump(std::ostream& info);
+            Request();
+            ~Request();
 
-			std::string requestURI;
-			std::string queryString;
-			std::string protocol;
-			std::string method;
-			ParamCollection params;
-			HeaderCollection headers;
-			CookieCollection cookies;
-			boost::shared_ptr<std::iostream> data;
+            void clear();
+            void sendHeaders(Connection& conn);
+            void sendBody(Connection& conn);
+            void dump(std::ostream& info);
 
-		};
+            std::string requestURI;
+            std::string queryString;
+            std::string protocol;
+            std::string method;
+            ParamCollection params;
+            HeaderCollection headers;
+            CookieCollection cookies;
+            boost::shared_ptr<std::iostream> data;
 
-		//////////////////////////////////////////////////////////////////////
-		/// Response
-		//////////////////////////////////////////////////////////////////////
-		class Response 
-		{
-		public:
+        };
 
-			Response();
-			~Response();
+        //////////////////////////////////////////////////////////////////////
+        /// Response
+        //////////////////////////////////////////////////////////////////////
+        class Response 
+        {
+        public:
 
-			void clear();
-			void sendHeaders(Connection& conn);
-			void sendBody(Connection& conn);
+            Response();
+            ~Response();
 
-			std::string protocol;
-			int status;
-			std::string reason;
-			std::map<std::string,std::string> headers;
-			boost::shared_ptr<std::iostream> data;
-		};
+            void clear();
+            void sendHeaders(Connection& conn);
+            void sendBody(Connection& conn);
 
-		//////////////////////////////////////////////////////////////////////
-		/// Env
-		//////////////////////////////////////////////////////////////////////
-		class Env : public ConnectionCtx
-		{
-		public:
+            std::string protocol;
+            int status;
+            std::string reason;
+            std::map<std::string,std::string> headers;
+            boost::shared_ptr<std::iostream> data;
+        };
 
-			Env() :
-			req(NULL),
-			res(NULL),
-			controller(NULL),
-			session(NULL)
-			{
-			}
+        //////////////////////////////////////////////////////////////////////
+        /// Env
+        //////////////////////////////////////////////////////////////////////
+        class Env : public ConnectionCtx
+        {
+        public:
 
-			Request * req;
-			Response * res;
-            boost::shared_ptr<HTTPConfig> cfg;
-			Controller * controller;
-			Session * session;
-			boost::shared_ptr<Server> server;
-		};
+            Env() :
+              req(NULL),
+                  res(NULL),
+                  controller(NULL),
+                  session(NULL)
+              {
+              }
 
-		//////////////////////////////////////////////////////////////////////
-		/// Free functions
-		//////////////////////////////////////////////////////////////////////
+              Request * req;
+              Response * res;
+              boost::shared_ptr<HTTPConfig> cfg;
+              Controller * controller;
+              Session * session;
+              boost::shared_ptr<Server> server;
+        };
 
-		std::string getRFC1123(const time_t& timer);
+        //////////////////////////////////////////////////////////////////////
+        /// Free functions
+        //////////////////////////////////////////////////////////////////////
 
-		void urlDecode(std::string& enc);
+        std::string getRFC1123(const time_t& timer);
 
-		void urlDecode(std::pair<std::string,std::string>& pair);
+        void urlDecode(std::string& enc);
 
-		std::string urlEncode(const std::string& enc);
+        void urlDecode(std::pair<std::string,std::string>& pair);
 
-		std::string genDigestNonce(time_t timestamp);
+        std::string urlEncode(const std::string& enc);
 
-		std::string genDigestNonce();
+        std::string genDigestNonce(time_t timestamp);
 
-		std::string genDigestOpaque();
+        std::string genDigestNonce();
 
-		std::string genDigestResponse(std::map<std::string, std::string>& authInfo, const std::string& method, const std::string& password);
+        std::string genDigestOpaque();
 
-		bool auth(const Env& env);
-	}	
+        std::string genDigestResponse(std::map<std::string, std::string>& authInfo, const std::string& method, const std::string& password);
+
+        bool auth(const Env& env);
+    }	
 
 }
 

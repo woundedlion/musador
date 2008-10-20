@@ -8,8 +8,8 @@
 using namespace Musador::Database;
 
 DatabaseSqlite::DatabaseSqlite(std::wstring databaseName) : 
-    dbName(Util::unicodeToUtf8(databaseName.c_str())),
-        db(&DatabaseSqlite::tssCleanup)
+dbName(Util::unicodeToUtf8(databaseName.c_str())),
+db(&DatabaseSqlite::tssCleanup)
 {
     this->open();
 }
@@ -65,13 +65,13 @@ DatabaseSqlite::close()
 {
     if (NULL == this->db.get())
         return false;
-    
+
     int err;
     if (SQLITE_OK != (err = ::sqlite3_close(this->db.get())))
     {
         DatabaseSqlite::err(err);
     }
-    
+
     this->db.release();
     return true;
 }
@@ -109,10 +109,10 @@ DatabaseSqlite::select(const std::wstring& table, const std::vector<ColumnBase *
     }
 
     q << " FROM " << table.c_str();
-    
+
     if (!conditions.empty())
         q << " WHERE " << conditions.c_str();
-    
+
     return this->execute(q.str());
 }
 
@@ -158,7 +158,7 @@ DatabaseSqlite::update(const std::wstring& table, const std::vector<ColumnBase *
         q << (*iter)->name().c_str() << L"=";
         (*iter)->writeValue(q);
     }
-        
+
     if (!conditions.empty())
         q << " WHERE " << conditions;
 

@@ -9,28 +9,28 @@
 
 namespace Musador
 {
-	class ConnectionCtx;
+    class ConnectionCtx;
 
-	class PipeListener : public Listener, public boost::enable_shared_from_this<PipeListener>
-	{
-	public:
+    class PipeListener : public Listener, public boost::enable_shared_from_this<PipeListener>
+    {
+    public:
 
-		PipeListener(const std::wstring& name);
+        PipeListener(const std::wstring& name);
 
-		~PipeListener();
+        ~PipeListener();
 
-		void beginAccept(EventHandler handler, boost::any tag = NULL);
+        void beginAccept(EventHandler handler, boost::any tag = NULL);
 
-		std::wstring getName();
+        std::wstring getName();
 
-	protected:
+    protected:
 
-		std::wstring name;
+        std::wstring name;
 
-	private:
+    private:
 
-		std::string friendlyName();
-	};
+        std::string friendlyName();
+    };
 }
 
 

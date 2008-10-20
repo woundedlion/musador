@@ -21,175 +21,175 @@ namespace sc = boost::statechart;
 
 namespace Musador
 {
-	class HTTPConnection;
+    class HTTPConnection;
 
-	namespace HTTP
-	{
-		//////////////////////////////////////////////////////////////////////////////////////
-		// Protocol State Machine
+    namespace HTTP
+    {
+        //////////////////////////////////////////////////////////////////////////////////////
+        // Protocol State Machine
 
-		// States
-		struct StateClosed;
-		struct StateRecvReq;
-		struct StateRecvReqHeader;
-		struct StateRecvReqBody;
-		struct StateRecvReqBodyChunk;
-		struct StateReqError;
-		struct StateSendRes;
-		struct StateSendResHeader;
-		struct StateSendResBody;
-		struct StateSendResBodyChunk;
-		struct StateReqProcess;
+        // States
+        struct StateClosed;
+        struct StateRecvReq;
+        struct StateRecvReqHeader;
+        struct StateRecvReqBody;
+        struct StateRecvReqBodyChunk;
+        struct StateReqError;
+        struct StateSendRes;
+        struct StateSendResHeader;
+        struct StateSendResBody;
+        struct StateSendResBodyChunk;
+        struct StateReqProcess;
 
-		// Events
-		struct EvtOpen : sc::event<EvtOpen> {};
-		struct EvtReadComplete : sc::event<EvtReadComplete> 
-		{
-			EvtReadComplete(boost::shared_ptr<IOMsgReadComplete> msgRead) : msgRead(msgRead) {}
-			boost::shared_ptr<IOMsgReadComplete> msgRead;
-		};
-		struct EvtReqDone : sc::event<EvtReqDone> {};
-		struct EvtReqError : sc::event<EvtReqError> {};
-		struct EvtWriteComplete : sc::event<EvtWriteComplete> 
-		{
-			EvtWriteComplete(boost::shared_ptr<IOMsgWriteComplete> msgWrite) : msgWrite(msgWrite) {}
-			boost::shared_ptr<IOMsgWriteComplete> msgWrite;
-		};
-		struct EvtClose : sc::event<EvtClose> {};
-		struct EvtKeepAlive : sc::event<EvtKeepAlive> {};
+        // Events
+        struct EvtOpen : sc::event<EvtOpen> {};
+        struct EvtReadComplete : sc::event<EvtReadComplete> 
+        {
+            EvtReadComplete(boost::shared_ptr<IOMsgReadComplete> msgRead) : msgRead(msgRead) {}
+            boost::shared_ptr<IOMsgReadComplete> msgRead;
+        };
+        struct EvtReqDone : sc::event<EvtReqDone> {};
+        struct EvtReqError : sc::event<EvtReqError> {};
+        struct EvtWriteComplete : sc::event<EvtWriteComplete> 
+        {
+            EvtWriteComplete(boost::shared_ptr<IOMsgWriteComplete> msgWrite) : msgWrite(msgWrite) {}
+            boost::shared_ptr<IOMsgWriteComplete> msgWrite;
+        };
+        struct EvtClose : sc::event<EvtClose> {};
+        struct EvtKeepAlive : sc::event<EvtKeepAlive> {};
 
-		// State definitions, transitions
-		struct FSM : sc::state_machine<FSM,StateClosed>
-		{
-			FSM(HTTPConnection& conn);
+        // State definitions, transitions
+        struct FSM : sc::state_machine<FSM,StateClosed>
+        {
+            FSM(HTTPConnection& conn);
 
-			HTTPConnection& conn;
-			Request req;
-			Response res;
-		};
+            HTTPConnection& conn;
+            Request req;
+            Response res;
+        };
 
-		struct StateClosed : sc::simple_state<StateClosed,FSM>
-		{
-			StateClosed() {}
-			typedef sc::transition<EvtOpen,StateRecvReq> reactions;
-		};
+        struct StateClosed : sc::simple_state<StateClosed,FSM>
+        {
+            StateClosed() {}
+            typedef sc::transition<EvtOpen,StateRecvReq> reactions;
+        };
 
-		struct StateRecvReq : sc::simple_state<StateRecvReq,FSM,StateRecvReqHeader>
-		{
-			typedef mpl::list<
-				sc::transition<EvtReqDone,StateSendRes>,
-				sc::transition<EvtReqError,StateReqError>
-				> reactions;
-		};
+        struct StateRecvReq : sc::simple_state<StateRecvReq,FSM,StateRecvReqHeader>
+        {
+            typedef mpl::list<
+                sc::transition<EvtReqDone,StateSendRes>,
+                sc::transition<EvtReqError,StateReqError>
+            > reactions;
+        };
 
-		struct StateRecvReqHeader : sc::state<StateRecvReqHeader,StateRecvReq>
-		{
-			typedef mpl::list<
-				sc::custom_reaction<EvtReadComplete>
-			> reactions;
+        struct StateRecvReqHeader : sc::state<StateRecvReqHeader,StateRecvReq>
+        {
+            typedef mpl::list<
+                sc::custom_reaction<EvtReadComplete>
+            > reactions;
 
-			StateRecvReqHeader(my_context ctx);
-			sc::result react(const EvtReadComplete& evt);
+            StateRecvReqHeader(my_context ctx);
+            sc::result react(const EvtReadComplete& evt);
 
-		};
+        };
 
-		struct StateReqError : sc::state<StateReqError,StateRecvReq>
-		{
-			StateReqError(my_context ctx);
-		};
+        struct StateReqError : sc::state<StateReqError,StateRecvReq>
+        {
+            StateReqError(my_context ctx);
+        };
 
-		struct StateRecvReqBodyChunk : sc::state<StateRecvReqBodyChunk,StateRecvReq>
-		{
-			typedef mpl::list<
-				sc::custom_reaction<EvtReadComplete>
-			> reactions;
+        struct StateRecvReqBodyChunk : sc::state<StateRecvReqBodyChunk,StateRecvReq>
+        {
+            typedef mpl::list<
+                sc::custom_reaction<EvtReadComplete>
+            > reactions;
 
-			StateRecvReqBodyChunk(my_context ctx);
-			sc::result react(const EvtReadComplete& evt);
-		};
+            StateRecvReqBodyChunk(my_context ctx);
+            sc::result react(const EvtReadComplete& evt);
+        };
 
-		struct StateRecvReqBody : sc::state<StateRecvReqBody,StateRecvReq>
-		{
-			typedef mpl::list<
-				sc::custom_reaction<EvtReadComplete>
-			> reactions;
+        struct StateRecvReqBody : sc::state<StateRecvReqBody,StateRecvReq>
+        {
+            typedef mpl::list<
+                sc::custom_reaction<EvtReadComplete>
+            > reactions;
 
-			StateRecvReqBody(my_context ctx);
-			sc::result react(const EvtReadComplete& evt);
-		};
+            StateRecvReqBody(my_context ctx);
+            sc::result react(const EvtReadComplete& evt);
+        };
 
-		struct StateReqProcess : sc::state<StateReqProcess,StateRecvReq>
-		{
-			StateReqProcess(my_context ctx);
-			bool sendFile(HTTP::Env& env, const std::wstring& path);
-			bool dirIndex(HTTP::Env& env, const std::wstring& path);
-		};
+        struct StateReqProcess : sc::state<StateReqProcess,StateRecvReq>
+        {
+            StateReqProcess(my_context ctx);
+            bool sendFile(HTTP::Env& env, const std::wstring& path);
+            bool dirIndex(HTTP::Env& env, const std::wstring& path);
+        };
 
-		struct StateSendRes : sc::simple_state<StateSendRes,FSM,StateSendResHeader>
-		{
-			typedef mpl::list<
-				typedef sc::transition<EvtClose,StateClosed>,	
-				typedef sc::transition<EvtKeepAlive,StateRecvReq>
-			> reactions;
-		};
+        struct StateSendRes : sc::simple_state<StateSendRes,FSM,StateSendResHeader>
+        {
+            typedef mpl::list<
+                typedef sc::transition<EvtClose,StateClosed>,	
+                typedef sc::transition<EvtKeepAlive,StateRecvReq>
+            > reactions;
+        };
 
-		struct StateSendResHeader : sc::state<StateSendResHeader,StateSendRes>
-		{
-			typedef mpl::list<
-				sc::custom_reaction<EvtWriteComplete>
-			> reactions;
+        struct StateSendResHeader : sc::state<StateSendResHeader,StateSendRes>
+        {
+            typedef mpl::list<
+                sc::custom_reaction<EvtWriteComplete>
+            > reactions;
 
-			StateSendResHeader(my_context ctx);
-			sc::result react(const EvtWriteComplete& evt);
-		};
+            StateSendResHeader(my_context ctx);
+            sc::result react(const EvtWriteComplete& evt);
+        };
 
-		struct StateSendResBodyChunk : sc::state<StateSendResBodyChunk,StateSendRes>
-		{
-			typedef mpl::list<
-				sc::custom_reaction<EvtWriteComplete>
-			> reactions;
+        struct StateSendResBodyChunk : sc::state<StateSendResBodyChunk,StateSendRes>
+        {
+            typedef mpl::list<
+                sc::custom_reaction<EvtWriteComplete>
+            > reactions;
 
-			StateSendResBodyChunk(my_context ctx);
-			sc::result react(const EvtWriteComplete& evt);		
-		};
+            StateSendResBodyChunk(my_context ctx);
+            sc::result react(const EvtWriteComplete& evt);		
+        };
 
-		struct StateSendResBody : sc::state<StateSendResBody,StateSendRes>
-		{
-			typedef mpl::list<
-				sc::custom_reaction<EvtWriteComplete>
-			> reactions;
+        struct StateSendResBody : sc::state<StateSendResBody,StateSendRes>
+        {
+            typedef mpl::list<
+                sc::custom_reaction<EvtWriteComplete>
+            > reactions;
 
-			StateSendResBody(my_context ctx);
-			sc::result react(const EvtWriteComplete& evt);
-		};
+            StateSendResBody(my_context ctx);
+            sc::result react(const EvtWriteComplete& evt);
+        };
 
-	}
+    }
 
 
-	class HTTPConnection : public SocketConnection, public boost::enable_shared_from_this<HTTPConnection>
-	{
-	public:
+    class HTTPConnection : public SocketConnection, public boost::enable_shared_from_this<HTTPConnection>
+    {
+    public:
 
-		HTTPConnection();
+        HTTPConnection();
 
-		~HTTPConnection();
+        ~HTTPConnection();
 
-		void onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
+        void onAcceptComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 
-		void onConnectComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) {}
+        void onConnectComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL) {}
 
-		void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
+        void onReadComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 
-		void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
+        void onWriteComplete(boost::shared_ptr<IOMsg> msg, boost::any tag = NULL);
 
-		HTTP::Env& getEnv();
+        HTTP::Env& getEnv();
 
-	private:
+    private:
 
-		Mutex fsmMutex;
-		HTTP::FSM fsm;
-		HTTP::Env env;
-	};
+        Mutex fsmMutex;
+        HTTP::FSM fsm;
+        HTTP::Env env;
+    };
 
 }
 

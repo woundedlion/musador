@@ -78,51 +78,51 @@ void Indexer::runIndexer()
 
             CHECK_CANCELED
 
-            if (Indexer::INVALID_ID == (newId = this->addDirectory(dir)))
-            {
-                LOG(Error) << "Failed to index " << targIter->string() << ". Skipping...";
-                continue;
-            }
-            else
-            {
-                parentId = newId;
-            }
-
-            fs::wrecursive_directory_iterator end_iter;
-            for (fs::wrecursive_directory_iterator iter(*targIter); iter != end_iter; iter++)
-            {
-                CHECK_CANCELED
-
-                if (fs::is_directory(*iter))
+                if (Indexer::INVALID_ID == (newId = this->addDirectory(dir)))
                 {
-                    // Add directory to database
-                    if (Indexer::INVALID_ID == (newId = this->addDirectory(*iter)))
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        parentId = newId;
-                    }
+                    LOG(Error) << "Failed to index " << targIter->string() << ". Skipping...";
+                    continue;
                 }
-                else if (fs::is_regular(*iter))
+                else
                 {
-                    if (!MIMEResolver::instance()->valid(iter->path().leaf()))
-                    {
-                        continue;
-                    }
-                    // Add file to database
-                    if (Indexer::INVALID_ID == this->addFile(*iter,parentId))
-                    {
-                        continue;
-                    }
+                    parentId = newId;
                 }
-            }			
+
+                fs::wrecursive_directory_iterator end_iter;
+                for (fs::wrecursive_directory_iterator iter(*targIter); iter != end_iter; iter++)
+                {
+                    CHECK_CANCELED
+
+                        if (fs::is_directory(*iter))
+                        {
+                            // Add directory to database
+                            if (Indexer::INVALID_ID == (newId = this->addDirectory(*iter)))
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                parentId = newId;
+                            }
+                        }
+                        else if (fs::is_regular(*iter))
+                        {
+                            if (!MIMEResolver::instance()->valid(iter->path().leaf()))
+                            {
+                                continue;
+                            }
+                            // Add file to database
+                            if (Indexer::INVALID_ID == this->addFile(*iter,parentId))
+                            {
+                                continue;
+                            }
+                        }
+                }			
         }
 
         CHECK_CANCELED
 
-        this->indexDB();
+            this->indexDB();
         {
             // Finalize progress counts
             Guard lock(this->progressMutex);
@@ -330,34 +330,34 @@ Indexer::indexDB()
     try
     {
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(genre)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(genre)");
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS parent_id ON files(parent_id)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS parent_id ON files(parent_id)");
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS filename ON files(filename)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS filename ON files(filename)");
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS size ON files(size)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS size ON files(size)");
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS mtime ON files(mtime)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS mtime ON files(mtime)");
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS artist ON files(artist)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS artist ON files(artist)");
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS title ON files(title)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS title ON files(title)");
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS album ON files(album)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS album ON files(album)");
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(genre)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS genre ON files(genre)");
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS length ON files(length)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS length ON files(length)");
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS bitrate ON files(bitrate)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS bitrate ON files(bitrate)");
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS status_id ON files(status_id)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS status_id ON files(status_id)");
         CHECK_CANCELED
 
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS path ON dirs(path)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS path ON dirs(path)");
         CHECK_CANCELED
-        this->db->execute(L"CREATE INDEX IF NOT EXISTS mtime ON dirs(mtime)");
+            this->db->execute(L"CREATE INDEX IF NOT EXISTS mtime ON dirs(mtime)");
         CHECK_CANCELED
     }
     catch (Database::DatabaseException e)

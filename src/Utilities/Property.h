@@ -19,7 +19,7 @@ namespace Musador
         Property(const T& data);
 
         Property(const Property<T>&);
-        
+
         Property& operator=(const Property<T>& p);
 
         Property& operator=(const T& data);
@@ -31,7 +31,7 @@ namespace Musador
         bool operator!=(const Property<T>& rhs) const;
 
         T get() const;
-        
+
         void set(const T& data);
 
         /// Serialize this configuration.
@@ -64,7 +64,7 @@ namespace Musador
 
     template <typename T>
     Property<T>&
-    Property<T>::operator=(const Property<T>& p)
+        Property<T>::operator=(const Property<T>& p)
     {
         this->set(p.get());
         return *this;
@@ -72,7 +72,7 @@ namespace Musador
 
     template <typename T>
     Property<T>&
-    Property<T>::operator=(const T& data)
+        Property<T>::operator=(const T& data)
     {
         this->set(data);
         return *this;
@@ -86,21 +86,21 @@ namespace Musador
 
     template <typename T>
     bool
-    Property<T>::operator==(const Property<T>& rhs) const
+        Property<T>::operator==(const Property<T>& rhs) const
     {
         return this->get() == rhs.get();
     }
 
     template <typename T>
     bool
-    Property<T>::operator!=(const Property<T>& rhs) const
+        Property<T>::operator!=(const Property<T>& rhs) const
     {
         return this->get() != rhs.get();
     }
 
     template <typename T>
     T 
-    Property<T>::get() const
+        Property<T>::get() const
     {
         Guard lock(this->dataMutex);
         return data;
@@ -108,7 +108,7 @@ namespace Musador
 
     template <typename T>
     void
-    Property<T>::set(const T& data)
+        Property<T>::set(const T& data)
     {
         Guard lock(this->dataMutex);
         this->data = data;
@@ -117,7 +117,7 @@ namespace Musador
     template <typename T>
     template <class Archive>
     void 
-    Property<T>::serialize(Archive & ar, const unsigned int version)
+        Property<T>::serialize(Archive & ar, const unsigned int version)
     {
         Guard lock(this->dataMutex);
         ar & BOOST_SERIALIZATION_NVP(data);

@@ -7,23 +7,23 @@
 
 class MIMEResolver : public Singleton<MIMEResolver>
 {
-	friend class Singleton<MIMEResolver>;
+    friend class Singleton<MIMEResolver>;
 
 public:
 
-	typedef std::map<std::wstring,std::wstring> TypeMap;
-	
-	bool valid(const std::wstring& path);
-	
-	std::wstring MIMEType(const std::wstring& path);
+    typedef std::map<std::wstring,std::wstring> TypeMap;
+
+    bool valid(const std::wstring& path);
+
+    std::wstring MIMEType(const std::wstring& path);
 
 private:
 
-	MIMEResolver();
+    MIMEResolver();
 
-	static bool inited;
-	static TypeMap types;
-	static std::wstring parseExtension(const std::wstring& filename);
+    static bool inited;
+    static TypeMap types;
+    static std::wstring parseExtension(const std::wstring& filename);
 
 };
 

@@ -8,22 +8,22 @@
 
 namespace Musador
 {
-	class Connection;
-	class ConnectionCtx;
+    class Connection;
+    class ConnectionCtx;
 
-	class Listener
-	{
-	public:
+    class Listener
+    {
+    public:
 
-		virtual ~Listener() {}
+        virtual ~Listener() {}
 
-		virtual void beginAccept(EventHandler handler, boost::any tag = NULL) = 0;
+        virtual void beginAccept(EventHandler handler, boost::any tag = NULL) = 0;
 
-		virtual void close() = 0;
+        virtual void close() = 0;
 
-		virtual boost::shared_ptr<Connection> createConnection() = 0;
+        virtual boost::shared_ptr<Connection> createConnection() = 0;
 
-	};
+    };
 }
 
 

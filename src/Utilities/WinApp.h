@@ -9,42 +9,42 @@
 
 namespace Musador
 {
-	typedef boost::mutex Mutex;
-	typedef boost::condition Condition;
-	typedef boost::mutex::scoped_lock Guard;
+    typedef boost::mutex Mutex;
+    typedef boost::condition Condition;
+    typedef boost::mutex::scoped_lock Guard;
 
-	class WinApp
-	{
-	public:
+    class WinApp
+    {
+    public:
 
-		WinApp(const std::wstring& appName);
+        WinApp(const std::wstring& appName);
 
-		virtual ~WinApp();
+        virtual ~WinApp();
 
-		void run();
+        void run();
 
-		BOOL postMessage(UINT uMsg, WPARAM wParam = NULL, LPARAM lParam = NULL);
+        BOOL postMessage(UINT uMsg, WPARAM wParam = NULL, LPARAM lParam = NULL);
 
-		static HRESULT CALLBACK _wndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+        static HRESULT CALLBACK _wndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-		virtual HRESULT wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
+        virtual HRESULT wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
 
-		virtual void onRunning() {}
+        virtual void onRunning() {}
 
-		operator HWND() { return this->hWndMain; }
+        operator HWND() { return this->hWndMain; }
 
-	protected:
+    protected:
 
-		std::wstring appName;
-		HWND hWndMain;
-		HINSTANCE hInst;
+        std::wstring appName;
+        HWND hWndMain;
+        HINSTANCE hInst;
 
-	};
+    };
 
-	inline BOOL WinApp::postMessage(UINT uMsg, WPARAM wParam /* = NULL */, LPARAM lParam /* = NULL */)
-	{
-		return ::PostMessage(this->hWndMain, uMsg, wParam, lParam);
-	}
+    inline BOOL WinApp::postMessage(UINT uMsg, WPARAM wParam /* = NULL */, LPARAM lParam /* = NULL */)
+    {
+        return ::PostMessage(this->hWndMain, uMsg, wParam, lParam);
+    }
 }
 
 

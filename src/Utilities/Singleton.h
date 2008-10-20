@@ -9,31 +9,31 @@ class Singleton : public boost::noncopyable
 
 public:
 
-	static T * instance()
-	{
-		if (!_instance)
-			_instance = new T();
-		return _instance;
-	}
+    static T * instance()
+    {
+        if (!_instance)
+            _instance = new T();
+        return _instance;
+    }
 
-	static void destroy()
-	{
-		if (_instance)
-		{
-			delete _instance;
-			_instance = NULL;
-		}
-	}
+    static void destroy()
+    {
+        if (_instance)
+        {
+            delete _instance;
+            _instance = NULL;
+        }
+    }
 
 protected:
 
-	Singleton() {}
+    Singleton() {}
 
-	virtual ~Singleton() {}
+    virtual ~Singleton() {}
 
 private:
 
-	static T * _instance;
+    static T * _instance;
 
 };
 

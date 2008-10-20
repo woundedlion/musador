@@ -9,15 +9,15 @@ using namespace Musador;
 ConsoleProgressReporter::ConsoleProgressReporter(const Indexer& indexer) :
 indexer(indexer)
 {
-	
+
 }
 
 void ConsoleProgressReporter::run()
 {
     int i = 0;
     IndexerProgress p;
-	do 
-	{
+    do 
+    {
         // Get the progress
         IndexerProgress lastP = p;
         p = indexer.progress();
@@ -61,9 +61,9 @@ void ConsoleProgressReporter::run()
 
         boost::xtime xt;
         boost::xtime_get(&xt,boost::TIME_UTC);
-		xt.nsec += 250000000; 
-		boost::thread::sleep(xt);
-	} while (!p.done);
+        xt.nsec += 250000000; 
+        boost::thread::sleep(xt);
+    } while (!p.done);
 
     std::wcout << std::endl;
 }
