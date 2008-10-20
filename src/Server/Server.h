@@ -5,8 +5,8 @@
 #include "Utilities/MIMEResolver.h"
 #include "boost/shared_ptr.hpp"
 #include "boost/thread.hpp"
-#include "Connection.h"
-#include "Proactor.h"
+#include "IO/Connection.h"
+#include "IO/Proactor.h"
 #include "Session.h"
 #include "Config/Config.h"
 

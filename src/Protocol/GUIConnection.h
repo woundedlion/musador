@@ -1,7 +1,7 @@
 #ifndef GUI_CONNECTION_H_66E5DEFA_BA19_45d1_8990_2F5FBD85F9DD
 #define GUI_CONNECTION_H_66E5DEFA_BA19_45d1_8990_2F5FBD85F9DD
 
-#include "Server/PipeConnection.h"
+#include "IO/PipeConnection.h"
 #include "GUIMessages.h"
 
 namespace Musador

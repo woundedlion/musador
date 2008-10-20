@@ -2,8 +2,8 @@
 
 #include "Protocol/GUIListener.h"
 #include "Protocol/GUIMessages.h"
-#include "Server/IOMessages.h"
-#include "Server/Proactor.h"
+#include "IO/IOMessages.h"
+#include "IO/Proactor.h"
 #include "Utilities/TimerQueue.h"
 #include "LibrarianGUI.h"
 #include "res/resource.h"

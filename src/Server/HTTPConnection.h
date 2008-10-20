@@ -4,7 +4,7 @@
 #include <queue>
 
 #include "HTTP.h"
-#include "SocketConnection.h"
+#include "IO/SocketConnection.h"
 
 #include "boost/weak_ptr.hpp"
 #include "boost/shared_ptr.hpp"

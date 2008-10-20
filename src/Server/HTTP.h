@@ -5,7 +5,7 @@
 #include <map>
 #include <sstream>
 
-#include "Connection.h"
+#include "IO/Connection.h"
 #include "Utilities/Util.h"
 #include "Utilities/Base64.h"
 #include "Utilities/MTRand.h"
