@@ -44,13 +44,13 @@ LibrarianController::Success::operator<<(const std::string& s)
 
 LibrarianController::LibrarianController()
 {
-	BIND_HANDLER("/info",info);
-	BIND_HANDLER("/reindex",reindex);
-    BIND_HANDLER("/cancel_index",cancelIndex);
-    BIND_HANDLER("/config.xml",getConfigXML);
-    BIND_HANDLER("/index_progress.xml",getIndexProgressXML);
-    BIND_HANDLER("/library.xml",getLibraryXML);
-    BIND_HANDLER("/library_stats.xml",getLibraryStatsXML);
+	BIND_HANDLER("/debug/info/xml",info);
+	BIND_HANDLER("/index/start",reindex);
+    BIND_HANDLER("/index/cancel",cancelIndex);
+    BIND_HANDLER("/config/xml",getConfigXML);
+    BIND_HANDLER("/index/progress/xml",getIndexProgressXML);
+    BIND_HANDLER("/library/list/xml",getLibraryXML);
+    BIND_HANDLER("/library/stats/xml",getLibraryStatsXML);
 
     LibrarianConfig::LibraryCollection libraries = Config::instance()->librarian.libraries;
     LibrarianConfig::LibraryCollection::iterator iter = libraries.find(LibrarianConfig::LOCAL_LIB_ID);
@@ -207,7 +207,7 @@ LibrarianController::getLibraryXML(HTTP::Env& env)
             }
             else
             {
-                // Library with that ID does not exists
+                // Library with that ID does not exist
                 Error err;
                 err << "Invalid library ID";
                 ar << boost::serialization::make_nvp("error",err);

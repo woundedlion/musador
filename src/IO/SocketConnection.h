@@ -23,11 +23,9 @@ namespace Musador
             virtual void beginConnect(boost::any tag = NULL) {}
 
             void beginRead(boost::any tag = NULL);
-            void beginRead(boost::shared_ptr<MsgReadComplete> msgRead,
-                boost::any tag = NULL);
+            void beginRead(boost::shared_ptr<MsgReadComplete> msgRead, boost::any tag = NULL);
 
-            void beginWrite(boost::shared_ptr<MsgWriteComplete> msgWrite, 
-                boost::any tag = NULL);
+            void beginWrite(boost::shared_ptr<MsgWriteComplete> msgWrite, boost::any tag = NULL);
             void beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag = NULL);
             void beginWrite(std::istream& dataStream, boost::any tag = NULL);
             void beginWrite(const std::string& str, boost::any tag = NULL);

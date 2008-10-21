@@ -134,6 +134,8 @@ void Indexer::runIndexer()
         LOG(Info) << e.what();
         this->canceled = true;
         this->db->txnRollback();
+        Guard lock(this->progressMutex);
+        this->p.canceled = true;
     }
 
     if (!this->canceled)
@@ -172,6 +174,8 @@ void Indexer::reindex()
         this->p.numFiles = 0;
         this->p.bytes = 0;
         this->p.startTime = std::clock();
+        this->p.canceled = false;
+        this->p.done = false;
     }
 
     this->indexThread.reset(new boost::thread(boost::bind(&Indexer::runIndexer,this)));
@@ -390,6 +394,7 @@ bytes(0),
 startTime(0),
 curTime(0),
 lastPath(L""),
-done(false)
+done(false),
+canceled(false)
 {
 }

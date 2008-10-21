@@ -49,6 +49,7 @@ namespace Musador
             ar & BOOST_SERIALIZATION_NVP(curTime);
             ar & BOOST_SERIALIZATION_NVP(lastPath);
             ar & BOOST_SERIALIZATION_NVP(done);
+            ar & BOOST_SERIALIZATION_NVP(canceled);
         }
 
         /// @brief The number of files which have so far been indexed.
@@ -71,6 +72,9 @@ namespace Musador
 
         /// @brief True if the index is complete, false otherwise.
         bool done;
+
+        /// @brief True if the index was canceled.
+        bool canceled;
     };
 
     /// @class Indexer
