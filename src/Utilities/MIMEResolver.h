@@ -5,26 +5,29 @@
 #include <string>
 #include "Singleton.h"
 
-class MIMEResolver : public Singleton<MIMEResolver>
+namespace Util
 {
-    friend class Singleton<MIMEResolver>;
+    class MIMEResolver : public Util::Singleton<MIMEResolver>
+    {
+        friend class Util::Singleton<MIMEResolver>;
 
-public:
+    public:
 
-    typedef std::map<std::wstring,std::wstring> TypeMap;
+        typedef std::map<std::wstring,std::wstring> TypeMap;
 
-    bool valid(const std::wstring& path);
+        bool valid(const std::wstring& path);
 
-    std::wstring MIMEType(const std::wstring& path);
+        std::wstring MIMEType(const std::wstring& path);
 
-private:
+    private:
 
-    MIMEResolver();
+        MIMEResolver();
 
-    static bool inited;
-    static TypeMap types;
-    static std::wstring parseExtension(const std::wstring& filename);
+        static bool inited;
+        static TypeMap types;
+        static std::wstring parseExtension(const std::wstring& filename);
 
-};
+    };
+}
 
 #endif

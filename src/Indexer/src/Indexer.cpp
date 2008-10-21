@@ -17,7 +17,7 @@
 
 using namespace Musador;
 
-class IndexException : public StreamException<IndexException>{};
+class IndexException : public Util::StreamException<IndexException>{};
 
 Indexer::Indexer(std::wstring dbFilename) :
 canceled(false),
@@ -107,7 +107,7 @@ void Indexer::runIndexer()
                         }
                         else if (fs::is_regular(*iter))
                         {
-                            if (!MIMEResolver::instance()->valid(iter->path().leaf()))
+                            if (!Util::MIMEResolver::instance()->valid(iter->path().leaf()))
                             {
                                 continue;
                             }

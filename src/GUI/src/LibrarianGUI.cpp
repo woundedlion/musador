@@ -15,11 +15,11 @@
 using namespace Musador;
 
 LibrarianGUI::LibrarianGUI() :
-WinApp(L"Musador Librarian"),
+UI::WinApp(L"Musador Librarian"),
 trayIcon(NULL)
 {
     IO::Proactor::instance()->start();
-    TimerQueue::instance()->start();
+    Util::TimerQueue::instance()->start();
 
     this->trayMenu.insertItem(0,ENABLE,L"Enable");
     this->trayMenu.insertSep(1,EXIT_SEP);
@@ -30,8 +30,8 @@ LibrarianGUI::~LibrarianGUI()
 {
     IO::Proactor::instance()->stop();
     IO::Proactor::destroy();
-    TimerQueue::instance()->stop();
-    TimerQueue::destroy();
+    Util::TimerQueue::instance()->stop();
+    Util::TimerQueue::destroy();
 }
 
 HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -73,9 +73,9 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     l.start();
                 }
-                catch (const ServiceAlreadyStartedException&)
+                catch (const UI::ServiceAlreadyStartedException&)
                 {}
-                catch(const ServiceException&)
+                catch(const UI::ServiceException&)
                 {
                     //TODO: LOG!
                     break;
@@ -99,7 +99,7 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 void 
 LibrarianGUI::onRunning()
 {
-    this->trayIcon.reset(new WindowsShellIcon(this->hWndMain,WM_APP_TRAYICON));
+    this->trayIcon.reset(new UI::WindowsShellIcon(this->hWndMain,WM_APP_TRAYICON));
     this->trayIcon->setToolTip(L"Musador Librarian : Disabled");
     this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
     this->trayIcon->show();

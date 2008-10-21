@@ -4,10 +4,10 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-#include "Utilities/WindowsService.h"
+#include "UI/Console.h"
+#include "UI/WindowsService.h"
 #include "Indexer/Indexer.h"
 #include "Server/Server.h"
-#include "Utilities/Console.h"
 #include "Config/Config.h"
 #include "LibrarianController.h"
 #include "Protocol/GUIListener.h"
@@ -22,10 +22,10 @@ namespace Musador
     /// @brief The daemon component of the Musador system.
     /// This module contains the web server, services requests from web clients, manages config data,
     /// and manages library index files.
-    class Librarian : public WindowsService<Librarian>
+    class Librarian : public UI::WindowsService<Librarian>
     {
 
-        friend class WindowsService<Librarian>;
+        friend class UI::WindowsService<Librarian>;
 
     public:
 

@@ -6,6 +6,8 @@
 #define LOG_SENDER L"GUI"
 using namespace Musador;
 
+using namespace Musador::UI;
+
 volatile LONG WindowsShellIcon::counter = 0;
 
 WindowsShellIcon::WindowsShellIcon(HWND hWnd, UINT uCallbackMsg) :

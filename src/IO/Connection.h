@@ -15,7 +15,7 @@ namespace Musador
 
     namespace IO
     {
-        typedef AbstractFactory<Connection> ConnectionFactory;
+        typedef Util::AbstractFactory<Connection> ConnectionFactory;
 
         class ConnectionCtx
         {

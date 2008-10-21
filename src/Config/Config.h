@@ -42,22 +42,22 @@ namespace Musador
           }
 
           /// @brief The root directory for the site, available at http://addr:port/
-          Property<std::wstring> documentRoot;
+          Util::Property<std::wstring> documentRoot;
 
           /// @brief The IP Address in dot notation on which to listen for requests to this site.
-          Property<std::string> addr;
+          Util::Property<std::string> addr;
 
           /// @brief The port number on which to listen for requests to this site.
-          Property<unsigned short> port;
+          Util::Property<unsigned short> port;
 
           /// @brief Specifies whether HTTP Digest authentication is required to access this site.
-          Property<bool> requireAuth;
+          Util::Property<bool> requireAuth;
 
           /// @brief Collection of users with credentials to access the site.
-          Property<HTTP::UserCollection> users;
+          Util::Property<HTTP::UserCollection> users;
 
           /// @brief Realm name used for HTTP Authentication
-          Property<std::wstring> realm;
+          Util::Property<std::wstring> realm;
 
     };
 
@@ -82,11 +82,11 @@ namespace Musador
         }
 
         /// C@brief ollection of the sites defined for this server.
-        Property<HTTPSiteCollection> sites;
+        Util::Property<HTTPSiteCollection> sites;
 
         /// @brief Pointer to the controller instance which implements application-specific logic
         /// @remarks Used internally. NOT SERIALIZED.
-        Property<Controller *> controller;
+        Util::Property<Controller *> controller;
     };
 
     /// @class LibraryConfig 
@@ -108,16 +108,16 @@ namespace Musador
         }
 
         /// @brief The numeric Library ID.
-        Property<int> id;
+        Util::Property<int> id;
 
         /// @brief User-defined nickname for this Library        
-        Property<std::wstring> nickname;
+        Util::Property<std::wstring> nickname;
 
         /// @brief path to the data file for this Library
-        Property<std::wstring> dataFile;
+        Util::Property<std::wstring> dataFile;
 
         /// @brief List of root target directories whose contents are indexed in this Library
-        Property<std::vector<std::wstring> > targets;
+        Util::Property<std::vector<std::wstring> > targets;
 
     };
 
@@ -141,17 +141,17 @@ namespace Musador
         }
 
         /// @brief The path to the application-specific data directory
-        Property<std::wstring> dataDir;
+        Util::Property<std::wstring> dataDir;
 
         /// @brief The music libraries known by the system, mapped by ID
-        Property<LibraryCollection> libraries;
+        Util::Property<LibraryCollection> libraries;
 
     };
 
     /// @class Config 
     /// @brief Top-level configuration container. 
     /// Contains the configuration for the entire system.
-    class Config : public Singleton<Config>
+    class Config : public Util::Singleton<Config>
     {
     public:
 

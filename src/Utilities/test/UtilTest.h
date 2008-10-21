@@ -55,12 +55,12 @@ public:
 
     void testTimerQueue()
     {
-        TimerQueue::instance()->start();
+        Util::TimerQueue::instance()->start();
         this->timerTicks = 0;	
-        TimerQueue::instance()->createTimer(1000, boost::bind(&UtilTest::gotTimer,this),false,123);
+        Util::TimerQueue::instance()->createTimer(1000, boost::bind(&UtilTest::gotTimer,this),false,123);
         ::Sleep(4500);
         TS_ASSERT(this->timerTicks == 4);
-        TimerQueue::instance()->stop();
-        TimerQueue::destroy();
+        Util::TimerQueue::instance()->stop();
+        Util::TimerQueue::destroy();
     }
 };

@@ -2,9 +2,11 @@
 #include <iostream>
 #include "LibrarianGUI.h"
 
+using namespace Musador;
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 { 
-    Musador::LibrarianGUI gui;
+    LibrarianGUI gui;
     gui.run();
     return 0;
 }

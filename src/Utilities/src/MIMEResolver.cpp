@@ -1,5 +1,7 @@
 #include "MIMEResolver.h"
 
+using namespace Util;
+
 MIMEResolver::TypeMap MIMEResolver::types;
 
 MIMEResolver::MIMEResolver()

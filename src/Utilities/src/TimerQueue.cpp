@@ -5,7 +5,7 @@
 #include <boost/bind.hpp>
 #include "TimerQueue.h"
 
-using namespace Musador;
+using namespace Util;
 
 Timer::Timer(unsigned int intervalMs, TimerHandler handler, bool once, boost::any tag) :
 timeoutMs(intervalMs),

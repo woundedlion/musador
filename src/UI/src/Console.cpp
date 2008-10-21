@@ -2,7 +2,7 @@
 #include "boost/bind.hpp"
 #include <functional>
 
-using namespace Musador;
+using namespace Musador::UI;
 
 Console::Console() :
 hCon(::GetStdHandle(STD_OUTPUT_HANDLE)),

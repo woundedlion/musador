@@ -14,10 +14,10 @@ using namespace Musador;
 namespace fs = boost::filesystem;
 
 Librarian::Librarian() :
-WindowsService(L"Musador Librarian")
+UI::WindowsService<Librarian>(L"Musador Librarian")
 {
     Network::instance();
-    MIMEResolver::instance();
+    Util::MIMEResolver::instance();
 
     // load config or generate defaults
     fs::wpath dataPath(Util::pathToDataDir() + L"\\Musador");
@@ -52,8 +52,8 @@ Librarian::~Librarian()
     IO::Proactor::destroy();
 
     Config::destroy();
-    Musador::Network::destroy();
-    MIMEResolver::destroy();
+    Network::destroy();
+    Util::MIMEResolver::destroy();
 }
 
 int 

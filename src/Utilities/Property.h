@@ -3,9 +3,8 @@
 
 #include <boost/thread/mutex.hpp>
 
-namespace Musador
+namespace Util
 {
-
     typedef boost::mutex Mutex;
     typedef boost::mutex::scoped_lock Guard;
 

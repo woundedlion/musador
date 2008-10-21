@@ -3,41 +3,44 @@
 
 #include <boost/utility.hpp>
 
-template <class T>
-class Singleton : public boost::noncopyable
+namespace Util
 {
-
-public:
-
-    static T * instance()
+    template <class T>
+    class Singleton : public boost::noncopyable
     {
-        if (!_instance)
-            _instance = new T();
-        return _instance;
-    }
 
-    static void destroy()
-    {
-        if (_instance)
+    public:
+
+        static T * instance()
         {
-            delete _instance;
-            _instance = NULL;
+            if (!_instance)
+                _instance = new T();
+            return _instance;
         }
-    }
 
-protected:
+        static void destroy()
+        {
+            if (_instance)
+            {
+                delete _instance;
+                _instance = NULL;
+            }
+        }
 
-    Singleton() {}
+    protected:
 
-    virtual ~Singleton() {}
+        Singleton() {}
 
-private:
+        virtual ~Singleton() {}
 
-    static T * _instance;
+    private:
 
-};
+        static T * _instance;
 
-template <class T> T * Singleton<T>::_instance = NULL;
+    };
 
+    template <class T> T * Singleton<T>::_instance = NULL;
+
+}
 
 #endif

@@ -134,7 +134,7 @@ ConsoleLogListener::send(const LogStatement& stmt)
     if (stmt.lvl != this->curLevel)
     {
         this->curLevel = stmt.lvl;
-        Console::TextColor color = Console::COLOR_WHITE_HI;
+        UI::Console::TextColor color = UI::Console::COLOR_WHITE_HI;
         switch (stmt.lvl)
         {
         case Debug:

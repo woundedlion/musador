@@ -4,6 +4,8 @@
 #define LOG_SENDER L"GUI"
 using namespace Musador;
 
+using namespace Musador::UI;
+
 WinMenu::WinMenu() :
 hMenu(::CreatePopupMenu())
 {

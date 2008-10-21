@@ -6,7 +6,7 @@
 #include "boost/thread/mutex.hpp"
 #include "boost/thread/condition.hpp"
 
-namespace Musador
+namespace Util
 {
     typedef boost::mutex Mutex;
     typedef boost::condition Condition;

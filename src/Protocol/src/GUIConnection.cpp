@@ -69,7 +69,7 @@ GUIConnection::onConnectComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag 
         this->beginRead();
         break;
     case IO::MSG_ERROR:
-        TimerQueue::instance()->createTimer(500, boost::bind(&PipeConnection::beginConnect,this,tag));
+        Util::TimerQueue::instance()->createTimer(500, boost::bind(&PipeConnection::beginConnect,this,tag));
         break;
     }
 }

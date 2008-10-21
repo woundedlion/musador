@@ -9,9 +9,8 @@
 
 #include "Utilities/Singleton.h"
 
-namespace Musador
+namespace Util
 {
-
     typedef boost::mutex Mutex;
     typedef boost::mutex::scoped_lock Guard;
 
@@ -35,7 +34,7 @@ namespace Musador
         boost::any tag;
     };
 
-    class TimerQueue : public Singleton<TimerQueue>
+    class TimerQueue : public Util::Singleton<TimerQueue>
     {
     public:
 
@@ -59,7 +58,7 @@ namespace Musador
         std::auto_ptr<boost::thread> timerThread;
         bool doShutdown;
     };
-
 }
+
 
 #endif

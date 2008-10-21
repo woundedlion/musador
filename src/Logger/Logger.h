@@ -8,8 +8,8 @@
 #include <queue>
 #include "Utilities/Util.h"
 #include "Utilities/Singleton.h"
-#include "Utilities/Console.h"
 #include "Utilities/Property.h"
+#include "UI/Console.h"
 
 #define LOG(level) Logging::log(Logging::level,LOG_SENDER)
 
@@ -80,20 +80,20 @@ namespace Musador
 
         private:
 
-            Console console;
+            UI::Console console;
             LogLevel curLevel;
 
-            static const Console::TextColor LOG_COLOR_DEBUG = Console::COLOR_BLUE_LO;
-            static const Console::TextColor LOG_COLOR_INFO = Console::COLOR_WHITE_LO;
-            static const Console::TextColor LOG_COLOR_WARNING = Console::COLOR_CYAN_HI;
-            static const Console::TextColor LOG_COLOR_ERROR = Console::COLOR_YELLOW_HI;
-            static const Console::TextColor LOG_COLOR_CRITICAL = Console::COLOR_RED_HI;
+            static const UI::Console::TextColor LOG_COLOR_DEBUG = UI::Console::COLOR_BLUE_LO;
+            static const UI::Console::TextColor LOG_COLOR_INFO = UI::Console::COLOR_WHITE_LO;
+            static const UI::Console::TextColor LOG_COLOR_WARNING = UI::Console::COLOR_CYAN_HI;
+            static const UI::Console::TextColor LOG_COLOR_ERROR = UI::Console::COLOR_YELLOW_HI;
+            static const UI::Console::TextColor LOG_COLOR_CRITICAL = UI::Console::COLOR_RED_HI;
 
         };
 
         /// @class Logger
         /// @brief Singleton logging object.
-        class Logger : public Singleton<Logger>
+        class Logger : public Util::Singleton<Logger>
         {
             friend class LogWriter;
 
@@ -212,7 +212,7 @@ namespace Musador
         LogWriter log(LogLevel lvl, const std::wstring& sender);
 
         template <typename T>
-        inline LogWriter& operator<<(LogWriter& w, const Property<T>& p)
+        inline LogWriter& operator<<(LogWriter& w, const Util::Property<T>& p)
         {
             return w << p.get();
         }

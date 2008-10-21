@@ -11,9 +11,9 @@
 
 namespace Musador
 {
-    class Network : public Singleton<Network>
+    class Network : public Util::Singleton<Network>
     {
-        friend class Singleton<Network>;
+        friend class Util::Singleton<Network>;
     public:
 
         ~Network();
@@ -57,7 +57,7 @@ namespace Musador
     };
 }
 
-class NetworkException : public StreamException<NetworkException>
+class NetworkException : public Util::StreamException<NetworkException>
 {
 public:
     NetworkException() {}

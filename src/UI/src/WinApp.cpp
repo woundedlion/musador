@@ -6,6 +6,8 @@
 #define LOG_SENDER L"GUI"
 using namespace Musador;
 
+using namespace Musador::UI;
+
 #include <assert.h>
 
 WinApp::WinApp(const std::wstring& appName) :

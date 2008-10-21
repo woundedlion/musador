@@ -35,7 +35,7 @@ namespace Musador
         //////////////////////////////////////////////////////////////////////////
         /// Proactor 
         /// Provides an asynchronous IO interface
-        class Proactor : public Singleton<Proactor>
+        class Proactor : public Util::Singleton<Proactor>
         {
         public:
 
@@ -171,7 +171,7 @@ namespace Musador
             this->beginWrite(conn, handler, msgWrite, tag);
         }
 
-        class IOException : public StreamException<IOException> { };
+        class IOException : public Util::StreamException<IOException> { };
 
 #ifdef WIN32
         class CompletionCtx : public OVERLAPPED
