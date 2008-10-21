@@ -80,7 +80,6 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     //TODO: LOG!
                     break;
                 }
-                this->service->beginConnect();
             }
             break;
         case EXIT:
