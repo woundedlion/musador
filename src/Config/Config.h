@@ -81,7 +81,7 @@ namespace Musador
             ar & BOOST_SERIALIZATION_NVP(sites);
         }
 
-        /// C@brief ollection of the sites defined for this server.
+        /// @brief ollection of the sites defined for this server.
         Util::Property<HTTPSiteCollection> sites;
 
         /// @brief Pointer to the controller instance which implements application-specific logic

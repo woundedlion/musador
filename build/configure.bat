@@ -1,1 +1,1 @@
-cmake ../src
+cmake ..

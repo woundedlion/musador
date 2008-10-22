@@ -32,47 +32,81 @@ namespace Musador
         class CompletionCtx;
         class Job;
 
-        //////////////////////////////////////////////////////////////////////////
-        /// Proactor 
-        /// Provides an asynchronous IO interface
+        /// @class Proactor 
+        /// @brief Implementation of the Proactor Pattern providing an interface to perform asynchronous I/O operations.
         class Proactor : public Util::Singleton<Proactor>
         {
         public:
 
-            /// Constructor
+            /// @brief Constructor.
             Proactor();
 
-            /// Destructor
+            /// @brief Destructor
             ~Proactor();
 
             // Socket I/O
+
+            /// @brief Asynchronously accept a connection on a Socket.
+            /// @param[in] listener Shared pointer to the SocketListener on which to accept a connection.
+            /// @param[in] handler The EventHandler which is called back on completion or error.
+            /// @param[in] User-defined data which are passed along to handler on completion or error.
             void beginAccept(boost::shared_ptr<SocketListener> listener, EventHandler handler, boost::any tag = NULL);
 
+            /// @brief Asynchronously read from a Socket.
+            /// @param[in] conn Shared pointer to the SocketConnection on which to accept a connection.
+            /// @param[in] handler The EventHandler which is called back on completion or error.
+            /// @param[in] User-defined data which are passed along to handler on completion or error.
             void beginRead(boost::shared_ptr<SocketConnection> conn, 
                 EventHandler handler, 
                 boost::any tag = NULL);
 
+            /// @brief Asynchronously read from a Socket using a previously allocated completion message.
+            /// @param[in] conn Shared pointer to the SocketConnection on which to accept a connection.
+            /// @param[in] handler The EventHandler which is called back on completion or error.
+            /// @param[in] msgRead A MsgReadComplete used to store the data read from the connection.
+            /// @param[in] User-defined data which are passed along to handler on completion or error.
             void beginRead(boost::shared_ptr<SocketConnection> conn, 
                 EventHandler handler, 
                 boost::shared_ptr<MsgReadComplete> msgRead, 
                 boost::any tag = NULL);
 
+            /// @brief Asynchronously write to a Socket using a previously allocated array.
+            /// @param[in] conn Shared pointer to the SocketConnection on which to accept a connection.
+            /// @param[in] handler The EventHandler which is called back on completion or error.
+            /// @param[in] data A shared array containing data to write to the connection.
+            /// @param[in] len The size in bytes of the data contained in data.
+            /// @param[in] User-defined data which are passed along to handler on completion or error.
             void beginWrite(boost::shared_ptr<SocketConnection> conn, 
                 EventHandler handler, 
                 boost::shared_array<char> data, 
                 int len, 
                 boost::any tag = NULL);
 
+            /// @brief Asynchronously write to a Socket using a previously allocated completion message.
+            /// @param[in] conn Shared pointer to the SocketConnection on which to accept a connection.
+            /// @param[in] handler The EventHandler which is called back on completion or error.
+            /// @param[in] msgWrite Shared pointer to a MsgWriteComplete containing the data to write to the connection.
+            /// @param[in] User-defined data which are passed along to handler on completion or error.
             void beginWrite(boost::shared_ptr<SocketConnection> conn, 
                 EventHandler handler, 
                 boost::shared_ptr<MsgWriteComplete> msgWrite, 
                 boost::any tag = NULL);
 
             // Pipe I/O
+
+            /// @briefAsynchronously accept a connection on a NamedPipe.
+            /// @param[in] listener Shared pointer to the PipeListener on which to accept a connection.
+            /// @param[in] handler The EventHandler which is called back on completion or error.
+            /// @param[in] User-defined data which are passed along to handler on completion or error.
             void beginAccept(boost::shared_ptr<PipeListener> listener, 
                 EventHandler handler, 
                 boost::any tag = NULL);
 
+            /// @brief Asynchronously connect to a NamedPipe.
+            /// @param[in] conn Shared pointer to the PipeConnection with which to connect.
+            /// @param[in] handler The EventHandler which is called back on completion or error.
+            /// @param dest The name of the pipe to connect to
+            /// @param[in] User-defined data which are passed along to handler on completion or error.
             void beginConnect(boost::shared_ptr<PipeConnection> conn,
                 EventHandler handler,
                 const std::wstring& dest,

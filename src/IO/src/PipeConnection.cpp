@@ -101,18 +101,3 @@ PipeConnection::setPipe(HANDLE pipe)
 {
     this->pipe = pipe;
 }
-
-std::string
-PipeConnection::friendlyName()
-{
-    std::string r = Util::unicodeToUtf8(this->name);
-    size_t pos = r.find_last_of("\\/");
-    if (pos == std::string::npos)
-    {
-        return r;
-    } 
-    else 
-    {
-        return r.substr(r.find_last_of("\\/") + 1);
-    }
-}
