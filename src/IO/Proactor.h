@@ -53,7 +53,7 @@ namespace Musador
             void beginAccept(boost::shared_ptr<SocketListener> listener, EventHandler handler, boost::any tag = NULL);
 
             /// @brief Asynchronously read from a Socket.
-            /// @param[in] conn Shared pointer to the SocketConnection on which to accept a connection.
+            /// @param[in] conn Shared pointer to the SocketConnection from which to read.
             /// @param[in] handler The EventHandler which is called back on completion or error.
             /// @param[in] User-defined data which are passed along to handler on completion or error.
             void beginRead(boost::shared_ptr<SocketConnection> conn, 
@@ -61,7 +61,7 @@ namespace Musador
                 boost::any tag = NULL);
 
             /// @brief Asynchronously read from a Socket using a previously allocated completion message.
-            /// @param[in] conn Shared pointer to the SocketConnection on which to accept a connection.
+            /// @param[in] conn Shared pointer to the SocketConnection from which to read.
             /// @param[in] handler The EventHandler which is called back on completion or error.
             /// @param[in] msgRead A MsgReadComplete used to store the data read from the connection.
             /// @param[in] User-defined data which are passed along to handler on completion or error.
@@ -71,7 +71,7 @@ namespace Musador
                 boost::any tag = NULL);
 
             /// @brief Asynchronously write to a Socket using a previously allocated array.
-            /// @param[in] conn Shared pointer to the SocketConnection on which to accept a connection.
+            /// @param[in] conn Shared pointer to the SocketConnection to which to write.
             /// @param[in] handler The EventHandler which is called back on completion or error.
             /// @param[in] data A shared array containing data to write to the connection.
             /// @param[in] len The size in bytes of the data contained in data.
@@ -83,7 +83,7 @@ namespace Musador
                 boost::any tag = NULL);
 
             /// @brief Asynchronously write to a Socket using a previously allocated completion message.
-            /// @param[in] conn Shared pointer to the SocketConnection on which to accept a connection.
+            /// @param[in] conn Shared pointer to the SocketConnection to which to write.
             /// @param[in] handler The EventHandler which is called back on completion or error.
             /// @param[in] msgWrite Shared pointer to a MsgWriteComplete containing the data to write to the connection.
             /// @param[in] User-defined data which are passed along to handler on completion or error.
@@ -112,30 +112,58 @@ namespace Musador
                 const std::wstring& dest,
                 boost::any tag = NULL);
 
+            /// @brief Asynchronously read from a Named Pipe.
+            /// @param[in] conn Shared pointer to the PipeConnection from which to read.
+            /// @param[in] handler The EventHandler which is called back on completion or error.
+            /// @param[in] User-defined data which are passed along to handler on completion or error.
             void beginRead(boost::shared_ptr<PipeConnection> conn, 
                 EventHandler handler, 
                 boost::any tag = NULL);
 
+            /// @brief Asynchronously read from a Named Pipe using a previously allocated completion message.
+            /// @param[in] conn Shared pointer to the PipeConnection from which to read.
+            /// @param[in] handler The EventHandler which is called back on completion or error.
+            /// @param[in] msgRead A MsgReadComplete used to store the data read from the connection.
+            /// @param[in] User-defined data which are passed along to handler on completion or error.
             void beginRead(boost::shared_ptr<PipeConnection> conn, 
                 EventHandler handler, 
                 boost::shared_ptr<MsgReadComplete> msgRead, 
                 boost::any tag = NULL);
 
-            void beginWrite(boost::shared_ptr<PipeConnection> conn, 
+            /// @brief Asynchronously write to a Named Pipe using a previously allocated array.
+            /// @param[in] conn Shared pointer to the PipeConnection to which to write.
+            /// @param[in] handler The EventHandler which is called back on completion or error.
+            /// @param[in] data A shared array containing data to write to the connection.
+            /// @param[in] len The size in bytes of the data contained in data.
+            /// @param[in] User-defined data which are passed along to handler on completion or error.
+           void beginWrite(boost::shared_ptr<PipeConnection> conn, 
                 EventHandler handler, 
                 boost::shared_array<char> data, 
                 int len, 
                 boost::any tag = NULL);
 
-            void beginWrite(boost::shared_ptr<PipeConnection> conn, 
+           /// @brief Asynchronously write to a Named Pipe using a previously allocated completion message.
+           /// @param[in] conn Shared pointer to the PipeConnection to which to write.
+           /// @param[in] handler The EventHandler which is called back on completion or error.
+           /// @param[in] msgWrite Shared pointer to a MsgWriteComplete containing the data to write to the connection.
+           /// @param[in] User-defined data which are passed along to handler on completion or error.
+           void beginWrite(boost::shared_ptr<PipeConnection> conn, 
                 EventHandler handler, 
                 boost::shared_ptr<MsgWriteComplete> msgWrite, 
                 boost::any tag = NULL);
 
-            // Control
-            void start(int numWorkers = 1);
+           /// @brief Start the IO engine running.
+           /// A user must call this before I/O requests will be serviced.
+           /// @param[in] numWorkers The number of worker threads to spawn which will service I/O requests.
+           /// @remarks The Proactor will attempt to maintain one active worker thread for each core
+           /// available on the machine. So, for instance, a good value for numWorkers would be double the number of cores.
+           /// That way, if any I/O threads are sleeping, the Proactor will automaticaly wake additional threads from the worker pool 
+           /// to service outstanding I/O requests, to fill out the number of currently active threads until it again
+           /// reaches the # of available cores.
+           void start(int numWorkers = 1);
 
-            void stop(); 
+           /// @brief Stop the I/O engine. A user must call this to shut down the Proactor and its worker threads.
+           void stop(); 
 
         private:
 
