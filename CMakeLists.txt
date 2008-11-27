@@ -15,34 +15,33 @@ ADD_DEFINITIONS( -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -DWIN32_LEA
 
 ENABLE_TESTING()
 
-SET(cxxTestGenScript ${CMAKE_SOURCE_DIR}/3rdParty/cxxtest/cxxtestgen.pl)
+SET(cxxTestGenScript ${CMAKE_SOURCE_DIR}/src/3rdParty/cxxtest/cxxtestgen.pl)
 MACRO(genCxxTest testIn testOut)
-	MESSAGE("Generating test: "${testOut})
+	MESSAGE("Generating test: ${testOut} from ${testIn}")
 	EXEC_PROGRAM(perl ARGS -w ${cxxTestGenScript} --error-printer -o ${testOut} ${testIn})
 ENDMACRO(genCxxTest)
 
-MACRO(cxxTestLink)
-	SET(testExe ${PROJECT_NAME}Test)
-	
-	FILE(GLOB_RECURSE testHdrs test/*.h)
-	FOREACH(hdr ${testHdrs})
-		GET_FILENAME_COMPONENT(path ${hdr} PATH)
-		GET_FILENAME_COMPONENT(base ${hdr} NAME_WE)
-		SET(src ${path}/${base}.cpp)
-		IF (NOT EXISTS ${src})
-			genCxxTest(${hdr} ${src})
-		ENDIF(NOT EXISTS ${src})		
-		ADD_CUSTOM_COMMAND(	OUTPUT ${src} 
-							COMMAND perl -w ${cxxTestGenScript} --error-printer -o ${src} ${hdr}
-							DEPENDS ${hdr}
-							)
-		SET(testSrcs ${testSrcs} ${src} ${hdr})
-	ENDFOREACH(hdr)
-	
-	ADD_EXECUTABLE(${testExe} ${testSrcs})
+MACRO(cxxTestLink)	
+    FILE(GLOB_RECURSE testHdrs test/*.h)
+    FOREACH(hdr ${testHdrs})
+        SET(testSrcs "")
+	GET_FILENAME_COMPONENT(base ${hdr} NAME_WE)
+	SET(src ${CMAKE_CURRENT_BINARY_DIR}/${base}.cpp)
+
+	IF (NOT EXISTS ${src})
+	    genCxxTest(${hdr} ${src})
+	ENDIF(NOT EXISTS ${src})		
+	ADD_CUSTOM_COMMAND( OUTPUT ${src} 
+	                    COMMAND perl -w ${cxxTestGenScript} --error-printer -o ${src} ${hdr}
+	                    DEPENDS ${hdr}
+                           )
+	SET(testExe Test${base})
+
+        ADD_EXECUTABLE(${testExe} ${src} ${hdr})
 	TARGET_LINK_LIBRARIES(${testExe} ${PROJECT_NAME} ${ARGV})
 	ADD_DEPENDENCIES(${testExe} ${PROJECT_NAME} ${ARGV})
 	ADD_TEST(${testExe} ${EXECUTABLE_OUTPUT_PATH}/${testExe}) 
+    ENDFOREACH(hdr)	
 ENDMACRO(cxxTestLink)
 
 MACRO(ADD_FLAG where flag)

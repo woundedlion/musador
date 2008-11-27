@@ -1,6 +1,6 @@
 #include <cxxtest\TestSuite.h>
 
-#include "Database.h"
+#include "Database/Database.h"
 #include "Logger/Logger.h"
 
 #define LOG_SENDER L"DatabaseTest"

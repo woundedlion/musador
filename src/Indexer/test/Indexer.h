@@ -1,7 +1,7 @@
 #include <cxxtest\TestSuite.h>
 #include <boost\bind.hpp>
 
-#include "Indexer.h"
+#include "Indexer/Indexer.h"
 #include "Logger/Logger.h"
 #include "ConsoleProgressReporter.h"
 

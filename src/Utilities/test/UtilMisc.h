@@ -2,7 +2,7 @@
 
 #include <boost/bind.hpp>
 
-#include "Util.h"
+#include "Utilities/Util.h"
 #include "Utilities/TimerQueue.h"
 #include "Logger/Logger.h"
 #define LOG_SENDER L"UtilTest"

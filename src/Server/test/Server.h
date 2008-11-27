@@ -3,14 +3,14 @@
 
 #include <cxxtest\TestSuite.h>
 
-#include "Server.h"
+#include "Server/Server.h"
 #include "Utilities/MTRand.h"
 #include <string>
 #include "boost/thread.hpp"
 #include "boost/bind.hpp"
 #include "Logger/Logger.h"
-#include "EchoListener.h"
-#include "EchoConnection.h"
+#include "Server/EchoListener.h"
+#include "Server/EchoConnection.h"
 
 #define LOG_SENDER L"ServerTest"
 using namespace Musador;

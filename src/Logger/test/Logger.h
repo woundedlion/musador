@@ -1,7 +1,7 @@
 #include <cxxtest\TestSuite.h>
 #include "boost/bind.hpp"
 #include "boost/lexical_cast.hpp"
-#include "Logger.h"
+#include "Logger/Logger.h"
 
 using namespace Musador;
 using namespace Logging;
