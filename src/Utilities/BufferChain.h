@@ -57,9 +57,9 @@ namespace Util
         {
         public:
 
-            bidirectional_iterator_base();
+            bidirectional_iterator_base() {};
 
-            virtual ~bidirectional_iterator_base() = 0;
+            virtual ~bidirectional_iterator_base() {};
 
         };
 
@@ -67,13 +67,11 @@ namespace Util
         {
         public:
 
+            friend class BufferChain;
+
             iterator();
 
             iterator(const iterator& iter);
-
-            iterator(const BufferList& bufs, 
-                const typename BufferList::iterator& curBuf, 
-                T * p);
 
             ~iterator();
 
@@ -95,9 +93,13 @@ namespace Util
 
         private:
 
+            iterator(BufferList *bufs, 
+                const typename BufferList::iterator& curBuf, 
+                T * p);
+
             typename BufferList::value_type& buf();
 
-            BufferList bufs;
+            BufferList * bufs;
             typename BufferList::iterator curBuf;
             T * p;
 
@@ -190,13 +192,20 @@ namespace Util
     template<typename T>
     typename BufferChain<T>::iterator BufferChain<T>::begin()
     {
-
+        if (this->data.empty())
+        {
+            return this->end();
+        }
+        else
+        {
+            return BufferChain<T>::iterator(&this->data, this->data.begin(), (*this->data.begin())->begin());
+        }
     }
 
     template<typename T>
     typename BufferChain<T>::iterator BufferChain<T>::end()
     {
-
+        return BufferChain<T>::iterator(&this->data, this->data.end(), NULL);
     }
 
     // iterator
@@ -217,9 +226,9 @@ namespace Util
         p(c.p)
     {}
 
-    // Full Constructor
+    // Full Constructor (private)
     template<typename T>
-    BufferChain<T>::iterator::iterator(const BufferList& bufs, typename const BufferList::iterator& curBuf, T * p) :
+    BufferChain<T>::iterator::iterator(BufferList * bufs, typename const BufferList::iterator& curBuf, T * p) :
         bufs(bufs),
         curBuf(curBuf),
         p(p)
@@ -265,26 +274,32 @@ namespace Util
     template<typename T>
     typename BufferChain<T>::iterator& BufferChain<T>::iterator::operator++()
     {
-        // Make sure the pointer is valid for the current buffer
-        assert(this->p >= this->buf()->begin() && this->p <= this->buf->end());
-
-        // increment the pointer if there is more data in the current buffer
-        if (this->p != this->buf()->end())
+#ifdef DEBUG
+        bool incrementable = false;
+#endif
+        // while there is more data in this buffer or another buffer in the chain
+        while (this->p != this->buf()->end() || this->buf() != this->bufs.end())
         {
-            ++this->p;
-        }
-
-        // if we are past-the-end, try to move to the next buffer
-        if (this->p == this->buf()->end())
-        {
-            ++this->buf();
-            if (this->buf() != this->bufs.end())
+            // increment if there is more data in this buffer
+            if (this->p != this->buf()->end())
             {
+#ifdef DEBUG
+                this->incrementable = true;
+#endif
+                ++this->p;
+                break;
+            } 
+            else // otherwise try to move to the next buffer
+            {
+                ++this->buf();
                 // next buffer in the chain
                 this->p = this->buf()->begin();
             }
         }
 
+#ifdef DEBUG
+        assert(incrementable);
+#endif
         return *this;
     }
 
@@ -310,10 +325,10 @@ namespace Util
             // decrement if there is prev data in this buffer
             if (this->p != this->buf()->begin())
             {
-                --this->p;
 #ifdef DEBUG
                 this->decrementable = true;
 #endif
+                --this->p;
                 break;
             } 
             else // otherwise try to move to the previous buffer

@@ -108,7 +108,7 @@ HTTP::StateRecvReqHeader::StateRecvReqHeader(my_context ctx) : my_base(ctx)
 sc::result 
 HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 {
-    const char * start = evt.msgRead->buf.get() + evt.msgRead->off;
+    const char * start = evt.msgRead->buf.get();
     const char * end = evt.msgRead->buf.get() + evt.msgRead->len;
     bool valid = false;
     boost::regex expr("([[:alpha:]]+)[[:s:]]+([^[:s:]?]+)(?:\\?(\\S*))?[[:s:]]+(HTTP/1.[01])\\r\\n(?:([[:alnum:]\\-]+):[[:s:]]*([^\\r\\n]*)\\r\\n)*\\r\\n"); 

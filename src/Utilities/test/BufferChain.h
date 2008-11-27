@@ -24,6 +24,10 @@ public:
     void testBufferChain()
     {
         LOG(Info) << "Util::BufferChain test begin...";
+        typedef Util::BufferChain<char> BufferChain;
+        BufferChain buf;
+        BufferChain::iterator beg = buf.begin();
+        BufferChain::iterator end = buf.end();
         LOG(Info) << "Util::BufferChain test end...";
     }
 
