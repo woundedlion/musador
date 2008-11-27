@@ -102,7 +102,7 @@ HTTP::StateRecvReqHeader::StateRecvReqHeader(my_context ctx) : my_base(ctx)
 {
     outermost_context().req.clear();
     outermost_context().res.clear();
-    outermost_context().conn.beginRead(outermost_context().msgRead);
+    outermost_context().conn.beginRead();
 }
 
 sc::result 
@@ -218,14 +218,12 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
             return transit<StateReqError>();
         }
     }
-    else // Haven't received a full header yet
+    else // Haven't received the full header yet
     {
         if (evt.msgRead->MAX == evt.msgRead->len)
         {
-            LOG(Warning) << "Discarding " << evt.msgRead->len << " bytes received without a valid header.";
-            evt.msgRead->len = 0; // Discard overflowed mesage
-            evt.msgRead->off = 0;
-            outermost_context().conn.beginRead(evt.msgRead); // keep reading
+            LOG(Warning) << "Discarding " << evt.msgRead->len << " bytes receivied without a valid header.";
+            outermost_context().conn.beginRead(); // Discard overflowed message, keep reading into a new message buffer
         }
         else
         {
@@ -478,8 +476,7 @@ HTTP::StateSendResBodyChunk::react(const EvtWriteComplete& evt)
 ///////////////////////////////////////////////////////////////////////////
 
 HTTP::FSM::FSM(HTTPConnection& conn) :
-conn(conn),
-msgRead(new IO::MsgReadComplete())
+conn(conn)
 {
 
 }
