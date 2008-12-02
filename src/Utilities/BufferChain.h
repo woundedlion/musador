@@ -294,6 +294,13 @@ namespace Util
                 ++this->buf();
                 // next buffer in the chain
                 this->p = this->buf()->begin();
+                if (this->p != this->buf()->end())
+                {
+#ifdef DEBUG
+                    this->incrementable = true;
+#endif
+                    break;
+                } 
             }
         }
 
