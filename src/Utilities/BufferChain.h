@@ -19,15 +19,21 @@ namespace Util
 
         Buffer(const boost::shared_array<T>& buf, size_t capacity);
 
+        Buffer(const boost::shared_array<T>& buf, size_t capacity, size_t dataEnd);
+
+        Buffer(const boost::shared_array<T>& buf, size_t capacity, size_t dataBegin, size_t dataEnd);
+
         ~Buffer();
 
         size_t numUsed() const;
 
         size_t numFree() const;
 
-        T * begin();
+        bool empty() const;
 
-        T * end();
+        T * begin() const;
+
+        T * end() const;
 
     private:
 
@@ -93,13 +99,13 @@ namespace Util
 
         private:
 
-            iterator(BufferList *bufs, 
+            iterator(const BufferList& bufs, 
                 const typename BufferList::iterator& curBuf, 
                 T * p);
 
             typename BufferList::value_type& buf();
 
-            BufferList * bufs;
+            const BufferList&  bufs;
             typename BufferList::iterator curBuf;
             T * p;
 
@@ -114,6 +120,14 @@ namespace Util
         iterator begin();
 
         iterator end();
+
+        void append(boost::shared_ptr<Buffer<T> > buf);
+
+        void append(boost::shared_array<T> buf, size_t capacity);
+
+        void append(boost::shared_array<T> buf, size_t capacity, size_t dataEnd);
+
+        void append(boost::shared_array<T> buf, size_t capacity, size_t dataBegin, size_t dataEnd);
 
     private:
 
@@ -143,8 +157,24 @@ namespace Util
     Buffer<T>::Buffer(const boost::shared_array<T>& buf, size_t capacity) : 
     start(buf),
         capacity(capacity),
-        len(0),
+        len(capacity),
         off(0)
+    {}
+
+    template<typename T>
+    Buffer<T>::Buffer(const boost::shared_array<T>& buf, size_t capacity, size_t dataEnd) : 
+    start(buf),
+        capacity(capacity),
+        len(dataEnd),
+        off(0)
+    {}
+
+    template<typename T>
+    Buffer<T>::Buffer(const boost::shared_array<T>& buf, size_t capacity, size_t dataBegin, size_t dataEnd) : 
+    start(buf),
+        capacity(capacity),
+        len(dataEnd),
+        off(dataBegin)
     {}
 
     template<typename T>
@@ -164,13 +194,19 @@ namespace Util
     }
 
     template<typename T>
-    T * Buffer<T>::begin()
+    bool Buffer<T>::empty() const
+    {
+        return this->numUsed() != 0;
+    }
+
+    template<typename T>
+    T * Buffer<T>::begin() const
     {
         return this->buf.get() + this->off;
     }
 
     template<typename T>
-    T * Buffer<T>::end()
+    T * Buffer<T>::end() const
     {
         return this->buf.get() + this->len;
     }
@@ -192,20 +228,47 @@ namespace Util
     template<typename T>
     typename BufferChain<T>::iterator BufferChain<T>::begin()
     {
-        if (this->data.empty())
+        for (BufferList::const_iterator iter = this->data.begin(); iter != this->data.end(); ++iter)
         {
-            return this->end();
+            if (!(*iter)->empty())
+            {
+                return BufferChain<T>::iterator(this->data, iter, (*iter)->begin());
+            }
         }
-        else
-        {
-            return BufferChain<T>::iterator(&this->data, this->data.begin(), (*this->data.begin())->begin());
-        }
+        return this->end();
     }
 
     template<typename T>
     typename BufferChain<T>::iterator BufferChain<T>::end()
     {
-        return BufferChain<T>::iterator(&this->data, this->data.end(), NULL);
+        return BufferChain<T>::iterator(this->data, this->data.end(), NULL);
+    }
+
+    template<typename T>
+    void BufferChain<T>::append(boost::shared_ptr<Buffer<T> > buf)
+    {
+        this->data.push_back(buf);
+    }
+
+    template<typename T>
+    void BufferChain<T>::append(boost::shared_array<T> buf, size_t capacity)
+    {
+        boost::shared_ptr<Buffer<T> > buf(new Buffer<T>(buf, capacity));
+        this->data.push_back(buf);
+    }
+
+    template<typename T>
+    void BufferChain<T>::append(boost::shared_array<T> buf, size_t capacity, size_t dataEnd)
+    {
+        boost::shared_ptr<Buffer<T> > buf(new Buffer<T>(buf, capacity, dataEnd));
+        this->data.push_back(buf);
+    }
+
+    template<typename T>
+    void BufferChain<T>::append(boost::shared_array<T> buf, size_t capacity, size_t dataBegin, size_t dataEnd)
+    {
+        boost::shared_ptr<Buffer<T> > buf(new Buffer<T>(buf, capacity, dataBegin, dataEnd));
+        this->data.push_back(buf);
     }
 
     // iterator
@@ -213,7 +276,7 @@ namespace Util
     // Default Constructor
     template<typename T>
     BufferChain<T>::iterator::iterator() :
-        bufs(NULL),
+    bufs(NULL),
         curBuf(NULL),
         p(NULL)
     {}
@@ -221,15 +284,15 @@ namespace Util
     // Copy Constructor
     template<typename T>
     BufferChain<T>::iterator::iterator(const typename BufferChain<T>::iterator& c) :
-        bufs(c.bufs),
+    bufs(c.bufs),
         curBuf(c.curBuf),
         p(c.p)
     {}
 
     // Full Constructor (private)
     template<typename T>
-    BufferChain<T>::iterator::iterator(BufferList * bufs, typename const BufferList::iterator& curBuf, T * p) :
-        bufs(bufs),
+    BufferChain<T>::iterator::iterator(const BufferList& bufs, typename const BufferList::iterator& curBuf, T * p) :
+    bufs(bufs),
         curBuf(curBuf),
         p(p)
     {}
@@ -341,7 +404,6 @@ namespace Util
             else // otherwise try to move to the previous buffer
             {
                 --this->buf();
-                // next buffer in the chain
                 this->p = this->buf()->end();
             }
         }
