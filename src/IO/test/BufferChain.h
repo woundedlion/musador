@@ -1,6 +1,6 @@
 #include <cxxtest\TestSuite.h>
 
-#include "Utilities/BufferChain.h"
+#include "IO/BufferChain.h"
 #include "Logger/Logger.h"
 #define LOG_SENDER L"BufferChainTest"
 
@@ -24,7 +24,7 @@ public:
     void testBufferChain()
     {
         LOG(Info) << "Util::BufferChain test begin...";
-        typedef Util::BufferChain<char> BufferChain;
+        typedef IO::BufferChain<char> BufferChain;
         BufferChain buf;
         BufferChain::iterator beg = buf.begin();
         BufferChain::iterator end = buf.end();
