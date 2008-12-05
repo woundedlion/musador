@@ -27,7 +27,8 @@ namespace Musador
             case IO::MSG_READ_COMPLETE:
                 {
                     boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
-                    this->beginWrite(msgRead->buf,msgRead->len);
+                    msgRead->buf.rewind();
+                    this->beginWrite(msgRead->buf);
                 }
                 break;
             case IO::MSG_ERROR:

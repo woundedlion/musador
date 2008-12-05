@@ -108,8 +108,8 @@ HTTP::StateRecvReqHeader::StateRecvReqHeader(my_context ctx) : my_base(ctx)
 sc::result 
 HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 {
-    const char * start = evt.msgRead->buf.get() + evt.msgRead->off;
-    const char * end = evt.msgRead->buf.get() + evt.msgRead->len;
+    const char * start = evt.msgRead->buf.begin();
+    const char * end = evt.msgRead->buf.end();
     bool valid = false;
     boost::regex expr("([[:alpha:]]+)[[:s:]]+([^[:s:]?]+)(?:\\?(\\S*))?[[:s:]]+(HTTP/1.[01])\\r\\n(?:([[:alnum:]\\-]+):[[:s:]]*([^\\r\\n]*)\\r\\n)*\\r\\n"); 
     boost::cmatch matches;
@@ -220,9 +220,9 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
     }
     else // Haven't received the full header yet
     {
-        if (evt.msgRead->MAX == evt.msgRead->len)
+        if (evt.msgRead->buf.numFree() == 0)
         {
-            LOG(Warning) << "Discarding " << evt.msgRead->len << " bytes receivied without a valid header.";
+            LOG(Warning) << "Discarding " << evt.msgRead->buf.numUsed() << " bytes receivied without a valid header.";
             outermost_context().conn.beginRead(); // Discard overflowed message, keep reading into a new message buffer
         }
         else

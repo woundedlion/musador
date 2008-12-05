@@ -73,13 +73,11 @@ namespace Musador
             /// @brief Asynchronously write to a Socket using a previously allocated array.
             /// @param[in] conn Shared pointer to the SocketConnection to which to write.
             /// @param[in] handler The EventHandler which is called back on completion or error.
-            /// @param[in] data A shared array containing data to write to the connection.
-            /// @param[in] len The size in bytes of the data contained in data.
+            /// @param[in] data A Buffer containing data to write to the connection.
             /// @param[in] User-defined data which are passed along to handler on completion or error.
             void beginWrite(boost::shared_ptr<SocketConnection> conn, 
                 EventHandler handler, 
-                boost::shared_array<char> data, 
-                int len, 
+                Buffer<char> data, 
                 boost::any tag = NULL);
 
             /// @brief Asynchronously write to a Socket using a previously allocated completion message.
@@ -133,13 +131,11 @@ namespace Musador
             /// @brief Asynchronously write to a Named Pipe using a previously allocated array.
             /// @param[in] conn Shared pointer to the PipeConnection to which to write.
             /// @param[in] handler The EventHandler which is called back on completion or error.
-            /// @param[in] data A shared array containing data to write to the connection.
-            /// @param[in] len The size in bytes of the data contained in data.
+            /// @param[in] data A Buffer containing data to write to the connection.
             /// @param[in] User-defined data which are passed along to handler on completion or error.
            void beginWrite(boost::shared_ptr<PipeConnection> conn, 
                 EventHandler handler, 
-                boost::shared_array<char> data, 
-                int len, 
+                Buffer<char> data, 
                 boost::any tag = NULL);
 
            /// @brief Asynchronously write to a Named Pipe using a previously allocated completion message.
@@ -211,25 +207,19 @@ namespace Musador
 
         inline void Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn, 
             EventHandler handler, 
-            boost::shared_array<char> data, 
-            int len, 
+            Buffer<char> data, 
             boost::any tag /* = NULL */)
         {
-            boost::shared_ptr<MsgWriteComplete> msgWrite(new MsgWriteComplete());
-            msgWrite->buf = data;
-            msgWrite->len = len;
+            boost::shared_ptr<MsgWriteComplete> msgWrite(new MsgWriteComplete(data));
             this->beginWrite(conn, handler, msgWrite, tag);
         }
 
         inline void Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn, 
             EventHandler handler, 
-            boost::shared_array<char> data, 
-            int len, 
+            Buffer<char> data, 
             boost::any tag /* = NULL */)
         {
-            boost::shared_ptr<MsgWriteComplete> msgWrite(new MsgWriteComplete());
-            msgWrite->buf = data;
-            msgWrite->len = len;
+            boost::shared_ptr<MsgWriteComplete> msgWrite(new MsgWriteComplete(data));
             this->beginWrite(conn, handler, msgWrite, tag);
         }
 

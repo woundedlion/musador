@@ -3,9 +3,9 @@
 
 #include <assert.h>
 #include <boost/function.hpp>
-#include <boost/shared_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include "Network/Network.h"
+#include "BufferChain.h"
 
 namespace Musador
 {
@@ -57,21 +57,20 @@ namespace Musador
 
             /// @brief Constructor.
             inline MsgWriteComplete() : Msg(MSG_WRITE_COMPLETE),
-                buf(new char[MsgWriteComplete::MAX]),
-                len(0),
-                off(0)
+                buf(MsgWriteComplete::MAX)
             {
             }
 
-            /// @brief Shared array containing the data that was requested to be written.
-            boost::shared_array<char> buf;
+            /// @brief Constructor.
+            /// @param[in] buf Buffer containing existing data to write
+            inline MsgWriteComplete(Buffer<char> buf) : Msg(MSG_WRITE_COMPLETE),
+                buf(buf)
+            {
+            }
+
+            /// @brief Buffer containing the data that was requested to be written.
+            Buffer<char> buf;
             
-            /// @brief The size of the data in buf.
-            unsigned long len;
-
-            /// @brief The position of the next byte to write, or len if all of the bytes have been successfully written.
-            unsigned long off;
-
             /// @brief The maximum capacity or size of the buffer pointed to by buf.
             static const int MAX = 4096;
         };
@@ -84,20 +83,19 @@ namespace Musador
 
             /// @brief Constructor.
             inline MsgReadComplete() : Msg(MSG_READ_COMPLETE),
-                buf(new char[MsgReadComplete::MAX]),
-                len(0),
-                off(0)
+                buf(MsgReadComplete::MAX)
             {
             }
 
-            /// @brief Shared array containing the data which was read.
-            boost::shared_array<char> buf;
+            /// @brief Constructor.
+            /// @param[in] buf Buffer containing existing data to write
+            inline MsgReadComplete(Buffer<char> buf) : Msg(MSG_READ_COMPLETE),
+                buf(buf)
+            {
+            }
 
-            /// @brief The size of the data contained in buf.
-            unsigned long len;
-
-            /// @brief The position of the next unused spot in buf into which data is read.
-            unsigned long off;
+            /// @brief Buffer containing the data which was read.
+            Buffer<char> buf;
 
             /// @brief The Maximum capacity or size of buf.
             static const int MAX = 4096;
@@ -111,23 +109,15 @@ namespace Musador
 
             /// @brief Constructor.
             inline MsgSocketAcceptComplete() : Msg(MSG_SOCKET_ACCEPT_COMPLETE),
-                buf(new char[2 * (sizeof(sockaddr_in) + 16)]),
-                len(0),
-                off(0)
+                buf(2 * (sizeof(sockaddr_in) + 16))
             {
             }
 
             /// @brief Shared pointer to the Listener object which accepted this connection.
             boost::shared_ptr<Listener> listener;
 
-            /// @brief Shared array containing any data which was read along with the ACCEPT.
-            boost::shared_array<char> buf;
-
-            /// @brief The size of the data contained in buf.
-            unsigned long len;
-
-            /// @brief The position of the next unused spot in buf into which data is read.
-            unsigned long off;
+            /// @brief Buffer containing any data which was read along with the ACCEPT.
+            Buffer<char> buf;
         };
 
         /// @class MsgPipeAcceptComplete

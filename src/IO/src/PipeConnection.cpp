@@ -55,9 +55,9 @@ PipeConnection::beginWrite(boost::shared_ptr<MsgWriteComplete> msgWrite, boost::
 }
 
 void 
-PipeConnection::beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag /*= NULL*/)
+PipeConnection::beginWrite(Buffer<char> data, boost::any tag /*= NULL*/)
 {
-    Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), data, len, tag);
+    Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), data, tag);
 }
 
 void 
@@ -66,7 +66,7 @@ PipeConnection::beginWrite(std::istream& dataStream, boost::any tag /*= NULL*/)
     boost::shared_array<char> data(new char[MsgWriteComplete::MAX]);
     dataStream.read(data.get(),MsgWriteComplete::MAX);
     int len = dataStream.gcount();
-    Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), data, len, tag);
+    Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), Buffer<char>(data, len), tag);
 }
 
 void 
@@ -75,7 +75,7 @@ PipeConnection::beginWrite(const std::string& str, boost::any tag /*= NULL*/)
     unsigned int len = str.size();
     boost::shared_array<char> data(new char[len]);
     str.copy(data.get(), len);
-    Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), data, len, tag);
+    Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), Buffer<char>(data, len), tag);
 }
 
 std::string 

@@ -28,7 +28,7 @@ GUIConnection::onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /* 
             // parse the messsage(s)
             std::stringbuf msgData;
             msgData.pubsetbuf(0,0);
-            msgData.str(std::string(msgRead->buf.get(),msgRead->len));
+            msgData.str(std::string(msgRead->buf.begin(), msgRead->buf.end()));
             boost::archive::binary_iarchive ar(msgData);
             boost::shared_ptr<GUIMsg> msgGUI;
             ar & msgGUI; // deserialize

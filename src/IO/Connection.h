@@ -60,10 +60,9 @@ namespace Musador
 
             /// @brief Start an asynchronous WRITE using a previously allocated array.
             /// Upon completion, the IO engine will invoke the onWriteComplete method.
-            /// @param[in] data Shared array object containing data to write to the connection.
-            /// @param[in] len The size of the data buffer.
+            /// @param[in] data Buffer object containing data to write to the connection.
             /// @param[in] tag User-defined data which, upon completion, are passed along to onWriteComplete.
-            virtual void beginWrite(boost::shared_array<char> data, unsigned int len, boost::any tag = NULL) = 0;
+            virtual void beginWrite(Buffer<char> data, boost::any tag = NULL) = 0;
 
             /// @brief Start an asynchronous WRITE using data from an input stream.
             /// Upon completion, the IO engine will invoke the onWriteComplete method.

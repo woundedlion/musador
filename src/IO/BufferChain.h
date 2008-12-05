@@ -19,11 +19,11 @@ namespace Musador
 
             Buffer(size_t capacity);
 
-            Buffer(const boost::shared_array<T>& buf, size_t capacity);
+            Buffer(boost::shared_array<T> buf, size_t capacity);
 
-            Buffer(const boost::shared_array<T>& buf, size_t capacity, size_t dataEnd);
+            Buffer(boost::shared_array<T> buf, size_t capacity, size_t dataEnd);
 
-            Buffer(const boost::shared_array<T>& buf, size_t capacity, size_t dataBegin, size_t dataEnd);
+            Buffer(boost::shared_array<T> buf, size_t capacity, size_t dataBegin, size_t dataEnd);
 
             ~Buffer();
 
@@ -37,15 +37,21 @@ namespace Musador
 
             T * end() const;
 
+            void advanceBegin(size_t num);
+
+            void advanceEnd(size_t num);
+
+            void rewind();
+
         private:
 
             boost::shared_array<T> buf;
 
             size_t capacity;
 
-            size_t len;
+            size_t endOffset;
 
-            size_t off;
+            size_t beginOffset;
 
         };
 
@@ -141,42 +147,42 @@ namespace Musador
 
         template<typename T>
         Buffer<T>::Buffer() : 
-        start(NULL),
+        buf(NULL),
             capacity(0),
-            len(0),
-            off(0)
+            endOffset(0),
+            beginOffset(0)
         {}
 
         template<typename T>
         Buffer<T>::Buffer(size_t capacity) : 
-        start(new T[capacity]),
+        buf(new T[capacity]),
             capacity(capacity),
-            len(0),
-            off(0)
+            endOffset(0),
+            beginOffset(0)
         {}
 
         template<typename T>
-        Buffer<T>::Buffer(const boost::shared_array<T>& buf, size_t capacity) : 
-        start(buf),
+        Buffer<T>::Buffer(boost::shared_array<T> buf, size_t capacity) : 
+        buf(buf),
             capacity(capacity),
-            len(capacity),
-            off(0)
+            endOffset(capacity),
+            beginOffset(0)
         {}
 
         template<typename T>
-        Buffer<T>::Buffer(const boost::shared_array<T>& buf, size_t capacity, size_t dataEnd) : 
-        start(buf),
+        Buffer<T>::Buffer(boost::shared_array<T> buf, size_t capacity, size_t dataEnd) : 
+        buf(buf),
             capacity(capacity),
-            len(dataEnd),
-            off(0)
+            endOffset(dataEnd),
+            beginOffset(0)
         {}
 
         template<typename T>
-        Buffer<T>::Buffer(const boost::shared_array<T>& buf, size_t capacity, size_t dataBegin, size_t dataEnd) : 
-        start(buf),
+        Buffer<T>::Buffer(boost::shared_array<T> buf, size_t capacity, size_t dataBegin, size_t dataEnd) : 
+        buf(buf),
             capacity(capacity),
-            len(dataEnd),
-            off(dataBegin)
+            endOffset(dataEnd),
+            beginOffset(dataBegin)
         {}
 
         template<typename T>
@@ -186,7 +192,7 @@ namespace Musador
         template<typename T>
         size_t Buffer<T>::numUsed() const
         {
-            return this->len - this->off;
+            return this->endOffset - this->beginOffset;
         }
 
         template<typename T>
@@ -204,13 +210,33 @@ namespace Musador
         template<typename T>
         T * Buffer<T>::begin() const
         {
-            return this->buf.get() + this->off;
+            return this->buf.get() + this->beginOffset;
         }
 
         template<typename T>
         T * Buffer<T>::end() const
         {
-            return this->buf.get() + this->len;
+            return this->buf.get() + this->endOffset;
+        }
+
+        template<typename T>
+        void Buffer<T>::advanceBegin(size_t num)
+        {
+            assert(num <= this->numUsed());
+            this->beginOffset += num;
+        }
+
+        template<typename T>
+        void Buffer<T>::advanceEnd(size_t num)
+        {
+            assert(num <= this->numFree());
+            this->endOffset += num;
+        }
+
+        template<typename T>
+        void Buffer<T>::rewind()
+        {
+            this->beginOffset = 0;
         }
 
         // BufferChain

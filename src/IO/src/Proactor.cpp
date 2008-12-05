@@ -190,7 +190,7 @@ Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
     this->addJob(ctx.get(),ctx);
     if ( !this->fnAcceptEx(	listener->getSocket(),
         boost::static_pointer_cast<SocketConnection>(conn)->getSocket(), 
-        msgAccept->buf.get(), 
+        msgAccept->buf.begin(), 
         0, 
         sizeof(sockaddr_in) + 16, 
         sizeof(sockaddr_in) + 16, 
@@ -294,7 +294,7 @@ Proactor::completeSocketAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned lo
     int localAddrSize = 0;
     int remoteAddrSize = 0;
     boost::shared_ptr<MsgSocketAcceptComplete> msgAccept(boost::shared_static_cast<MsgSocketAcceptComplete>(ctx->msg));
-    this->fnGetAcceptExSockaddrs(	msgAccept->buf.get(), 
+    this->fnGetAcceptExSockaddrs(msgAccept->buf.begin(), 
         0,
         sizeof(sockaddr_in) + 16,
         sizeof(sockaddr_in) + 16, 
@@ -307,7 +307,7 @@ Proactor::completeSocketAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned lo
     SocketConnection& conn = static_cast<SocketConnection&>(*msgAccept->conn);
     conn.setLocalEP(*localAddr);
     conn.setRemoteEP(*remoteAddr);
-    msgAccept->len = nBytes;
+    msgAccept->buf.advanceEnd(nBytes);
 
     LOG(Debug) << "Accept completed: " << conn.toString();
 
@@ -412,7 +412,7 @@ Proactor::beginRead(boost::shared_ptr<SocketConnection> conn,
                     boost::shared_ptr<MsgReadComplete> msgRead, 
                     boost::any tag /* = NULL */)
 {
-    if (msgRead->MAX == msgRead->len)
+    if (msgRead->buf.numFree() == 0)
     {
         throw IOException() << "Message overflow at " << msgRead->MAX << " bytes";
     }
@@ -429,8 +429,8 @@ Proactor::beginRead(boost::shared_ptr<SocketConnection> conn,
     DWORD nBytes = 0;
     DWORD flags = 0;
     WSABUF buf = {0};
-    buf.buf = msgRead->buf.get() + msgRead->len;
-    buf.len = msgRead->MAX - msgRead->len;
+    buf.buf = msgRead->buf.end();
+    buf.len = msgRead->buf.numFree();
 
     this->addJob(ctx.get(),ctx);
 
@@ -469,7 +469,7 @@ Proactor::beginRead(boost::shared_ptr<PipeConnection> conn,
                     boost::shared_ptr<MsgReadComplete> msgRead, 
                     boost::any tag /* = NULL */)
 {
-    if (msgRead->MAX == msgRead->len)
+    if (msgRead->buf.numFree() == 0)
     {
         throw IOException() << "Message overflow at " << msgRead->MAX << " bytes";
     }
@@ -486,8 +486,8 @@ Proactor::beginRead(boost::shared_ptr<PipeConnection> conn,
 
     DWORD nBytes = 0;
     if (0 == ::ReadFile(conn->getPipe(), 
-        msgRead->buf.get() + msgRead->len, 
-        msgRead->MAX - msgRead->len, 
+        msgRead->buf.end(), 
+        msgRead->buf.numFree(), 
         &nBytes,
         ctx.get()))
     {
@@ -512,7 +512,7 @@ void
 Proactor::completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes)
 {
     boost::shared_ptr<MsgReadComplete> msgRead(boost::shared_static_cast<MsgReadComplete>(ctx->msg));
-    msgRead->len += nBytes;
+    msgRead->buf.advanceEnd(nBytes);
 
     if (0 == nBytes)
     {
@@ -555,8 +555,8 @@ Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn,
     // Make the async write request
     DWORD nBytes = 0;
     WSABUF buf = {0};
-    buf.buf = msgWrite->buf.get() + msgWrite->off;
-    buf.len = msgWrite->len - msgWrite->off;
+    buf.buf = msgWrite->buf.begin();
+    buf.len = msgWrite->buf.numUsed();
 
     this->addJob(ctx.get(),ctx);
 
@@ -607,8 +607,8 @@ Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn,
     // Make the async write request	
     DWORD nBytes = 0;
     if (0 == ::WriteFile(conn->getPipe(), 
-        msgWrite->buf.get() + msgWrite->off, 
-        msgWrite->len - msgWrite->off, 
+        msgWrite->buf.begin(), 
+        msgWrite->buf.numUsed(), 
         &nBytes,
         ctx.get()))
     {
@@ -633,15 +633,16 @@ void
 Proactor::completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes)
 {
     boost::shared_ptr<MsgWriteComplete> msgWrite(boost::shared_static_cast<MsgWriteComplete>(ctx->msg));
-    msgWrite->off += nBytes;
-    if (msgWrite->off < msgWrite->len)
+    msgWrite->buf.advanceBegin(nBytes);
+
+    LOG(Debug)	<< "Write completed: " << nBytes << " bytes from " << msgWrite->conn->toString();
+
+    if (msgWrite->buf.numUsed() > 0)
     {
         // Not done writing, so reschedule the write with a double-dispatch
         msgWrite->conn->beginWrite(msgWrite, ctx->tag);
         return;
     }
-
-    LOG(Debug)	<< "Write completed: " << msgWrite->off << " bytes from " << msgWrite->conn->toString();
 
     // notify the handler
     if (NULL != ctx->handler)
