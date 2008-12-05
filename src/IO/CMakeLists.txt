@@ -17,4 +17,4 @@ ADD_LIBRARY(${PROJECT_NAME} ${hdrs} ${srcs})
 ADD_DEFINITIONS(-DUNICODE -D_UNICODE -DBOOST_REGEX_MATCH_EXTRA)
 ADD_DEPENDENCIES(${PROJECT_NAME} ${libs})
 
-#cxxTestLink(${libs})
+cxxTestLink(${libs} Logger)
