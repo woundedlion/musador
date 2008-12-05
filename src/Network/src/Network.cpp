@@ -14,12 +14,14 @@ Network::~Network()
     ::WSACleanup();
 }
 
-int Network::getLastError()
+int 
+Network::getLastError()
 {
     return ::WSAGetLastError();
 }
 
-SOCKET Network::socket(int af, int type, int protocol, bool async)
+SOCKET 
+Network::socket(int af, int type, int protocol, bool async)
 {
     SOCKET s = NULL;
     if (async)
@@ -37,7 +39,8 @@ SOCKET Network::socket(int af, int type, int protocol, bool async)
     return s;
 }
 
-void Network::bind(SOCKET s, sockaddr_in *localEP)
+void 
+Network::bind(SOCKET s, sockaddr_in *localEP)
 {
     int err = ::bind(s,(sockaddr *)localEP,sizeof(sockaddr_in));
     if (SOCKET_ERROR == err)
@@ -46,7 +49,8 @@ void Network::bind(SOCKET s, sockaddr_in *localEP)
     }
 }
 
-void Network::listen(SOCKET s, int backlog)
+void 
+Network::listen(SOCKET s, int backlog)
 {
     if (0 == backlog)
     {
@@ -59,7 +63,8 @@ void Network::listen(SOCKET s, int backlog)
     }
 }
 
-SOCKET Network::accept(SOCKET s, sockaddr_in * clientSocket)
+SOCKET 
+Network::accept(SOCKET s, sockaddr_in * clientSocket)
 {
     int size = sizeof(sockaddr_in);
     SOCKET cs = ::accept(s, (sockaddr *)clientSocket, &size);
@@ -70,7 +75,8 @@ SOCKET Network::accept(SOCKET s, sockaddr_in * clientSocket)
     return cs;
 }
 
-void Network::connect(SOCKET s, sockaddr_in to)
+void 
+Network::connect(SOCKET s, sockaddr_in to)
 {
     int size = sizeof(sockaddr_in);
     int err = ::connect(s, (sockaddr *)&to,sizeof(sockaddr_in));
@@ -80,7 +86,8 @@ void Network::connect(SOCKET s, sockaddr_in to)
     }
 }
 
-void Network::closeSocket(SOCKET s)
+void 
+Network::closeSocket(SOCKET s)
 {
     int err = ::closesocket(s);
     if (SOCKET_ERROR == err)
@@ -89,7 +96,8 @@ void Network::closeSocket(SOCKET s)
     }
 }
 
-void Network::setBIO(SOCKET s, bool blocking)
+void 
+Network::setBIO(SOCKET s, bool blocking)
 {
     u_long nonblocking = blocking ? 0 : 1;
     int err = ::ioctlsocket(s,FIONBIO,&nonblocking);
@@ -99,7 +107,8 @@ void Network::setBIO(SOCKET s, bool blocking)
     }
 }
 
-void Network::setBroadcast(SOCKET s, bool enableBroadcast)
+void 
+Network::setBroadcast(SOCKET s, bool enableBroadcast)
 {
     int valLen = sizeof(BOOL);
     BOOL val = true;
@@ -110,7 +119,8 @@ void Network::setBroadcast(SOCKET s, bool enableBroadcast)
     }
 }
 
-int Network::recv(SOCKET s, char * buf, int len, int flags)
+int 
+Network::recv(SOCKET s, char * buf, int len, int flags)
 {
     int err = ::recv(s, buf, len,flags);
     if (SOCKET_ERROR == err)
@@ -129,7 +139,8 @@ int Network::recv(SOCKET s, char * buf, int len, int flags)
     return err;
 }
 
-int Network::send(SOCKET s, const char * buf,int len, int flags /* = NULL */)
+int 
+Network::send(SOCKET s, const char * buf,int len, int flags /* = NULL */)
 {
     int err = ::send(s, buf, len,flags);
     if (SOCKET_ERROR == err)
@@ -147,7 +158,8 @@ int Network::send(SOCKET s, const char * buf,int len, int flags /* = NULL */)
     return err;
 }
 
-int Network::select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * errorfds, const struct timeval * timeout)
+int 
+Network::select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * errorfds, const struct timeval * timeout)
 {
     int err = ::select(nfds,readfds,writefds,errorfds,timeout);
     if (SOCKET_ERROR == err)
@@ -157,22 +169,72 @@ int Network::select(int nfds, fd_set * readfds, fd_set * writefds, fd_set * erro
     return err;
 }
 
-bool Network::fdIsSet(SOCKET s, fd_set * fds)
+bool 
+Network::fdIsSet(SOCKET s, fd_set * fds)
 {
     return (FD_ISSET(s,fds) ? true : false);
 }
 
-void Network::fdSet(SOCKET s, fd_set * fds)
+void 
+Network::fdSet(SOCKET s, fd_set * fds)
 {
     FD_SET(s,fds);
 }
 
-void Network::fdClr(SOCKET s, fd_set * fds)
+void 
+Network::fdClr(SOCKET s, fd_set * fds)
 {
     FD_CLR(s,fds);
 }
 
-void Network::fdZero(fd_set * fds)
+void 
+Network::fdZero(fd_set * fds)
 {
     FD_ZERO(fds);
+}
+
+size_t
+Network::getRecvBufferSize(SOCKET s)
+{
+    size_t val;
+    int len = sizeof(val);
+    int err = ::getsockopt(s, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len);
+    if (SOCKET_ERROR == err)
+    {
+        throw NetworkException() << "Unable to query SO_RCVBUF on socket " << s << "(" << this->getLastError() << ")"; 
+    }    
+    return val;
+}
+
+void
+Network::setRecvBufferSize(SOCKET s, size_t size)
+{
+    int err = ::setsockopt(s, SOL_SOCKET, SO_RCVBUF, (char *)&size, sizeof(size));
+    if (SOCKET_ERROR == err)
+    {
+        throw NetworkException() << "Unable to set SO_RCVBUF on socket " << s << "(" << this->getLastError() << ")"; 
+    }    
+}
+
+size_t
+Network::getSendBufferSize(SOCKET s)
+{
+    size_t val;
+    int len = sizeof(val);
+    int err = ::getsockopt(s, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len);
+    if (SOCKET_ERROR == err)
+    {
+        throw NetworkException() << "Unable to query SO_SNDBUF on socket " << s << "(" << this->getLastError() << ")"; 
+    }    
+    return val;
+}
+
+void
+Network::setSendBufferSize(SOCKET s, size_t size)
+{
+    int err = ::setsockopt(s, SOL_SOCKET, SO_SNDBUF, (char *)&size, sizeof(size));
+    if (SOCKET_ERROR == err)
+    {
+        throw NetworkException() << "Unable to set SO_SNDBUF on socket " << s << "(" << this->getLastError() << ")"; 
+    }    
 }

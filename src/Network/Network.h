@@ -11,6 +11,7 @@
 
 namespace Musador
 {
+
     class Network : public Util::Singleton<Network>
     {
         friend class Util::Singleton<Network>;
@@ -49,6 +50,14 @@ namespace Musador
         void fdZero(fd_set * fds);
 
         int getLastError();
+
+        size_t getRecvBufferSize(SOCKET s);
+
+        void setRecvBufferSize(SOCKET s, size_t size);
+
+        size_t getSendBufferSize(SOCKET s);
+
+        void setSendBufferSize(SOCKET s, size_t size);
 
     private:
 
