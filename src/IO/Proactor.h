@@ -77,7 +77,7 @@ namespace Musador
             /// @param[in] User-defined data which are passed along to handler on completion or error.
             void beginWrite(boost::shared_ptr<SocketConnection> conn, 
                 EventHandler handler, 
-                Buffer<char> data, 
+                const Buffer<char>& data, 
                 boost::any tag = NULL);
 
             /// @brief Asynchronously write to a Socket using a previously allocated completion message.
@@ -135,7 +135,7 @@ namespace Musador
             /// @param[in] User-defined data which are passed along to handler on completion or error.
            void beginWrite(boost::shared_ptr<PipeConnection> conn, 
                 EventHandler handler, 
-                Buffer<char> data, 
+                const Buffer<char>& data, 
                 boost::any tag = NULL);
 
            /// @brief Asynchronously write to a Named Pipe using a previously allocated completion message.
@@ -207,7 +207,7 @@ namespace Musador
 
         inline void Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn, 
             EventHandler handler, 
-            Buffer<char> data, 
+            const Buffer<char>& data, 
             boost::any tag /* = NULL */)
         {
             boost::shared_ptr<MsgWriteComplete> msgWrite(new MsgWriteComplete(data));
@@ -216,7 +216,7 @@ namespace Musador
 
         inline void Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn, 
             EventHandler handler, 
-            Buffer<char> data, 
+            const Buffer<char>& data, 
             boost::any tag /* = NULL */)
         {
             boost::shared_ptr<MsgWriteComplete> msgWrite(new MsgWriteComplete(data));

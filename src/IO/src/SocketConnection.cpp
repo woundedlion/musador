@@ -39,7 +39,7 @@ SocketConnection::beginWrite(boost::shared_ptr<MsgWriteComplete> msgWrite,
 
 
 void 
-SocketConnection::beginWrite(Buffer<char> data, boost::any tag /* = NULL */)
+SocketConnection::beginWrite(const Buffer<char>& data, boost::any tag /* = NULL */)
 {
     Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), data, tag);
 }

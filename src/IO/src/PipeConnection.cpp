@@ -55,7 +55,7 @@ PipeConnection::beginWrite(boost::shared_ptr<MsgWriteComplete> msgWrite, boost::
 }
 
 void 
-PipeConnection::beginWrite(Buffer<char> data, boost::any tag /*= NULL*/)
+PipeConnection::beginWrite(const Buffer<char>& data, boost::any tag /*= NULL*/)
 {
     Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), data, tag);
 }

@@ -63,7 +63,7 @@ namespace Musador
 
             /// @brief Constructor.
             /// @param[in] buf Buffer containing existing data to write
-            inline MsgWriteComplete(Buffer<char> buf) : Msg(MSG_WRITE_COMPLETE),
+            inline MsgWriteComplete(const Buffer<char>& buf) : Msg(MSG_WRITE_COMPLETE),
                 buf(buf)
             {
             }
@@ -89,7 +89,7 @@ namespace Musador
 
             /// @brief Constructor.
             /// @param[in] buf Buffer containing existing data to write
-            inline MsgReadComplete(Buffer<char> buf) : Msg(MSG_READ_COMPLETE),
+            inline MsgReadComplete(const Buffer<char>& buf) : Msg(MSG_READ_COMPLETE),
                 buf(buf)
             {
             }
