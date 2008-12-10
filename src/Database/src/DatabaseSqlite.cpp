@@ -1,7 +1,7 @@
-#include <assert.h>
 #include <sstream>
 #include <algorithm>
 #include "Utilities/Util.h"
+#include <cassert>
 #include "DatabaseSqlite.h"
 #include "sqlite/sqlite3.h"
 

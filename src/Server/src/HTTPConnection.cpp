@@ -4,7 +4,6 @@
 
 #include "HTTPConnection.h"
 #include "HTTP.h"
-#include "boost/regex.hpp"
 #include "Logger/Logger.h"
 #include <time.h>
 #include "Controller.h"
@@ -98,64 +97,56 @@ HTTPConnection::getEnv()
 // Receive States
 /////////////////////////////////////////////////////////////////////////////////////
 
+HTTP::StateReqError::StateReqError(my_context ctx) : my_base(ctx)
+{
+    HTTP::Response& res = outermost_context().res;
+    res.data.reset(new std::stringstream());
+    *res.data << "<h1>Error " << res.status << " " << res.reason << "</h1><br/>";
+    *res.data << "<i>" << HTTP::getRFC1123(::time(NULL)) << "</i>";
+    res.headers["Content-Type"] = "text/html";
+    res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data->tellp());
+    post_event(EvtReqDone());
+}
+
 HTTP::StateRecvReqHeader::StateRecvReqHeader(my_context ctx) : my_base(ctx)
 {
     outermost_context().req.clear();
     outermost_context().res.clear();
-    outermost_context().conn.beginRead();
+    if (!outermost_context().recvdData.empty())
+    {
+        post_event(EvtReadComplete(boost::shared_ptr<IO::MsgReadComplete>()));
+        return;
+    }
+    else
+    {
+        outermost_context().conn.beginRead();
+    }
 }
 
 sc::result 
 HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
 {
-    const char * start = evt.msgRead->buf.begin();
-    const char * end = evt.msgRead->buf.end();
-    bool valid = false;
-    boost::regex expr("([[:alpha:]]+)[[:s:]]+([^[:s:]?]+)(?:\\?(\\S*))?[[:s:]]+(HTTP/1.[01])\\r\\n(?:([[:alnum:]\\-]+):[[:s:]]*([^\\r\\n]*)\\r\\n)*\\r\\n"); 
-    boost::cmatch matches;
-    try
+    // convenience references
+    Request& req = outermost_context().req;
+    Response& res = outermost_context().res;
+    Env& env = outermost_context().conn.getEnv();
+    HTTPConnection& conn = outermost_context().conn;
+    IO::BufferChain<char>& recvdData = outermost_context().recvdData;
+
+    // append the new Buffer if there is one
+    if (NULL != evt.msgRead)
     {
-        valid = boost::regex_search(start,end,matches,expr,boost::match_extra);
+        recvdData.append(evt.msgRead->buf);
     }
-    catch (const std::runtime_error& e)
-    {
-        LOG(Error) << e.what();
-    }
-    if (valid)
+
+    // try to parse a request
+    size_t reqLen = 0;
+    if (HTTP::parseRequest(recvdData, req, reqLen))
     {	
-        Request& req = outermost_context().req;
-        Response& res = outermost_context().res;
-        Env& env = outermost_context().conn.getEnv();
+        recvdData.pop(reqLen);
 
-        // Fill the request object
-        req.method = matches[1];
-        req.requestURI = matches[2];
-        res.protocol = req.protocol = matches[4];
-
-        // Fill headers
-        for (size_t i = 0; i < matches.captures(5).size(); ++i)
-        {
-            req.headers[matches.captures(5)[i]] = matches.captures(6)[i];
-        }
-
-        // Fill Cookies
-        HTTP::parseCookie(req.headers["Cookie"],req.cookies);
-
-        // Fill Params
-        if (matches[3].matched)
-        {
-            req.queryString = matches[3];
-            boost::regex e("(?:([^\\s=&;]+)=?([^\\s=&;]*)[&;]*)*");
-            boost::smatch m;
-            bool v = boost::regex_match(req.queryString, m, e, boost::match_extra);
-            if (v)
-            {
-                for (size_t i = 0; i < m.captures(1).size(); ++i)
-                {
-                    req.params[m.captures(1)[i]] = m.captures(2)[i];
-                }
-            }
-        }
+        // Copy the protocol to the response
+        res.protocol = req.protocol;
 
         // TODO: Cleanup/expire sessions
         // Set up Session
@@ -188,7 +179,7 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
                 //				res.headers["WWW-Authenticate"] = "Basic realm=\"" + sessionName + "\" ";
                 res.status = 401;
                 res.reason = "Unauthorized";
-                return transit<StateReqError>();
+                return transit<StateReqError>();		
             }
         } 		
 
@@ -199,13 +190,13 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
             res.reason = "OK";
             return transit<StateReqProcess>();
         }
-        else if(matches[1] == "POST")
+        else if(req.method == "POST")
         {
             res.status = 405;
             res.reason = "Method Not Supported";
             return transit<StateReqError>();
         }
-        else if (matches[1] == "OPTIONS")
+        else if (req.method == "OPTIONS")
         {
             res.status = 405;
             res.reason = "Method Not Supported";
@@ -218,47 +209,11 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
             return transit<StateReqError>();
         }
     }
-    else // Haven't received the full header yet
+    else // Haven't received a full header yet
     {
-        if (evt.msgRead->buf.numFree() == 0)
-        {
-            LOG(Warning) << "Discarding " << evt.msgRead->buf.numUsed() << " bytes receivied without a valid header.";
-            outermost_context().conn.beginRead(); // Discard overflowed message, keep reading into a new message buffer
-        }
-        else
-        {
-            outermost_context().conn.beginRead(evt.msgRead); // keep reading into the same message buffer
-        }
+        conn.beginRead();
         return discard_event();
     }
-}
-
-HTTP::StateReqError::StateReqError(my_context ctx) : my_base(ctx)
-{
-    HTTP::Response& res = outermost_context().res;
-    res.data.reset(new std::stringstream());
-    *res.data << "<h1>Error " << res.status << " " << res.reason << "</h1><br/>";
-    *res.data << "<i>" << HTTP::getRFC1123(::time(NULL)) << "</i>";
-    res.headers["Content-Type"] = "text/html";
-    res.headers["Content-Length"] = boost::lexical_cast<std::string>(res.data->tellp());
-    post_event(EvtReqDone());
-}
-
-sc::result 
-HTTP::StateRecvReqBody::react(const EvtReadComplete& evt)
-{
-    return discard_event();
-}
-
-HTTP::StateRecvReqBodyChunk::StateRecvReqBodyChunk(my_context ctx) : my_base(ctx)
-{
-
-}
-
-sc::result 
-HTTP::StateRecvReqBodyChunk::react(const EvtReadComplete& evt)
-{
-    return discard_event();
 }
 
 HTTP::StateRecvReqBody::StateRecvReqBody(my_context ctx) : my_base(ctx)
@@ -266,6 +221,24 @@ HTTP::StateRecvReqBody::StateRecvReqBody(my_context ctx) : my_base(ctx)
 
 }
 
+sc::result 
+HTTP::StateRecvReqBody::react(const EvtReadComplete& evt)
+{
+    // TODO: implement POST handling
+    return discard_event();
+}
+
+HTTP::StateRecvReqBodyChunk::StateRecvReqBodyChunk(my_context ctx) : my_base(ctx)
+{
+    // TODO: implement chunked request handling
+}
+
+sc::result 
+HTTP::StateRecvReqBodyChunk::react(const EvtReadComplete& evt)
+{
+    // TODO: implement chunked request handling
+    return discard_event();
+}
 
 HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
 {
@@ -285,6 +258,8 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
                 fname /= L"index.html";
                 if (!this->sendFile(env,fname.file_string()))
                 {
+                    res.status = 403;
+                    res.reason = "Forbidden";
                     post_event(EvtReqError());
                     return;		
                 }
@@ -293,6 +268,8 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
             {
                 if (!this->dirIndex(env,fname.directory_string()))
                 {
+                    res.status = 403;
+                    res.reason = "Forbidden";
                     post_event(EvtReqError());
                     return;		
                 }
@@ -302,6 +279,8 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
         {
             if (!this->sendFile(env,fname.file_string()))
             {
+                res.status = 403;
+                res.reason = "Forbidden";
                 post_event(EvtReqError());
                 return;		
             }
@@ -346,8 +325,6 @@ HTTP::StateReqProcess::sendFile(HTTP::Env& env, const std::wstring& path)
     env.res->data.reset(new std::fstream(path.c_str(), std::ios::in | std::ios::binary));
     if (env.res->data->fail())
     {
-        res.status = 500;
-        res.reason = "Internal Server Error";
         return false;
     }
 
@@ -389,8 +366,6 @@ HTTP::StateReqProcess::sendFile(HTTP::Env& env, const std::wstring& path)
 bool
 HTTP::StateReqProcess::dirIndex(HTTP::Env& env, const std::wstring& path)
 {
-    env.res->status = 403;
-    env.res->reason = "Forbidden";
     return false;
 }
 

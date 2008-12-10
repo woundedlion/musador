@@ -4,8 +4,7 @@
 #include "PipeConnection.h"
 #include "SocketListener.h"
 #include "SocketConnection.h"
-
-#include <assert.h>
+#include <cassert>
 
 #include "Logger/Logger.h"
 #define LOG_SENDER L"I/O"

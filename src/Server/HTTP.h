@@ -9,6 +9,7 @@
 #include "Utilities/Util.h"
 #include "Utilities/Base64.h"
 #include "Utilities/MTRand.h"
+#include "IO/BufferChain.h"
 #include "boost/shared_ptr.hpp"
 #include "boost/thread/mutex.hpp"
 #include "boost/serialization/nvp.hpp"
@@ -167,6 +168,8 @@ namespace Musador
         std::string genDigestResponse(std::map<std::string, std::string>& authInfo, const std::string& method, const std::string& password);
 
         bool auth(const Env& env);
+
+        bool parseRequest(const IO::BufferChain<char>& data, Request& req, size_t& length);
     }	
 
 }

@@ -1,4 +1,3 @@
-#include "Util.h"
 #include <locale>
 #include <sstream>
 
@@ -15,6 +14,8 @@
 #undef BOOST_UTF8_END_NAMESPACE
 #undef BOOST_UTF8_DECL
 #undef BOOST_UTF8_BEGIN_NAMESPACE
+
+#include "Utilities/Util.h"
 
 typedef boost::utf8_codecvt_facet codecvt_t;
 

@@ -19,6 +19,10 @@ namespace Musador
 
             Buffer(size_t capacity);
 
+            Buffer(const T * data);
+
+            Buffer(const T * data, size_t capacity);
+
             Buffer(boost::shared_array<T> buf, size_t capacity);
 
             Buffer(boost::shared_array<T> buf, size_t capacity, size_t dataEnd);
@@ -60,7 +64,7 @@ namespace Musador
         {
         public:
 
-            typedef std::list<boost::shared_ptr<Buffer<T> > > BufferList;
+            typedef std::list<Buffer<T> > BufferList;
 
             class bidirectional_iterator_base : public std::iterator<
                 std::bidirectional_iterator_tag, 
@@ -107,15 +111,52 @@ namespace Musador
 
             private:
 
-                iterator(const BufferList& bufs, 
-                    const typename BufferList::iterator& curBuf, 
+                iterator(const BufferList* bufs, 
+                    const typename BufferList::const_iterator& curBuf, 
                     T * p);
 
-                typename BufferList::value_type& buf();
-
-                const BufferList&  bufs;
-                typename BufferList::iterator curBuf;
+                const BufferList* bufs;
+                typename BufferList::const_iterator curBuf;
                 T * p;
+            };
+
+            class const_iterator : public bidirectional_iterator_base
+            {
+            public:
+
+                friend class BufferChain;
+
+                const_iterator();
+
+                const_iterator(const const_iterator& iter);
+
+                ~const_iterator();
+
+                const_iterator& operator=(const const_iterator& iter);
+
+                bool operator==(const const_iterator& iter) const;
+
+                bool operator!=(const const_iterator& iter) const;
+
+                const T& operator*() const;
+
+                const_iterator& operator++();
+
+                const_iterator operator++(int);
+
+                const_iterator& operator--();
+
+                const_iterator operator--(int);
+
+            private:
+
+                const_iterator(const BufferList * bufs, 
+                    const typename BufferList::const_iterator& curBuf, 
+                    T * p);
+
+                const BufferList* bufs;
+                typename BufferList::const_iterator curBuf;
+                const T * p;
 
             };
 
@@ -129,13 +170,21 @@ namespace Musador
 
             iterator end();
 
-            void append(boost::shared_ptr<Buffer<T> > buf);
+            const_iterator begin() const;
+
+            const_iterator end() const;
+
+            void append(const Buffer<T>& buf);
 
             void append(boost::shared_array<T> buf, size_t capacity);
 
             void append(boost::shared_array<T> buf, size_t capacity, size_t dataEnd);
 
             void append(boost::shared_array<T> buf, size_t capacity, size_t dataBegin, size_t dataEnd);
+
+            void pop(size_t num);
+
+            bool empty() const;
 
         private:
 
@@ -162,10 +211,30 @@ namespace Musador
         {}
 
         template<typename T>
+        Buffer<T>::Buffer(const T * data) : 
+        buf(new T[::strlen(data)]),
+            capacity(::strlen(data)),
+            endOffset(capacity),
+            beginOffset(0)
+        {
+            std::copy(data, data + capacity, buf.get());
+        }
+
+        template<typename T>
+        Buffer<T>::Buffer(const T * data, size_t capacity) : 
+        buf(new T[capacity]),
+            capacity(capacity),
+            endOffset(capacity),
+            beginOffset(0)
+        {
+            std::copy(data, data + capacity, buf.get());
+        }
+
+        template<typename T>
         Buffer<T>::Buffer(boost::shared_array<T> buf, size_t capacity) : 
         buf(buf),
             capacity(capacity),
-            endOffset(capacity),
+            endOffset(0),
             beginOffset(0)
         {}
 
@@ -204,7 +273,7 @@ namespace Musador
         template<typename T>
         bool Buffer<T>::empty() const
         {
-            return this->numUsed() != 0;
+            return this->numUsed() == 0;
         }
 
         template<typename T>
@@ -258,9 +327,9 @@ namespace Musador
         {
             for (BufferList::iterator iter = this->data.begin(); iter != this->data.end(); ++iter)
             {
-                if (!(*iter)->empty())
+                if (!iter->empty())
                 {
-                    return BufferChain<T>::iterator(this->data, iter, (*iter)->begin());
+                    return BufferChain<T>::iterator(&this->data, iter, iter->begin());
                 }
             }
             return this->end();
@@ -269,11 +338,30 @@ namespace Musador
         template<typename T>
         typename BufferChain<T>::iterator BufferChain<T>::end()
         {
-            return BufferChain<T>::iterator(this->data, this->data.end(), NULL);
+            return BufferChain<T>::iterator(&this->data, this->data.end(), NULL);
         }
 
         template<typename T>
-        void BufferChain<T>::append(boost::shared_ptr<Buffer<T> > buf)
+        typename BufferChain<T>::const_iterator BufferChain<T>::begin() const
+        {
+            for (BufferList::const_iterator iter = this->data.begin(); iter != this->data.end(); ++iter)
+            {
+                if (!iter->empty())
+                {
+                    return BufferChain<T>::const_iterator(&this->data, iter, iter->begin());
+                }
+            }
+            return this->end();
+        }
+
+        template<typename T>
+        typename BufferChain<T>::const_iterator BufferChain<T>::end() const
+        {
+            return BufferChain<T>::const_iterator(&this->data, this->data.end(), NULL);
+        }
+
+        template<typename T>
+        void BufferChain<T>::append(const Buffer<T>& buf)
         {
             this->data.push_back(buf);
         }
@@ -281,22 +369,52 @@ namespace Musador
         template<typename T>
         void BufferChain<T>::append(boost::shared_array<T> buf, size_t capacity)
         {
-            boost::shared_ptr<Buffer<T> > buf(new Buffer<T>(buf, capacity));
-            this->data.push_back(buf);
+            this->data.push_back(Buffer<T>(buf, capacity));
         }
 
         template<typename T>
         void BufferChain<T>::append(boost::shared_array<T> buf, size_t capacity, size_t dataEnd)
         {
-            boost::shared_ptr<Buffer<T> > buf(new Buffer<T>(buf, capacity, dataEnd));
-            this->data.push_back(buf);
+            this->data.push_back(Buffer<T>(buf, capacity, 0, dataEnd));
         }
 
         template<typename T>
         void BufferChain<T>::append(boost::shared_array<T> buf, size_t capacity, size_t dataBegin, size_t dataEnd)
         {
-            boost::shared_ptr<Buffer<T> > buf(new Buffer<T>(buf, capacity, dataBegin, dataEnd));
-            this->data.push_back(buf);
+            this->data.push_back(Buffer<T>(buf, capacity, dataBegin, dataEnd));
+        }
+
+        template<typename T>
+        void BufferChain<T>::pop(size_t num)
+        {
+            while (num > 0)
+            {
+                BufferList::iterator buf = this->data.begin();
+                assert(buf != this->data.end());
+                if (num >= buf->numUsed())
+                {
+                    num -= buf->numUsed();
+                    this->data.pop_front();
+                }
+                else
+                {
+                    buf->advanceBegin(num);
+                    num = 0;
+                }
+            }
+        }
+
+        template<typename T>
+        bool BufferChain<T>::empty() const
+        {
+            for (BufferList::const_iterator iter = this->data.begin(); iter != this->data.end(); ++iter)
+            {
+                if (!iter->empty())
+                {
+                    return false;
+                }
+            }
+            return true; 
         }
 
         // iterator
@@ -319,7 +437,7 @@ namespace Musador
 
         // Full Constructor (private)
         template<typename T>
-        BufferChain<T>::iterator::iterator(const BufferList& bufs, typename const BufferList::iterator& curBuf, T * p) :
+        BufferChain<T>::iterator::iterator(const BufferList* bufs, typename const BufferList::const_iterator& curBuf, T * p) :
         bufs(bufs),
             curBuf(curBuf),
             p(p)
@@ -338,6 +456,7 @@ namespace Musador
             this->bufs = c.bufs;
             this->curBuf = c.curBuf;
             this->p = c.p;
+            return *this;
         }
 
         // Equality Operator
@@ -365,39 +484,30 @@ namespace Musador
         template<typename T>
         typename BufferChain<T>::iterator& BufferChain<T>::iterator::operator++()
         {
-#ifdef DEBUG
-            bool incrementable = false;
+#ifdef _DEBUG
+            // Make sure we are not already the end iterator
+            assert(this->curBuf != this->bufs->end() && this->p != NULL);
 #endif
-            // while there is more data in this buffer or another buffer in the chain
-            while (this->p != this->buf()->end() || this->buf() != this->bufs.end())
+            ++this->p;
+            if (this->p == this->curBuf->end())
             {
-                // increment if there is more data in this buffer
-                if (this->p != this->buf()->end())
+                // Skip to the next buffer that contains data
+                do {
+                    ++this->curBuf;
+                } while (this->curBuf != this->bufs->end() && this->curBuf->empty());
+
+                if (this->curBuf == this->bufs->end())
                 {
-#ifdef DEBUG
-                    this->incrementable = true;
-#endif
-                    ++this->p;
-                    break;
-                } 
-                else // otherwise try to move to the next buffer
+                    // we are are now the end iterator
+                    this->p = NULL;
+                }
+                else
                 {
-                    ++this->buf();
-                    // next buffer in the chain
-                    this->p = this->buf()->begin();
-                    if (this->p != this->buf()->end())
-                    {
-#ifdef DEBUG
-                        this->incrementable = true;
-#endif
-                        break;
-                    } 
+                    // we found some valid data
+                    this->p = this->curBuf->begin();
                 }
             }
 
-#ifdef DEBUG
-            assert(incrementable);
-#endif
             return *this;
         }
 
@@ -414,31 +524,27 @@ namespace Musador
         template<typename T>
         typename BufferChain<T>::iterator& BufferChain<T>::iterator::operator--()
         {
-#ifdef DEBUG
-            bool decrementable = false;
+#ifdef _DEBUG
+            // Make sure we are not already the begin iterator
+            assert(!this->bufs->empty() && (this->curBuf != this->bufs->begin() || this->p != this->curBuf->begin()));
 #endif
-            // while there is prev data in this buffer or a previous buffer in the chain
-            while (this->p != this->buf()->begin() || this->buf() != this->bufs.begin())
+            if (this->p == NULL || this->p == this->curBuf->begin())
             {
-                // decrement if there is prev data in this buffer
-                if (this->p != this->buf()->begin())
+                // Skip to the previous buffer containing data
+                do
                 {
-#ifdef DEBUG
-                    this->decrementable = true;
-#endif
-                    --this->p;
-                    break;
-                } 
-                else // otherwise try to move to the previous buffer
-                {
-                    --this->buf();
-                    this->p = this->buf()->end();
-                }
-            }
+                    --this->curBuf;
+                } while (this->curBuf != this->bufs->begin() && this->curBuf->empty());
 
-#ifdef DEBUG
-            assert(decrementable);
-#endif
+#ifdef _DEBUG
+                assert(this->curBuf != this->bufs->begin() || !this->curBuf->empty());
+#endif                    
+                this->p = this->curBuf->end() - 1;
+            }
+            else
+            {
+                --this->p;
+            }
             return *this;
         }
 
@@ -451,14 +557,145 @@ namespace Musador
             return r;
         }
 
-        // private functions
+        // const_iterator
 
+        // Default Constructor
         template<typename T>
-        typename BufferChain<T>::BufferList::value_type& BufferChain<T>::iterator::buf()
+        BufferChain<T>::const_iterator::const_iterator() :
+        bufs(NULL),
+            curBuf(NULL),
+            p(NULL)
+        {}
+
+        // Copy Constructor
+        template<typename T>
+        BufferChain<T>::const_iterator::const_iterator(const typename BufferChain<T>::const_iterator& c) :
+        bufs(c.bufs),
+            curBuf(c.curBuf),
+            p(c.p)
+        {}
+
+        // Full Constructor (private)
+        template<typename T>
+        BufferChain<T>::const_iterator::const_iterator(const BufferList* bufs, typename const BufferList::const_iterator& curBuf, T * p) :
+        bufs(bufs),
+            curBuf(curBuf),
+            p(p)
+        {}
+
+
+        // Destructor
+        template<typename T>
+        BufferChain<T>::const_iterator::~const_iterator()
+        {}
+
+        // Assignment Operator
+        template<typename T>
+        typename BufferChain<T>::const_iterator& BufferChain<T>::const_iterator::operator=(typename const BufferChain<T>::const_iterator& c)
         {
-            return (*this->curBuf);
+            this->bufs = c.bufs;
+            this->curBuf = c.curBuf;
+            this->p = c.p;
+            return *this;
         }
 
+        // Equality Operator
+        template<typename T>
+        bool BufferChain<T>::const_iterator::operator==(typename const BufferChain<T>::const_iterator& rhs) const
+        {
+            return this->p == rhs.p;
+        }
+
+        // Inequality Operator
+        template<typename T>
+        bool BufferChain<T>::const_iterator::operator!=(const typename BufferChain<T>::const_iterator& rhs) const
+        {
+            return this->p != rhs.p;
+        }
+
+        // Dereference operator
+        template<typename T>
+        const T& BufferChain<T>::const_iterator::operator*() const
+        {
+            return *this->p;
+        }
+
+        // Prefix increment operator
+        template<typename T>
+        typename BufferChain<T>::const_iterator& BufferChain<T>::const_iterator::operator++()
+        {
+#ifdef _DEBUG
+            // Make sure we are not already the end iterator
+            assert(this->curBuf != this->bufs->end() && this->p != NULL);
+#endif
+            ++this->p;
+            if (this->p == this->curBuf->end())
+            {
+                // Skip to the next buffer that contains data
+                do {
+                    ++this->curBuf;
+                } while (this->curBuf != this->bufs->end() && this->curBuf->empty());
+
+                if (this->curBuf == this->bufs->end())
+                {
+                    // we are are now the end iterator
+                    this->p = NULL;
+                }
+                else
+                {
+                    // we found some valid data
+                    this->p = this->curBuf->begin();
+                }
+            }
+
+            return *this;
+        }
+
+        // Postfix increment operator
+        template<typename T>
+        typename BufferChain<T>::const_iterator BufferChain<T>::const_iterator::operator++(int)
+        {
+            typename BufferChain<T>::iterator r(*this);
+            ++(*this);
+            return r;
+        }
+
+        // Prefix decrement operator
+        template<typename T>
+        typename BufferChain<T>::const_iterator& BufferChain<T>::const_iterator::operator--()
+        {
+#ifdef _DEBUG
+            // Make sure we are not already the begin iterator
+            assert(!this->bufs->empty() && (this->curBuf != this->bufs->begin() || this->p != this->curBuf->begin()));
+#endif
+            if (this->p == NULL || this->p == this->curBuf->begin())
+            {
+                // Skip to the previous buffer containing data
+                do
+                {
+                    --this->curBuf;
+                } while (this->curBuf != this->bufs->begin() && this->curBuf->empty());
+
+#ifdef _DEBUG
+                assert(this->curBuf != this->bufs->begin() || !this->curBuf->empty());
+#endif                    
+                this->p = this->curBuf->end() - 1;
+            }
+            else
+            {
+                --this->p;
+            }
+            return *this;
+        }
+
+        // Postfix decrement operator
+        template<typename T>
+        typename BufferChain<T>::const_iterator BufferChain<T>::const_iterator::operator--(int)
+        {
+            typename BufferChain<T>::iterator r(*this);
+            --(*this);
+            return r;
+        }
     }
 }
 

@@ -1,7 +1,9 @@
+#include "boost/regex.hpp"
 #include "Utilities/Util.h"
 #include "HTTP.h"
 #include "Config/Config.h"
 #include "Utilities/md5.h"
+#include "IO/BufferChain.h"
 
 using namespace Musador;
 
@@ -255,6 +257,59 @@ HTTP::auth(const Env& env)
     } 
 
     return false;
+}
+
+bool
+HTTP::parseRequest(const IO::BufferChain<char>& data, Request& req, size_t& length)
+{
+    IO::BufferChain<char>::const_iterator start = data.begin();
+    IO::BufferChain<char>::const_iterator end = data.end();
+    bool valid = false;
+    boost::regex expr("([[:alpha:]]+)[[:s:]]+([^[:s:]?]+)(?:\\?(\\S*))?[[:s:]]+(HTTP/1.[01])\\r\\n(?:([[:alnum:]\\-]+):[[:s:]]*([^\\r\\n]*)\\r\\n)*\\r\\n"); 
+    boost::match_results<IO::BufferChain<char>::const_iterator> matches;
+    try
+    {
+        valid = boost::regex_search(start, end, matches, expr, boost::match_extra);
+    }
+    catch (const std::runtime_error&)
+    {
+        return false;
+    }
+    if (valid)
+    {	
+        // Fill the request object
+        req.method = matches[1];
+        req.requestURI = matches[2];
+        req.protocol = matches[4];
+
+        // Fill headers
+        for (size_t i = 0; i < matches.captures(5).size(); ++i)
+        {
+            req.headers[matches.captures(5)[i]] = matches.captures(6)[i];
+        }
+
+        // Fill Cookies
+        HTTP::parseCookie(req.headers["Cookie"],req.cookies);
+
+        // Fill Params
+        if (matches[3].matched)
+        {
+            req.queryString = matches[3];
+            boost::regex e("(?:([^\\s=&;]+)=?([^\\s=&;]*)[&;]*)*");
+            boost::smatch m;
+            bool v = boost::regex_match(req.queryString, m, e, boost::match_extra);
+            if (v)
+            {
+                for (size_t i = 0; i < m.captures(1).size(); ++i)
+                {
+                    req.params[m.captures(1)[i]] = m.captures(2)[i];
+                }
+            }
+        }
+        length = matches.length();
+    }
+
+    return valid;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -5,6 +5,7 @@
 
 #include "HTTP.h"
 #include "IO/SocketConnection.h"
+#include "IO/BufferChain.h"
 
 #include "boost/weak_ptr.hpp"
 #include "boost/shared_ptr.hpp"
@@ -64,6 +65,7 @@ namespace Musador
             FSM(HTTPConnection& conn);
 
             HTTPConnection& conn;
+            IO::BufferChain<char> recvdData;
             Request req;
             Response res;
         };

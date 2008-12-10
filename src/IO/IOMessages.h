@@ -1,9 +1,9 @@
 #ifndef IO_MSGS_A8167A71_4E20_466d_8D70_C211158BB00D
 #define IO_MSGS_A8167A71_4E20_466d_8D70_C211158BB00D
 
-#include <assert.h>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
+#include <cassert>
 #include "Network/Network.h"
 #include "BufferChain.h"
 
