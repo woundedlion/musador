@@ -157,7 +157,6 @@ LibrarianController::getConfigXML(HTTP::Env& env)
         ar << boost::serialization::make_nvp("Librarian",*Config::instance());
     }
     env.res->headers["Content-Type"] = "text/xml";
-    // TODO: implement default content-length
     env.res->headers["Content-Length"] = boost::lexical_cast<std::string>(env.res->data->tellp());
     return true;
 }

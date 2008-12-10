@@ -75,9 +75,9 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 catch (const UI::ServiceAlreadyStartedException&)
                 {}
-                catch(const UI::ServiceException&)
+                catch(const UI::ServiceException& e)
                 {
-                    //TODO: LOG!
+                    LOG(Error) << "Unable to start service: " << e.what();
                     break;
                 }
             }

@@ -211,6 +211,11 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
     }
     else // Haven't received a full header yet
     {
+        // Limit length of BufferChain to avoid trivial attack scenario
+        if (recvdData.length() > IO::MsgReadComplete::MAX * 2)
+        {
+            recvdData.pop(IO::MsgReadComplete::MAX);
+        }
         conn.beginRead();
         return discard_event();
     }

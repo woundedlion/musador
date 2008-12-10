@@ -186,6 +186,8 @@ namespace Musador
 
             bool empty() const;
 
+            size_t length() const;
+
         private:
 
             BufferList data;
@@ -417,13 +419,24 @@ namespace Musador
             return true; 
         }
 
+        template<typename T>
+        size_t BufferChain<T>::length() const
+        {
+            size_t len = 0;
+            for (BufferList::const_iterator iter = this->data.begin(); iter != this->data.end(); ++iter)
+            {
+                len += iter->numUsed();
+            }
+            return len;
+        }
+
         // iterator
 
         // Default Constructor
         template<typename T>
         BufferChain<T>::iterator::iterator() :
         bufs(NULL),
-            curBuf(NULL),
+            curBuf(BufferList::const_iterator()),
             p(NULL)
         {}
 
@@ -563,7 +576,7 @@ namespace Musador
         template<typename T>
         BufferChain<T>::const_iterator::const_iterator() :
         bufs(NULL),
-            curBuf(NULL),
+            curBuf(BufferList::const_iterator()),
             p(NULL)
         {}
 

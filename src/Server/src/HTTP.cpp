@@ -436,10 +436,8 @@ HTTP::Response::sendBody(IO::Connection& conn) {
 /// Cookie Free functions
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-// TODO: escape semicolons at least if not urlencode
 void
-HTTP::parseCookie(const std::string& cookieStr,CookieCollection& cookies)
+HTTP::parseCookie(const std::string& cookieStr, CookieCollection& cookies)
 {
     std::vector<std::string> items;
     Util::tokenize(cookieStr,items,"; ");
