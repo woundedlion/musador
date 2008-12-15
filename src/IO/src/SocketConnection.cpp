@@ -7,7 +7,8 @@
 using namespace Musador;
 using namespace Musador::IO;
 
-SocketConnection::SocketConnection()
+SocketConnection::SocketConnection() :
+sock(NULL)
 {
 
 }

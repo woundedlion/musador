@@ -184,7 +184,7 @@ Server::getSession(const std::string& key)
     Guard lock(this->sessionsMutex);
     if (NULL == this->sessions[key])
     {
-        this->sessions[key].reset(new Session());
+        this->sessions[key].reset(new Session(key));
     }
     return *this->sessions[key];
 }

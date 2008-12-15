@@ -82,6 +82,18 @@ HTTPConnection::onWriteComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /
     }
 }
 
+void
+HTTPConnection::close()
+{
+    SocketConnection::close();
+    if (NULL != this->env.server)
+    {
+        boost::shared_ptr<IO::MsgError> msgErr(new IO::MsgError());
+        msgErr->conn = shared_from_this();
+        this->env.server->onError(msgErr);
+    }
+}
+
 inline
 HTTP::Env&
 HTTPConnection::getEnv()
@@ -156,13 +168,26 @@ HTTP::StateRecvReqHeader::react(const HTTP::EvtReadComplete& evt)
             // TODO: generate unique sessionName?
             sessionName = "Restricted";
         }
+
         std::string sessionKey(req.cookies[sessionName]);
         if (sessionKey.empty())
         {
-            Util::genGUID(sessionKey);
+            if (NULL == env.session)
+            {
+                Util::genGUID(sessionKey);
+                env.session = &env.server->getSession(sessionKey);
+            }
+            else
+            {
+                sessionKey = env.session->getKey();
+            }
+            res.headers["Set-Cookie"] = sessionName + "=" + sessionKey + ";";
         }
-        res.headers["Set-Cookie"] = sessionName + "=" + sessionKey + ";";
-        env.session = &env.server->getSession(sessionKey);
+        else
+        {
+            env.session = &env.server->getSession(sessionKey);
+        }
+
 
         // Handle Auth
         if (env.cfg->requireAuth) 
@@ -378,6 +403,12 @@ HTTP::StateReqProcess::dirIndex(HTTP::Env& env, const std::wstring& path)
 // Send States
 /////////////////////////////////////////////////////////////////////////////////////
 
+HTTP::StateSendRes::~StateSendRes()
+{
+    // delete the data istream on exit to free up resources
+    outermost_context().res.data.reset();
+}
+
 HTTP::StateSendResHeader::StateSendResHeader(my_context ctx) : my_base(ctx)
 {
     Response& res = outermost_context().res;
@@ -454,6 +485,11 @@ HTTP::StateSendResBodyChunk::react(const EvtWriteComplete& evt)
 ///////////////////////////////////////////////////////////////////////////
 // HTTP FSM logic
 ///////////////////////////////////////////////////////////////////////////
+
+HTTP::StateClosed::StateClosed(my_context ctx) : my_base(ctx)
+{
+    outermost_context().conn.close();
+}
 
 HTTP::FSM::FSM(HTTPConnection& conn) :
 conn(conn)

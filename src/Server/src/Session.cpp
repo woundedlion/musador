@@ -5,7 +5,8 @@ using namespace Musador;
 //////////////////////////////////////////////////////////////////////////////////////
 // Session
 //////////////////////////////////////////////////////////////////////////////////////
-Session::Session()
+Session::Session(const std::string& key) :
+key(key)
 {
 }
 
@@ -18,4 +19,10 @@ Session::clear()
 {
     Guard(this->lock);
     this->store.clear();
+}
+
+std::string
+Session::getKey() const
+{
+    return this->key;
 }

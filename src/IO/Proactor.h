@@ -155,8 +155,9 @@ namespace Musador
            /// available on the machine. So, for instance, a good value for numWorkers would be double the number of cores.
            /// That way, if any I/O threads are sleeping, the Proactor will automaticaly wake additional threads from the worker pool 
            /// to service outstanding I/O requests, to fill out the number of currently active threads until it again
-           /// reaches the # of available cores.
-           void start(int numWorkers = 1);
+           /// reaches the # of available cores. A value of 0, which is the default, will automatically use a value of double 
+           /// the hardware concurrency available on the machine.
+           void start(int numWorkers = 0);
 
            /// @brief Stop the I/O engine. A user must call this to shut down the Proactor and its worker threads.
            void stop(); 

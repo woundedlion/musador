@@ -42,8 +42,7 @@ UI::WindowsService<Librarian>(L"Musador Librarian")
 
     this->server.reset(new Server(cfg->server));
 
-    // Start 2 worker threads
-    IO::Proactor::instance()->start(2);
+    IO::Proactor::instance()->start();
 }
 
 Librarian::~Librarian()

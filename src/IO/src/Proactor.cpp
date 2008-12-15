@@ -653,6 +653,10 @@ Proactor::completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long nByt
 void 
 Proactor::start(int numWorkers /* = 0 */)
 {
+    if (numWorkers == 0)
+    {
+        numWorkers = 2 * boost::thread::hardware_concurrency();
+    }
     for (int i = 0; i < numWorkers; ++i)
     {
         this->workers.push_back(new boost::thread(boost::bind(&Proactor::runIO,this)));

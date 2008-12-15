@@ -20,15 +20,17 @@ namespace Musador
     {
     public:
 
-        Session();
+        Session(const std::string& key);
 
         virtual ~Session();
 
+        std::string getKey() const;
+
         template <typename T>
-        T get(const std::string& key)
+        T get(const std::string& key) const
         {
             Guard lock(this->lock);
-            StoreType::iterator iter = this->store.find(key);
+            StoreType::const_iterator iter = this->store.find(key);
             if (iter != this->store.end())
             {
                 return boost::any_cast<T>(iter->second);
@@ -48,14 +50,13 @@ namespace Musador
 
         void clear();
 
-
     protected:
 
         typedef std::map<std::string,boost::any> StoreType;
 
-        Mutex lock;
+        mutable Mutex lock;
         StoreType store;
-
+        std::string key;
     };
 
 }

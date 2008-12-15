@@ -70,9 +70,9 @@ namespace Musador
             Response res;
         };
 
-        struct StateClosed : sc::simple_state<StateClosed,FSM>
+        struct StateClosed : sc::state<StateClosed,FSM>
         {
-            StateClosed() {}
+            StateClosed(my_context ctx);
             typedef sc::transition<EvtOpen,StateRecvReq> reactions;
         };
 
@@ -133,6 +133,8 @@ namespace Musador
                 typedef sc::transition<EvtClose,StateClosed>,	
                 typedef sc::transition<EvtKeepAlive,StateRecvReq>
             > reactions;
+
+            ~StateSendRes();
         };
 
         struct StateSendResHeader : sc::state<StateSendResHeader,StateSendRes>
@@ -168,7 +170,7 @@ namespace Musador
     }
 
 
-    class HTTPConnection : public IO::SocketConnection, public boost::enable_shared_from_this<HTTPConnection>
+    class HTTPConnection : public IO::SocketConnection
     {
     public:
 
@@ -183,6 +185,8 @@ namespace Musador
         void onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL);
 
         void onWriteComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL);
+
+        void close();
 
         HTTP::Env& getEnv();
 
