@@ -10,59 +10,98 @@ namespace Musador
 {
     namespace IO
     {
+        /// @class Buffer
+        /// @brief A fixed-size buffer template
         template<typename T>
         class Buffer
         {
         public:
 
+            /// @brief Constructor
+            /// Constructs an empty Buffer
             Buffer();
 
+            /// @brief Constructor
+            /// Constructs a Buffer of the specified size
+            /// @param[in] capacity The total size of the Buffer after construction
             Buffer(size_t capacity);
 
-            Buffer(const T * data);
+            /// @brief Constructor
+            /// Constructs a Buffer and fills it with data of the specified length. The buffer is sized to match length exactly
+            /// @param[in] data The data to place in the Buffer
+            /// @param[in] len The length of the data pointed to by data
+            Buffer(const T * data, size_t len);
 
-            Buffer(const T * data, size_t capacity);
+            /// @brief Constructor
+            /// Constructs a Buffer and fills it with a shared_array of data of the specified length
+            /// @param[in] buf A shared array of data to place in the Buffer
+            /// @param[in] len The length of the data pointed to by buf
+            Buffer(boost::shared_array<T> buf, size_t len);
 
-            Buffer(boost::shared_array<T> buf, size_t capacity);
-
+            /// @brief Constructor
+            /// Constructs a Buffer of a specified capacity and fills it with a shared_array of data of the specified length
+            /// @param[in] buf A shared array of data to place in the Buffer
+            /// @param[in] capacity The full capacity of the Buffer after construction
+            /// @param[in] dataEnd The length of the data pointed to by buf
             Buffer(boost::shared_array<T> buf, size_t capacity, size_t dataEnd);
 
+            /// @brief Constructor
+            /// Constructs a Buffer of a specified capacity and fills it from the specified range in a shared_array of data
+            /// @param[in] buf A shared array of data to place in the Buffer
+            /// @param[in] capacity The full capacity of the Buffer after construction
+            /// @param[in] dataEnd The length of the data pointed to by buf
             Buffer(boost::shared_array<T> buf, size_t capacity, size_t dataBegin, size_t dataEnd);
 
+            /// @brief Destructor
             ~Buffer();
 
+            /// @brief Get the length of the readable data in the buffer
+            /// @returns The length of the readable data in the buffer
             size_t numUsed() const;
 
+            /// @brief Get the unused capacity of the buffer
+            /// @returns The unused capacity of the buffer
             size_t numFree() const;
 
+            /// @brief Check for emptiness
+            /// @returns True if the Buffer contains no readable data
             bool empty() const;
 
+            /// @brief Get a pointer to the start of the data in the Buffer
+            /// @returns A pointer to the first readable element of the data contained in the Buffer
             T * begin() const;
 
+            /// @brief Get a pointer to the end of the data in the Buffer
+            /// @returns A pointer immediately past the end of the last readable element of the data contained in the Buffer
             T * end() const;
 
+            /// @brief Advance the start of the readable data in the Buffer
+            /// Essentially, performs a pop by marking the specified number of elements at the start of the Buffer as unreadable.
+            /// The newly unused capacity at the head of the Buffer can be reclaimed by calling rewind.
             void advanceBegin(size_t num);
 
+            /// @brief Advance the end of the readbale data in the Buffer
+            /// Essentially, performs a push by marking the specified number of elements after the readable data in the Buffer as readable.
             void advanceEnd(size_t num);
 
+            /// @brief Rewind the start of the readable data in the Buffer to the beginning of the entire Buffer
             void rewind();
 
         private:
 
             boost::shared_array<T> buf;
-
             size_t capacity;
-
             size_t endOffset;
-
             size_t beginOffset;
 
         };
 
+        /// @class BufferChain
+        /// A chain of Buffers
         template<typename T>
         class BufferChain
         {
-        public:
+        private:
 
             typedef std::list<Buffer<T> > BufferList;
 
@@ -81,32 +120,65 @@ namespace Musador
 
             };
 
+        public:
+
+            /// @class iterator
+            /// @brief Bidirectional iterator type for the BufferChain
+            /// Allows the BufferChain to be used by algorithms which take Bidirectional Iterators
             class iterator : public bidirectional_iterator_base
             {
-            public:
-
                 friend class BufferChain;
 
+            public:
+
+                /// @brief Constructor
+                /// Default Constructor
                 iterator();
 
+                /// @brief Constructor
+                /// Copy Constructor
                 iterator(const iterator& iter);
 
+                /// @brief Destructor
                 ~iterator();
 
+                /// @brief Assignment operator
+                /// @param[in] iter The iterator to copy
+                /// @returns A reference to itself for operator chaining (e.g. a = b = c)
                 iterator& operator=(const iterator& iter);
 
+                /// @brief Equality operator
+                /// @param[in] iter The operand to test for equality
+                /// @returns True if this iterator is equal to iter
                 bool operator==(const iterator& iter) const;
 
+                /// @brief Inequality operator
+                /// @param[in] iter The operand to test for inequality
+                /// @returns True if this iterator is not equal to iter
                 bool operator!=(const iterator& iter) const;
 
+                /// @brief Dereference operator
+                /// @returns a reference to the element pointed to by this iterator
                 T& operator*() const;
 
+                /// @brief Prefix increment operator
+                /// Increment the iterator to point to the next element
+                /// @returns a reference to itself after the increment
                 iterator& operator++();
 
+                /// @brief Postfix increment operator
+                /// Increment the iterator to point to the next element
+                /// @returns a copy of itself before the increment
                 iterator operator++(int);
 
+                /// @brief Prefix decrement operator
+                /// Decrement the iterator to point to the previous element
+                /// @returns a reference to itself after the decrement
                 iterator& operator--();
 
+                /// @brief Postfix decrement operator
+                /// Decrement the iterator to point to the previous element
+                /// @returns a copy of itself before the decrement
                 iterator operator--(int);
 
             private:
@@ -120,32 +192,63 @@ namespace Musador
                 T * p;
             };
 
+            /// @class iterator
+            /// @brief Bidirectional const iterator type for the BufferChain
+            /// Allows the BufferChain to be used by algorithms which take Bidirectional Iterators
             class const_iterator : public bidirectional_iterator_base
             {
-            public:
-
                 friend class BufferChain;
 
+            public:
+
+                /// @brief Constructor
+                /// Default Constructor
                 const_iterator();
 
+                /// @brief Constructor
+                /// Copy Constructor
                 const_iterator(const const_iterator& iter);
 
+                /// @brief Destructor
                 ~const_iterator();
 
+                /// @brief Assignment operator
+                /// @param[in] iter The iterator to copy
+                /// @returns A reference to itself for operator chaining (e.g. a = b = c)
                 const_iterator& operator=(const const_iterator& iter);
 
+                /// @brief Equality operator
+                /// @param[in] iter The operand to test for equality
+                /// @returns True if this iterator is equal to iter
                 bool operator==(const const_iterator& iter) const;
 
+                /// @brief Inequality operator
+                /// @param[in] iter The operand to test for inequality
+                /// @returns True if this iterator is not equal to iter
                 bool operator!=(const const_iterator& iter) const;
 
+                /// @brief Dereference operator
+                /// @returns a reference to the element pointed to by this iterator
                 const T& operator*() const;
 
+                /// @brief Prefix increment operator
+                /// Increment the iterator to point to the next element
+                /// @returns a reference to itself after the increment
                 const_iterator& operator++();
 
+                /// @brief Postfix increment operator
+                /// Increment the iterator to point to the next element
+                /// @returns a copy of itself before the increment
                 const_iterator operator++(int);
 
+                /// @brief Prefix decrement operator
+                /// Decrement the iterator to point to the previous element
+                /// @returns a reference to itself after the decrement
                 const_iterator& operator--();
 
+                /// @brief Postfix decrement operator
+                /// Decrement the iterator to point to the previous element
+                /// @returns a copy of itself before the decrement
                 const_iterator operator--(int);
 
             private:
@@ -160,32 +263,61 @@ namespace Musador
 
             };
 
-        public:
-
+            /// @brief Constructor
             BufferChain();
 
+            /// @brief Destructor
             ~BufferChain();
 
+            /// @brief Get an iterator to the start of the readable data in the BufferChain
+            /// @returns An iterator to the start of the readable data in the BufferChain
             iterator begin();
 
+            /// @brief Get an iterator past the end of the readable data in the BufferChain
+            /// @returns An iterator past the end of the readable data in the BufferChain
             iterator end();
 
+            /// @brief Get a const iterator to the start of the readable data in the BufferChain
+            /// @returns An iterator to the start of the readable data in the BufferChain
             const_iterator begin() const;
 
+            /// @brief Get a const iterator past the end of the readable data in the BufferChain
+            /// @returns An iterator past the end of the readable data in the BufferChain
             const_iterator end() const;
 
+            /// @brief Append a Buffer to the BufferChain
+            /// @param[in] buf The Buffer to append to the chain
             void append(const Buffer<T>& buf);
 
-            void append(boost::shared_array<T> buf, size_t capacity);
+            /// @brief Append a Buffer constructed from an array of data 
+            /// @param[in] buf A shared array of data to append to the chain
+            /// @param[in] len The length of the data pointed to by buf
+            void append(boost::shared_array<T> buf, size_t len);
 
+            /// @brief Append a Buffer of the specified capacity constructed from an array of data 
+            /// @param[in] buf A shared array of data to append to the chain
+            /// @param[in] capacity The capacity of the newly appended Buffer
+            /// @param[in] dataEnd The length of the data pointed to by buf
             void append(boost::shared_array<T> buf, size_t capacity, size_t dataEnd);
 
+            /// @brief Append a Buffer of the specified capacity constructed from a specified range in an array of data 
+            /// @param[in] buf A shared array of data to append to the chain
+            /// @param[in] capacity The capacity of the newly appended Buffer
+            /// @param[in] dataBegin The position of the start of the data in buf
+            /// @param[in] dataEnd The position immediately past the end of the data in buf
             void append(boost::shared_array<T> buf, size_t capacity, size_t dataBegin, size_t dataEnd);
 
+            /// @brief Increment the start of the readbale data in the chain by num elements
+            /// As elements at the front  of the chain are popped, Buffers are automatically destroyed as they become unused
+            /// @param[in] num The number of elements to pop
             void pop(size_t num);
 
+            /// @brief Check the BufferChain for emptiness
+            /// @returns True if the BufferChain contains no readable data
             bool empty() const;
 
+            /// @brief Get the length of the readable data in the BufferChain
+            /// @returns The total length of all readable data in all Buffers in the chain
             size_t length() const;
 
         private:
@@ -193,6 +325,10 @@ namespace Musador
             BufferList data;
 
         };
+
+        //////////////////////////////////////////////////////////////////////////
+        // Implementations
+        //////////////////////////////////////////////////////////////////////////
 
         // Buffer
 
@@ -213,29 +349,19 @@ namespace Musador
         {}
 
         template<typename T>
-        Buffer<T>::Buffer(const T * data) : 
-        buf(new T[::strlen(data)]),
-            capacity(::strlen(data)),
-            endOffset(capacity),
+        Buffer<T>::Buffer(const T * data, size_t len) : 
+        buf(new T[len]),
+            capacity(len),
+            endOffset(len),
             beginOffset(0)
         {
-            std::copy(data, data + capacity, buf.get());
+            std::copy(data, data + len, buf.get());
         }
 
         template<typename T>
-        Buffer<T>::Buffer(const T * data, size_t capacity) : 
-        buf(new T[capacity]),
-            capacity(capacity),
-            endOffset(capacity),
-            beginOffset(0)
-        {
-            std::copy(data, data + capacity, buf.get());
-        }
-
-        template<typename T>
-        Buffer<T>::Buffer(boost::shared_array<T> buf, size_t capacity) : 
+        Buffer<T>::Buffer(boost::shared_array<T> buf, size_t len) : 
         buf(buf),
-            capacity(capacity),
+            capacity(len),
             endOffset(0),
             beginOffset(0)
         {}
@@ -369,9 +495,9 @@ namespace Musador
         }
 
         template<typename T>
-        void BufferChain<T>::append(boost::shared_array<T> buf, size_t capacity)
+        void BufferChain<T>::append(boost::shared_array<T> buf, size_t len)
         {
-            this->data.push_back(Buffer<T>(buf, capacity));
+            this->data.push_back(Buffer<T>(buf, len));
         }
 
         template<typename T>
@@ -497,10 +623,8 @@ namespace Musador
         template<typename T>
         typename BufferChain<T>::iterator& BufferChain<T>::iterator::operator++()
         {
-#ifdef _DEBUG
             // Make sure we are not already the end iterator
             assert(this->curBuf != this->bufs->end() && this->p != NULL);
-#endif
             ++this->p;
             if (this->p == this->curBuf->end())
             {
@@ -537,10 +661,8 @@ namespace Musador
         template<typename T>
         typename BufferChain<T>::iterator& BufferChain<T>::iterator::operator--()
         {
-#ifdef _DEBUG
             // Make sure we are not already the begin iterator
             assert(!this->bufs->empty() && (this->curBuf != this->bufs->begin() || this->p != this->curBuf->begin()));
-#endif
             if (this->p == NULL || this->p == this->curBuf->begin())
             {
                 // Skip to the previous buffer containing data
@@ -548,10 +670,7 @@ namespace Musador
                 {
                     --this->curBuf;
                 } while (this->curBuf != this->bufs->begin() && this->curBuf->empty());
-
-#ifdef _DEBUG
                 assert(this->curBuf != this->bufs->begin() || !this->curBuf->empty());
-#endif                    
                 this->p = this->curBuf->end() - 1;
             }
             else
@@ -637,10 +756,8 @@ namespace Musador
         template<typename T>
         typename BufferChain<T>::const_iterator& BufferChain<T>::const_iterator::operator++()
         {
-#ifdef _DEBUG
             // Make sure we are not already the end iterator
             assert(this->curBuf != this->bufs->end() && this->p != NULL);
-#endif
             ++this->p;
             if (this->p == this->curBuf->end())
             {
@@ -677,10 +794,8 @@ namespace Musador
         template<typename T>
         typename BufferChain<T>::const_iterator& BufferChain<T>::const_iterator::operator--()
         {
-#ifdef _DEBUG
             // Make sure we are not already the begin iterator
             assert(!this->bufs->empty() && (this->curBuf != this->bufs->begin() || this->p != this->curBuf->begin()));
-#endif
             if (this->p == NULL || this->p == this->curBuf->begin())
             {
                 // Skip to the previous buffer containing data
@@ -689,9 +804,7 @@ namespace Musador
                     --this->curBuf;
                 } while (this->curBuf != this->bufs->begin() && this->curBuf->empty());
 
-#ifdef _DEBUG
                 assert(this->curBuf != this->bufs->begin() || !this->curBuf->empty());
-#endif                    
                 this->p = this->curBuf->end() - 1;
             }
             else

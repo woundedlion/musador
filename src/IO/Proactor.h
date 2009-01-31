@@ -49,13 +49,13 @@ namespace Musador
             /// @brief Asynchronously accept a connection on a Socket.
             /// @param[in] listener Shared pointer to the SocketListener on which to accept a connection.
             /// @param[in] handler The EventHandler which is called back on completion or error.
-            /// @param[in] User-defined data which are passed along to handler on completion or error.
+            /// @param[in] tag User-defined data which are passed along to handler on completion or error.
             void beginAccept(boost::shared_ptr<SocketListener> listener, EventHandler handler, boost::any tag = NULL);
 
             /// @brief Asynchronously read from a Socket.
             /// @param[in] conn Shared pointer to the SocketConnection from which to read.
             /// @param[in] handler The EventHandler which is called back on completion or error.
-            /// @param[in] User-defined data which are passed along to handler on completion or error.
+            /// @param[in] tag User-defined data which are passed along to handler on completion or error.
             void beginRead(boost::shared_ptr<SocketConnection> conn, 
                 EventHandler handler, 
                 boost::any tag = NULL);
@@ -64,7 +64,7 @@ namespace Musador
             /// @param[in] conn Shared pointer to the SocketConnection from which to read.
             /// @param[in] handler The EventHandler which is called back on completion or error.
             /// @param[in] msgRead A MsgReadComplete used to store the data read from the connection.
-            /// @param[in] User-defined data which are passed along to handler on completion or error.
+            /// @param[in] tag User-defined data which are passed along to handler on completion or error.
             void beginRead(boost::shared_ptr<SocketConnection> conn, 
                 EventHandler handler, 
                 boost::shared_ptr<MsgReadComplete> msgRead, 
@@ -74,7 +74,7 @@ namespace Musador
             /// @param[in] conn Shared pointer to the SocketConnection to which to write.
             /// @param[in] handler The EventHandler which is called back on completion or error.
             /// @param[in] data A Buffer containing data to write to the connection.
-            /// @param[in] User-defined data which are passed along to handler on completion or error.
+            /// @param[in] tag User-defined data which are passed along to handler on completion or error.
             void beginWrite(boost::shared_ptr<SocketConnection> conn, 
                 EventHandler handler, 
                 const Buffer<char>& data, 
@@ -84,7 +84,7 @@ namespace Musador
             /// @param[in] conn Shared pointer to the SocketConnection to which to write.
             /// @param[in] handler The EventHandler which is called back on completion or error.
             /// @param[in] msgWrite Shared pointer to a MsgWriteComplete containing the data to write to the connection.
-            /// @param[in] User-defined data which are passed along to handler on completion or error.
+            /// @param[in] tag User-defined data which are passed along to handler on completion or error.
             void beginWrite(boost::shared_ptr<SocketConnection> conn, 
                 EventHandler handler, 
                 boost::shared_ptr<MsgWriteComplete> msgWrite, 
@@ -92,10 +92,10 @@ namespace Musador
 
             // Pipe I/O
 
-            /// @briefAsynchronously accept a connection on a NamedPipe.
+            /// @brief Asynchronously accept a connection on a NamedPipe.
             /// @param[in] listener Shared pointer to the PipeListener on which to accept a connection.
             /// @param[in] handler The EventHandler which is called back on completion or error.
-            /// @param[in] User-defined data which are passed along to handler on completion or error.
+            /// @param[in] tag User-defined data which are passed along to handler on completion or error.
             void beginAccept(boost::shared_ptr<PipeListener> listener, 
                 EventHandler handler, 
                 boost::any tag = NULL);
@@ -103,8 +103,8 @@ namespace Musador
             /// @brief Asynchronously connect to a NamedPipe.
             /// @param[in] conn Shared pointer to the PipeConnection with which to connect.
             /// @param[in] handler The EventHandler which is called back on completion or error.
-            /// @param dest The name of the pipe to connect to
-            /// @param[in] User-defined data which are passed along to handler on completion or error.
+            /// @param[in] dest The name of the pipe to connect to
+            /// @param[in] tag User-defined data which are passed along to handler on completion or error.
             void beginConnect(boost::shared_ptr<PipeConnection> conn,
                 EventHandler handler,
                 const std::wstring& dest,
@@ -113,7 +113,7 @@ namespace Musador
             /// @brief Asynchronously read from a Named Pipe.
             /// @param[in] conn Shared pointer to the PipeConnection from which to read.
             /// @param[in] handler The EventHandler which is called back on completion or error.
-            /// @param[in] User-defined data which are passed along to handler on completion or error.
+            /// @param[in] tag User-defined data which are passed along to handler on completion or error.
             void beginRead(boost::shared_ptr<PipeConnection> conn, 
                 EventHandler handler, 
                 boost::any tag = NULL);
@@ -122,7 +122,7 @@ namespace Musador
             /// @param[in] conn Shared pointer to the PipeConnection from which to read.
             /// @param[in] handler The EventHandler which is called back on completion or error.
             /// @param[in] msgRead A MsgReadComplete used to store the data read from the connection.
-            /// @param[in] User-defined data which are passed along to handler on completion or error.
+            /// @param[in] tag User-defined data which are passed along to handler on completion or error.
             void beginRead(boost::shared_ptr<PipeConnection> conn, 
                 EventHandler handler, 
                 boost::shared_ptr<MsgReadComplete> msgRead, 
@@ -132,7 +132,7 @@ namespace Musador
             /// @param[in] conn Shared pointer to the PipeConnection to which to write.
             /// @param[in] handler The EventHandler which is called back on completion or error.
             /// @param[in] data A Buffer containing data to write to the connection.
-            /// @param[in] User-defined data which are passed along to handler on completion or error.
+            /// @param[in] tag User-defined data which are passed along to handler on completion or error.
            void beginWrite(boost::shared_ptr<PipeConnection> conn, 
                 EventHandler handler, 
                 const Buffer<char>& data, 
@@ -142,7 +142,7 @@ namespace Musador
            /// @param[in] conn Shared pointer to the PipeConnection to which to write.
            /// @param[in] handler The EventHandler which is called back on completion or error.
            /// @param[in] msgWrite Shared pointer to a MsgWriteComplete containing the data to write to the connection.
-           /// @param[in] User-defined data which are passed along to handler on completion or error.
+           /// @param[in] tag User-defined data which are passed along to handler on completion or error.
            void beginWrite(boost::shared_ptr<PipeConnection> conn, 
                 EventHandler handler, 
                 boost::shared_ptr<MsgWriteComplete> msgWrite, 

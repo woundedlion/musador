@@ -49,7 +49,6 @@ namespace Musador
             /// @brief Start an asynchronous WRITE using a previously allocated array.
             /// Upon completion, the IO engine will invoke the onWriteComplete method.
             /// @param[in] data Buffer object containing data to write to the connection.
-            /// @param[in] len The size of the data buffer.
             /// @param[in] tag User-defined data which, upon completion, are passed along to onWriteComplete.
             void beginWrite(const Buffer<char>& data, boost::any tag = NULL);
 
