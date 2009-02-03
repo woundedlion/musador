@@ -3,7 +3,7 @@
 
 using namespace Musador::Database;
 
-SQLStream& operator<<(SQLStream& s, const ColumnBase& col)
+SQLStream& Musador::Database::operator<<(SQLStream& s, const ColumnBase& col)
 {
     col.toSQL(s);
     return s;

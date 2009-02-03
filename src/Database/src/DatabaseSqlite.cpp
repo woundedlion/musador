@@ -133,7 +133,7 @@ DatabaseSqlite::insert(const std::wstring& table,  const std::vector<ColumnBase 
             valueStr << ",";
         }
         q << (*iter)->name();
-        (*iter)->toSQL(valueStr);
+        valueStr << **iter;
     }
     q << ") VALUES (" << valueStr.str() << ")";
 
@@ -156,7 +156,7 @@ DatabaseSqlite::update(const std::wstring& table, const std::vector<ColumnBase *
             q << ",";
         }
         q << (*iter)->name().c_str() << L"=";
-        (*iter)->toSQL(q);
+        q << **iter;
     }
 
     if (!conditions.empty())
