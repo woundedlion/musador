@@ -19,7 +19,7 @@ Entity::~Entity()
 }
 
 void 
-Entity::load(unsigned long id)
+Entity::load(__int64 id)
 {
     this->id = id;
     std::wstringstream cond;
@@ -33,7 +33,7 @@ Entity::load(unsigned long id)
     int i = 0;
     for (std::vector<ColumnBase *>::iterator iter = this->columns.begin(); iter != this->columns.end(); iter++)
     {
-        (*iter)->extractResult(r.get(),i);
+        (*iter)->assign(*r.get(),i);
         (*iter)->setDirty(false);
         ++i;
     }

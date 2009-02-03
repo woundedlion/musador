@@ -116,7 +116,7 @@ DatabaseSqlite::select(const std::wstring& table, const std::vector<ColumnBase *
     return this->execute(q.str());
 }
 
-unsigned long 
+__int64
 DatabaseSqlite::insert(const std::wstring& table,  const std::vector<ColumnBase *>& columns)
 {
     std::wstringstream q;
@@ -133,7 +133,7 @@ DatabaseSqlite::insert(const std::wstring& table,  const std::vector<ColumnBase 
             valueStr << ",";
         }
         q << (*iter)->name();
-        (*iter)->writeValue(valueStr);
+        (*iter)->toSQL(valueStr);
     }
     q << ") VALUES (" << valueStr.str() << ")";
 
@@ -156,7 +156,7 @@ DatabaseSqlite::update(const std::wstring& table, const std::vector<ColumnBase *
             q << ",";
         }
         q << (*iter)->name().c_str() << L"=";
-        (*iter)->writeValue(q);
+        (*iter)->toSQL(q);
     }
 
     if (!conditions.empty())

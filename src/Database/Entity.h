@@ -27,11 +27,11 @@ namespace Musador
 
             /// @brief Get the numeric id of this row.
             /// @returns the numeric ID of this row.
-            inline unsigned long getId() { return this->id; }
+            inline __int64 getId() { return this->id; }
 
             /// @brief Populate this Entity instance with data from the specified row in the database.
             /// @param[in] id The numeric ID of the row in the database used to populate this Entity.
-            virtual void load(unsigned long id);
+            virtual void load(__int64 id);
 
             /// @brief Insert or Update the corresponding row in the database with the values contained in this Entity.
             /// Note that only fields which have been changed (marked dirty) will be included
@@ -50,7 +50,7 @@ namespace Musador
 
             boost::shared_ptr<IDatabase> db;
             std::wstring table;
-            unsigned long id;
+            __int64 id;
             std::vector<ColumnBase *> columns;
 
         };

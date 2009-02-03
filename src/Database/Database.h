@@ -49,7 +49,7 @@ namespace Musador
             /// @param[in] table The database table in which to insert.
             /// @param[in] columns A vector of columns with data to include in the INSERT statement.
             /// @returns The id value generated for the new row
-            virtual unsigned long insert(const std::wstring& table, const std::vector<ColumnBase *>& columns) = 0;	
+            virtual __int64 insert(const std::wstring& table, const std::vector<ColumnBase *>& columns) = 0;	
 
             /// @brief Update rows in the database.
             /// A SQL UPDATE statement of the form UPDATE [table] SET ([column_name]=[column_value], ...) WHERE [conditions]
