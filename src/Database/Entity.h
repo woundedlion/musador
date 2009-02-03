@@ -43,9 +43,9 @@ namespace Musador
 
         protected:
 
-            inline void reg(ColumnBase * col)
+            inline void bind(ColumnBase& col)
             {
-                this->columns.push_back(col);
+                this->columns.push_back(&col);
             }
 
             boost::shared_ptr<IDatabase> db;

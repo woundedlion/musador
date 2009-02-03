@@ -35,7 +35,7 @@ public:
 
         {
             std::string t("abcdef");
-            Buffer buf(t.c_str());
+            Buffer buf(t.c_str(), t.size());
             TS_ASSERT(!buf.empty());
             TS_ASSERT(buf.begin() != buf.end());  
             TS_ASSERT(std::equal(buf.begin(), buf.end(), t.begin()));

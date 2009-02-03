@@ -63,21 +63,18 @@ public:
     {
     public:
         EntityTest(boost::shared_ptr<Database::IDatabase> db) :
-          // bind Database and Table
           Database::Entity(db,L"test"),
-              // bind Column objects to physical table columns
               testInt(L"test_int"),
               testStr(L"test_str"),
               testPchar(L"test_pchar"),
               testWStr(L"test_wstr"),
               testPwchar_t(L"test_pwchar_t")
           {
-              // Register columns
-              reg(&testInt);
-              reg(&testStr);
-              reg(&testPchar);
-              reg(&testWStr);
-              reg(&testPwchar_t);
+              bind(testInt);
+              bind(testStr);
+              bind(testPchar);
+              bind(testWStr);
+              bind(testPwchar_t);
           }
 
           ~EntityTest() {}
