@@ -5,6 +5,7 @@
 #include "Utilities/Util.h"
 #include "ResultSet.h"
 #include "SQLStream.h"
+#include "Database.h"
 
 namespace Musador
 {
@@ -239,7 +240,7 @@ namespace Musador
         }
 
         template <>
-        inline void Column<__int64>::assign(const ResultSet& r, int iCol)
+        inline void Column<id_t>::assign(const ResultSet& r, int iCol)
         {
             *this = r.getInt64(iCol);
         }

@@ -69,8 +69,8 @@ void Indexer::runIndexer()
 
         for (TargetsIter targIter = this->targets.begin(); targIter != this->targets.end(); targIter++)
         {
-            unsigned long parentId = NULL;
-            unsigned long newId = Indexer::INVALID_ID;
+            Database::id_t parentId = NULL;
+            Database::id_t newId = Indexer::INVALID_ID;
 
             LOG(Info) << "Indexing Target: " << targIter->string();
             // Add top-level target directory to database
@@ -195,7 +195,7 @@ void Indexer::cancel()
     this->canceled = true;
 }
 
-unsigned long Indexer::addDirectory(const fs::wdirectory_entry& dir)
+Database::id_t Indexer::addDirectory(const fs::wdirectory_entry& dir)
 {
     EntityDir d(this->db);
     d.path = dir.path().directory_string();
@@ -219,7 +219,7 @@ unsigned long Indexer::addDirectory(const fs::wdirectory_entry& dir)
     return d.getId();
 }
 
-unsigned long Indexer::addFile(const fs::wdirectory_entry& file, unsigned long parentId)
+Database::id_t Indexer::addFile(const fs::wdirectory_entry& file, unsigned long parentId)
 {
     EntityFile f(this->db);
 

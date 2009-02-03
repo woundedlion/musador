@@ -19,7 +19,7 @@ Entity::~Entity()
 }
 
 void 
-Entity::load(__int64 id)
+Entity::load(id_t id)
 {
     this->id = id;
     std::wstringstream cond;

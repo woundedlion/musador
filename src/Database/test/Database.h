@@ -12,7 +12,7 @@ class DatabaseTest : public CxxTest::TestSuite
 
 public:
 
-    __int64 entId;
+    Database::id_t entId;
 
     DatabaseTest()
     {

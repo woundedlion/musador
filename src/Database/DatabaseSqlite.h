@@ -33,7 +33,7 @@ namespace Musador
             void txnCommit();
 
             boost::shared_ptr<ResultSet> select(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions);	
-            __int64 insert(const std::wstring& table, const std::vector<ColumnBase *>& columns);	
+            id_t insert(const std::wstring& table, const std::vector<ColumnBase *>& columns);	
             void update(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions );	
             void remove(const std::wstring& table, const std::wstring& conditions);
             boost::shared_ptr<ResultSet> execute(const std::wstring& q);

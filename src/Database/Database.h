@@ -7,15 +7,20 @@
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include "Column.h"
 #include "ResultSet.h"
-
-#define NEW_ROW_ID -1
 
 namespace Musador
 {
     namespace Database
     {
+        /// @brief type for row ids
+        typedef __int64 id_t;
+
+        /// @brief ID for rows which do not yet exist in the database
+        const int NEW_ROW_ID = -1;
+
+        class ColumnBase;
+
         /// @class IDatabase
         /// @brief Abstract base class for Database objects
         class IDatabase : public boost::enable_shared_from_this<IDatabase>
@@ -49,7 +54,7 @@ namespace Musador
             /// @param[in] table The database table in which to insert.
             /// @param[in] columns A vector of columns with data to include in the INSERT statement.
             /// @returns The id value generated for the new row
-            virtual __int64 insert(const std::wstring& table, const std::vector<ColumnBase *>& columns) = 0;	
+            virtual id_t insert(const std::wstring& table, const std::vector<ColumnBase *>& columns) = 0;	
 
             /// @brief Update rows in the database.
             /// A SQL UPDATE statement of the form UPDATE [table] SET ([column_name]=[column_value], ...) WHERE [conditions]
@@ -94,6 +99,7 @@ namespace Musador
     }
 }
 
+#include "Column.h"
 #include "Entity.h"
 #include "DatabaseSqlite.h"
 

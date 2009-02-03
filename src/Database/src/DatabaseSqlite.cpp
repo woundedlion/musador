@@ -116,7 +116,7 @@ DatabaseSqlite::select(const std::wstring& table, const std::vector<ColumnBase *
     return this->execute(q.str());
 }
 
-__int64
+id_t
 DatabaseSqlite::insert(const std::wstring& table,  const std::vector<ColumnBase *>& columns)
 {
     std::wstringstream q;

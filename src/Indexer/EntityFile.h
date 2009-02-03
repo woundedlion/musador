@@ -13,13 +13,6 @@ namespace Musador
     {
     public:
 
-        /// @brief Constructor.
-        /// @param[in] db A shared pointer to the database instance where this Entity is stored.    
-        EntityFile(boost::shared_ptr<Database::IDatabase> db);
-
-        /// @brief Destructor.
-        ~EntityFile();
-
         /// @brief The filename of this file.
         Database::Column<std::wstring> filename;
 
@@ -55,6 +48,36 @@ namespace Musador
 
         /// @brief The application-defined status of this file
         Database::Column<unsigned long> status_id;
+
+        /// @brief Constructor.
+        /// @param[in] db A shared pointer to the database instance where this Entity is stored.    
+        EntityFile::EntityFile(boost::shared_ptr<Database::IDatabase> db) : Entity(db, L"files"),
+            filename(L"filename"),
+            size(L"size"),
+            mtime(L"mtime"),
+            parentID(L"parent_id"),
+            artist(L"artist"),
+            album(L"album"),
+            title(L"title"),
+            genre(L"genre"),
+            track(L"track"),
+            length(L"length"),
+            bitrate(L"bitrate"),
+            status_id(L"status_id")
+        {
+            bind(filename);
+            bind(size);
+            bind(mtime);
+            bind(parentID);
+            bind(artist);
+            bind(album);
+            bind(title);
+            bind(genre);
+            bind(track);
+            bind(length);
+            bind(bitrate);
+            bind(status_id);
+        }
     };
 }
 #endif

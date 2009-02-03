@@ -15,19 +15,21 @@ namespace Musador
     {
     public:
 
-        /// @brief Constructor.
-        /// @param[in] db A shared pointer to the database instance where this Entity is stored.
-        EntityDir(boost::shared_ptr<Database::IDatabase> db);
-
-        /// @brief Destructor.
-        ~EntityDir();
-
         /// @brief The full path to the directory on disk
         Database::Column<std::wstring> path;
 
         /// @brief The Last Modified time of the directory
         Database::Column<time_t> mtime;
 
+        /// @brief Constructor.
+        /// @param[in] db A shared pointer to the database instance where this Entity is stored.
+        EntityDir::EntityDir(boost::shared_ptr<Database::IDatabase> db) : Entity(db, L"dirs"),
+            path(L"path"),
+            mtime(L"mtime")
+        {
+            bind(path);
+            bind(mtime);
+        }
     };
 }
 #endif
