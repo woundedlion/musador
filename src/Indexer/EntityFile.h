@@ -1,8 +1,6 @@
 #ifndef ENTITY_FILE_AA8ED717_7E19_4831_A696_C5C8ECB2B3FD
 #define ENTITY_FILE_AA8ED717_7E19_4831_A696_C5C8ECB2B3FD
 
-#include <time.h>
-#include <string>
 #include "Database/Entity.h"
 
 namespace Musador
@@ -23,7 +21,7 @@ namespace Musador
         Database::Column<long> size;
 
         /// @brief The foreign key ID for the directory containing this file.
-        Database::Column<long> parentID;
+        Database::Column<Database::id_t> parentID;
 
         /// @brief The Artist field present in this file's metadata
         Database::Column<std::wstring> artist;

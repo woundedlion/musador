@@ -219,7 +219,7 @@ Database::id_t Indexer::addDirectory(const fs::wdirectory_entry& dir)
     return d.getId();
 }
 
-Database::id_t Indexer::addFile(const fs::wdirectory_entry& file, unsigned long parentId)
+Database::id_t Indexer::addFile(const fs::wdirectory_entry& file, Database::id_t parentId)
 {
     EntityFile f(this->db);
 
