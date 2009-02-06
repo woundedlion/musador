@@ -7,9 +7,11 @@ namespace Musador
 {
     /// @class EntityFile
     /// @brief A Database Entity representing a file.
-    class EntityFile : public Database::Entity
+    class EntityFile : public Database::Entity<EntityFile>
     {
     public:
+
+        static const wchar_t * table() { return L"files"; }
 
         /// @brief The filename of this file.
         Database::Column<std::wstring> filename;
@@ -49,7 +51,7 @@ namespace Musador
 
         /// @brief Constructor.
         /// @param[in] db A shared pointer to the database instance where this Entity is stored.    
-        EntityFile::EntityFile(boost::shared_ptr<Database::IDatabase> db) : Entity(db, L"files"),
+        EntityFile::EntityFile(boost::shared_ptr<Database::IDatabase> db) : Entity<EntityFile>(db),
             filename(L"filename"),
             size(L"size"),
             mtime(L"mtime"),

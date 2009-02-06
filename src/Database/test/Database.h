@@ -59,11 +59,11 @@ public:
         LOG(Info) << "testSqliteCreate Success!";
     }
 
-    class EntityTest : public Database::Entity
+    class EntityTest : public Database::Entity<EntityTest>
     {
     public:
         EntityTest(boost::shared_ptr<Database::IDatabase> db) :
-          Database::Entity(db,L"test"),
+          Database::Entity<EntityTest>(db),
               testInt(L"test_int"),
               testStr(L"test_str"),
               testPchar(L"test_pchar"),
@@ -79,12 +79,15 @@ public:
 
           ~EntityTest() {}
 
+          static const wchar_t * table() { return L"test"; }
+    
           Database::Column<int> testInt;
           Database::Column<std::string> testStr;
           Database::Column<char *> testPchar;
           Database::Column<std::wstring> testWStr;
           Database::Column<wchar_t *> testPwchar_t;
     };
+
 
     void testSqliteInsert()
     {

@@ -20,7 +20,7 @@ namespace Musador
             /// @brief Constructor.
             /// @param[in] name The name of the column in the underlying database.
             explicit ColumnBase(std::wstring name) : 
-            nameStr(name),
+                nameStr(name),
                 dirty(false)
             {}
 
@@ -96,6 +96,10 @@ namespace Musador
 
         };
 
+        //////////////////////////////////////////////////////////////////////////
+        // Implementations
+        //////////////////////////////////////////////////////////////////////////
+
         template <typename T>
         Column<T>::Column(const std::wstring& name):
         ColumnBase(name),
@@ -123,14 +127,15 @@ namespace Musador
             return this->data == rhs;
         }
 
-        // Template specializations
-
-
         template <typename T>
         inline void Column<T>::toSQL(SQLStream& out) const
         {
             out << this->data;
         }
+
+        //////////////////////////////////////////////////////////////////////////
+        // Template specializations
+        //////////////////////////////////////////////////////////////////////////
 
         template <>
         inline void Column<std::string>::toSQL(SQLStream& out) const

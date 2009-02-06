@@ -7,9 +7,11 @@ namespace Musador
 {
     /// @class EntityDir
     /// @brief A Database Entity representing a directory.
-    class EntityDir : public Database::Entity
+    class EntityDir : public Database::Entity<EntityDir>
     {
     public:
+
+        static const wchar_t * table() { return L"dirs"; }
 
         /// @brief The full path to the directory on disk
         Database::Column<std::wstring> path;
@@ -19,7 +21,7 @@ namespace Musador
 
         /// @brief Constructor.
         /// @param[in] db A shared pointer to the database instance where this Entity is stored.
-        EntityDir::EntityDir(boost::shared_ptr<Database::IDatabase> db) : Entity(db, L"dirs"),
+        EntityDir::EntityDir(boost::shared_ptr<Database::IDatabase> db) : Entity<EntityDir>(db),
             path(L"path"),
             mtime(L"mtime")
         {
