@@ -32,7 +32,7 @@ namespace Musador
             /// @brief Begin an asynchronous ACCEPT with this listener.
             /// One incoming Connection can be accepted for each outstanding invocation of this method.
             /// @param[in] handler EventHandler invoked when a Connection is accepted or the ACCEPT fails.
-            /// @param[in] tag User-defined data passed along the handler upon completion of this request.
+            /// @param[in] tag User-defined data passed along to the handler upon completion of this request.
             virtual void beginAccept(EventHandler handler, boost::any tag = NULL) = 0;
 
             /// @brief Close this Listener.

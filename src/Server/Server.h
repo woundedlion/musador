@@ -17,41 +17,53 @@ typedef boost::thread Thread;
 
 namespace Musador
 {
+    /// @class Server
+    /// @brief Generic Server class which can serve Connections for any type 
+    /// of Listener
     class Server : public boost::enable_shared_from_this<Server>
     {
     public:
 
+        /// @brief Constructor
+        /// @param[in] cfg The configuration for this server
         Server(ServerConfig& cfg);
 
+        /// @brief Destructor
         virtual ~Server();
 
-        void start();
-
+        /// @brief Start accepting connections with the given listener
+        /// @param[in] listener The listener for which to serve connections
+        /// @param[in] tag User-defined data passed along to each new Connection's 
+        /// onAcceptComplete() function as well as the Server's onAcceptComplete() function
         void acceptConnections(	boost::shared_ptr<IO::Listener> listener, 
             boost::any tag = NULL);
 
+        /// @brief Asynchronously start the Server running
+        void start();
+
+        /// @brief Synchronously wait until the server is running
         void waitForStart();
 
+        /// @brief Asynchronously shut down the Server
         void stop();
 
+        /// @brief Synchronously wait until the server has shut down
         void waitForStop();
 
+        /// @brief Asynchronously restart the server
         void restart();
 
-        void onAccept(boost::shared_ptr<IO::Msg> msg, boost::any tag);
+        /// @brief Completion routine invoked when a new connection is accepted.
+        /// @param[in] msg Shared pointer to a Msg object specifying the result of the asynchronous ACCEPT
+        /// @param[in] tag User-defined data which was originally passed into Server::acceptConnections
+        void onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag);
 
+        /// @brief Invoked when on a Connection error
+        /// @param[in] msg Shared pointer to a Msg object specifying the error
         void onError(boost::shared_ptr<IO::MsgError> msgErr);
 
+        /// @brief Get the global Session collection for this Server
         Session & getSession(const std::string& key);
-
-        /*
-        bool authReq(const Request& request, const StateStore& session);
-        bool authIp(const std::string& ip);
-        bool serveFile(const Request& request, const std::string& queryString, std::map<std::string,std::string> args, const Response& response);
-        int getConnectionCount();
-        virtual std::string getAuthRealm(const std::string& uri) = 0;
-        virtual bool isValidUser(const std::string& username) = 0;
-        */
 
     private:
 

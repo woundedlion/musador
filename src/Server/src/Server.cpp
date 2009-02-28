@@ -138,12 +138,12 @@ Server::acceptConnections(boost::shared_ptr<IO::Listener> listener,
     this->listeners.push_back(listener);
 
     // Do the async accept
-    listener->beginAccept(boost::bind(&Server::onAccept,this,_1,_2), tag);
+    listener->beginAccept(boost::bind(&Server::onAcceptComplete,this,_1,_2), tag);
 }
 
 
 void 
-Server::onAccept(boost::shared_ptr<IO::Msg> msg, boost::any tag)
+Server::onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag)
 {
     switch (msg->getType())
     {
@@ -152,7 +152,7 @@ Server::onAccept(boost::shared_ptr<IO::Msg> msg, boost::any tag)
             boost::shared_ptr<IO::MsgSocketAcceptComplete> msgAccept(boost::shared_static_cast<IO::MsgSocketAcceptComplete>(msg));
 
             // Do another async accept
-            msgAccept->listener->beginAccept(boost::bind(&Server::onAccept,this,_1,_2),tag);
+            msgAccept->listener->beginAccept(boost::bind(&Server::onAcceptComplete,this,_1,_2),tag);
 
             // Set up the new connection
             this->addConnection(msgAccept->conn);

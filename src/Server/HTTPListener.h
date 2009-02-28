@@ -9,8 +9,11 @@ namespace Musador
     {
     public:
 
+        /// @brief Constructor
+        /// @param[in] localEP The local address to which the Listener will bind
         HTTPListener(const sockaddr_in& localEP);
 
+        /// @brief Factory method for producing a Connection object accepted by this Listener.
         boost::shared_ptr<IO::Connection> createConnection();
     };
 }
