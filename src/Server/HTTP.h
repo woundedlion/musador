@@ -92,8 +92,7 @@ namespace Musador
         /// @brief Collection type for HTTP Cookies
         typedef std::map<std::string,std::string> CookieCollection;	
 
-        //////////////////////////////////////////////////////////////////////////
-        
+        //////////////////////////////////////////////////////////////////////////        
         /// @class Request
         /// @brief An HTTP Request
         class Request 
@@ -109,12 +108,12 @@ namespace Musador
             /// @brief Reset this Request to an empty state, as if newly constructed
             void clear();
 
-            /// @brief Send the request headers over the specified Connection
-            /// @param[in] conn The IO:Connection object on which the header data is sent
+            /// @brief Asynchronously send the request headers over the specified Connection
+            /// @param[in] conn The Connection on which to send the header data
             void sendHeaders(IO::Connection& conn);
 
-            /// @brief Send the Request body over the specified Connection
-            /// @param[in] conn The IO:Connection object on which the request data is sent
+            /// @brief Asynchronously send the request body over the specified Connection
+            /// @param[in] conn The Connection on which to send the body data
             void sendBody(IO::Connection& conn);
             
             /// @brief Dump an HTML representation of the Request to the spcified output stream
@@ -143,39 +142,61 @@ namespace Musador
             /// The cookies name-value pairs in the request
             CookieCollection cookies;
 
-            /// A stream containing the request data (body of the request)
+            /// A stream containing the request body
             boost::shared_ptr<std::iostream> data;
 
         };
 
         //////////////////////////////////////////////////////////////////////
-        /// Response
-        //////////////////////////////////////////////////////////////////////
+        /// @class Request
+        /// @brief An HTTP Request
         class Response 
         {
         public:
 
+            /// @brief Constructor
             Response();
+
+            /// @brief Destructor
             ~Response();
 
+            /// @brief Clear the response object
+            /// Resets this object to an empty state, suitable for reuse
             void clear();
+
+            /// @brief Asynchronously send the response headers over the specified Connection
+            /// @param[in] conn The Connection on which to send the header data
             void sendHeaders(IO::Connection& conn);
+
+            /// @brief Asynchronously send the response body over the specified Connection
+            /// @param[in] conn The Connection on which to send the body data
             void sendBody(IO::Connection& conn);
 
+            /// @brief The protocol and version of the response e.g. HTTP/1.1
             std::string protocol;
+
+            /// @The HTTP response status code e.g. 200, 401, 404
             int status;
+
+            /// @The HTTP response status reason e.g. "OK", "Authorization Required", "Not Found"
             std::string reason;
+
+            /// @brief The header name-value pairs in the response
             std::map<std::string,std::string> headers;
+
+            /// A stream containing the response body
             boost::shared_ptr<std::iostream> data;
         };
 
         //////////////////////////////////////////////////////////////////////
-        /// Env
-        //////////////////////////////////////////////////////////////////////
+        /// @class Env
+        /// @brief The environment for an HTTPConnection
+        /// This structure contains any HTTP-specific connection context
         class Env : public IO::ConnectionCtx
         {
         public:
 
+            /// @brief Constructor
             Env() :
               req(NULL),
                   res(NULL),
@@ -184,11 +205,23 @@ namespace Musador
               {
               }
 
+              /// @brief A pointer to the current Request object
               Request * req;
+
+              /// @brief A pointer to the current Response object
               Response * res;
+
+              /// @brief A shared pointer to the HTTP configuration
               boost::shared_ptr<HTTPConfig> cfg;
+
+              /// @brief A pointer to the Controller for this connection
+              /// This is the object that maps specific requests to "business logic"
               Controller * controller;
+
+              /// @brief A pointer to he HTTP Session for this connection
               Session * session;
+
+              /// A shared pointer to the Server which owns this Connection
               boost::shared_ptr<Server> server;
         };
 
@@ -196,29 +229,64 @@ namespace Musador
         /// Free functions
         //////////////////////////////////////////////////////////////////////
 
+        /// @brief Parse a string containing cookies into a CookieCollection containing name-value pairs
+        /// @param[in] cookieStr A string of raw cookie data
+        /// @param[out] cookies A Collection of name-value pairs parsed from cookieStr
         void parseCookie(const std::string& cookieStr, CookieCollection& cookies);
 
+        /// @brief Format the given time_t as an RFC1123 time string
+        /// @param[in]timer A time_t object containing a time
+        /// @returns A string containing the time in RFC1123 format e.g. Fri, 06 Mar 2009 19:10:14 GMT
         std::string getRFC1123(const time_t& timer);
 
+        /// @brief Decode the given URL-encoded string
+        /// @param[in,out] enc A URL-encoded string, which is decoded in-place
         void urlDecode(std::string& enc);
 
+        /// @brief Decode the given URL-encoded string pair
+        /// @param[in,out] pair A pair of URL-encoded strings, which are decoded in-place
         void urlDecode(std::pair<std::string,std::string>& pair);
 
-        std::string urlEncode(const std::string& enc);
+        /// @brief URL-encode the given string
+        /// @param[in] str a string to URL-encode
+        /// @returns a URL-encoded version of str
+        std::string urlEncode(const std::string& str);
 
+        /// @brief Generate a nonce for digest authentication
+        /// The nonce is of the form timestamp+MD5(timestamp+privatekey)
+        /// @param[in] timestamp A time value used for generating the nonce
+        /// @returns A string containing the generated nonce
         std::string genDigestNonce(time_t timestamp);
 
+        /// @brief Generate a nonce for digest authentication using the current time as a timestamp
+        /// The nonce is of the form timestamp+MD5(timestamp+privatekey)
+        /// @returns A string containing the generated nonce
         std::string genDigestNonce();
 
+        /// @brief Generate an opaque value for digest authentication
+        /// @returns a 16-byte random hex string
         std::string genDigestOpaque();
 
+        /// @brief Generate a valid digest response for comparing against the response sent by the client
+        /// @param[in] authInfo map of name value pairs collected from the Authorization header in the request
+        /// @param[in] method A string containing the auth method, e.g. "Digest" 
+        /// @param[in] password The password of the user which is trying to authenticate
+        /// @returns A valid HTTP digest response
         std::string genDigestResponse(std::map<std::string, std::string>& authInfo, const std::string& method, const std::string& password);
 
+        /// @brief Try to authenticate a Request
+        /// @param[in] env The HTTP environment containing the Request to authenticate
+        /// @returns True if the Request contains valid credentials, false otherwise
         bool auth(const Env& env);
 
+        /// @brief Attempt to parse a complete Request from the given bytes of data
+        /// @param[in] data A BufferChain contining bytes of data to parse
+        /// @param[out] req The Request object to populate from the data
+        /// @param[out] length The number of bytes of data from the front of the chain used for the Request
+        /// @returns true if a Request was successfully parsed, false otherwise. A false return value could
+        /// simply indicate that more data is required to complete the Request.
         bool parseRequest(const IO::BufferChain<char>& data, Request& req, size_t& length);
     }	
-
 }
 
 #endif
