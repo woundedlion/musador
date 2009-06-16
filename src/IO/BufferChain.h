@@ -307,7 +307,7 @@ namespace Musador
             /// @param[in] dataEnd The position immediately past the end of the data in buf
             void append(boost::shared_array<T> buf, size_t capacity, size_t dataBegin, size_t dataEnd);
 
-            /// @brief Increment the start of the readbale data in the chain by num elements
+            /// @brief Increment the start of the readable data in the chain by num elements
             /// As elements at the front  of the chain are popped, Buffers are automatically destroyed as they become unused
             /// @param[in] num The number of elements to pop
             void pop(size_t num);
