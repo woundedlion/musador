@@ -119,8 +119,8 @@ DatabaseSqlite::select(const std::wstring& table, const std::vector<ColumnBase *
 id_t
 DatabaseSqlite::insert(const std::wstring& table,  const std::vector<ColumnBase *>& columns)
 {
-    std::wstringstream q;
-    std::wstringstream valueStr;
+    SQLStream q;
+    SQLStream valueStr;
     q << "INSERT INTO " << table.c_str() << "(";
     bool first = true;
     for (std::vector<ColumnBase *>::const_iterator iter = columns.begin(); iter != columns.end(); iter++)
@@ -144,7 +144,7 @@ DatabaseSqlite::insert(const std::wstring& table,  const std::vector<ColumnBase 
 void 
 DatabaseSqlite::update(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions )
 {
-    std::wstringstream q;
+    SQLStream q;
     q << "UPDATE " << table << " SET ";
     bool first = true;
     for (std::vector<ColumnBase *>::const_iterator iter = columns.begin(); iter != columns.end(); iter++)
@@ -168,7 +168,7 @@ DatabaseSqlite::update(const std::wstring& table, const std::vector<ColumnBase *
 void 
 DatabaseSqlite::remove(const std::wstring& table, const std::wstring& conditions)
 {
-    std::wstringstream q;
+    SQLStream q;
     q << "DELETE FROM " << table << " WHERE " << conditions;
     this->execute(q.str());
 }
