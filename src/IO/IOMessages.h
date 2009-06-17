@@ -22,7 +22,8 @@ namespace Musador
             MSG_SOCKET_ACCEPT_COMPLETE,
             MSG_PIPE_ACCEPT_COMPLETE,
             MSG_SOCKET_CONNECT_COMPLETE,
-            MSG_PIPE_CONNECT_COMPLETE
+            MSG_PIPE_CONNECT_COMPLETE,
+            MSG_NOTIFY
         };
 
         class Error
@@ -199,6 +200,16 @@ namespace Musador
 
             /// @brief A shared pointer to the Connection object to which this message refers.
             boost::shared_ptr<Connection> conn;
+        };
+
+        class MsgNotify : public Msg
+        {
+        public:
+
+            /// @brief Constructor.
+            inline MsgNotify() : Msg(MSG_NOTIFY)
+            {
+            }
         };
 
         /// @brief Type of the callback invoked for completion events.

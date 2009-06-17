@@ -148,6 +148,14 @@ namespace Musador
                 boost::shared_ptr<MsgWriteComplete> msgWrite, 
                 boost::any tag = NULL);
 
+           /// @brief Asynchronously post a message to an EventHandler
+           /// @param[in] handler The EventHandler which is called with the posted msg.
+           /// @param[in] msgNotify Shared pointer to a MsgNotify to post to the EventHandler.
+           /// @param[in] tag User-defined data which are passed along to handler.
+           void beginNotify(EventHandler handler, 
+               boost::shared_ptr<MsgNotify> msgNotify, 
+               boost::any tag = NULL);
+
            /// @brief Start the IO engine running.
            /// A user must call this before I/O requests will be serviced.
            /// @param[in] numWorkers The number of worker threads to spawn which will service I/O requests.
@@ -185,6 +193,7 @@ namespace Musador
             void completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
             void completeSocketConnect(boost::shared_ptr<CompletionCtx> ctx);
             void completePipeConnect(boost::shared_ptr<CompletionCtx> ctx);
+            void completeNotify(boost::shared_ptr<CompletionCtx> ctx);
 
 #ifdef WIN32
             HANDLE iocp;

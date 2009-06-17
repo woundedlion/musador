@@ -79,6 +79,8 @@ void Proactor::runIO()
                 case MSG_WRITE_COMPLETE:
                     this->completeWrite(ctx, nBytes);
                     break;
+                case MSG_NOTIFY:
+                    this->completeNotify(ctx);
                 }
             }
             else 
@@ -605,6 +607,27 @@ Proactor::completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long nByt
     {
         ctx->handler(msgWrite,ctx->tag);
     }
+}
+
+void
+Proactor::beginNotify(EventHandler handler, boost::shared_ptr<MsgNotify> msgNotify, boost::any tag /* = NULL */)
+{
+    boost::shared_ptr<CompletionCtx> ctx(new CompletionCtx());
+    ctx->handler = handler;
+    ctx->msg = msgNotify;
+    ctx->tag = tag;
+    this->addJob(ctx.get(),ctx);
+    ::PostQueuedCompletionStatus(this->iocp, 0, NULL, ctx.get());	
+}
+
+void
+Proactor::completeNotify(boost::shared_ptr<CompletionCtx> ctx)
+{
+    LOG(Debug)	<< "Notify completed.";
+    boost::shared_ptr<MsgNotify> msgNotify(boost::shared_static_cast<MsgNotify>(ctx->msg));
+    // notify the handler
+    assert(NULL != ctx->handler);
+    ctx->handler(msgNotify,ctx->tag);
 }
 
 void 

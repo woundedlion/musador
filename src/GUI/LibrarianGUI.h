@@ -7,7 +7,6 @@
 #include <boost/interprocess/sync/named_condition.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 
-#include "Utilities/MessageSink.h"
 #include "UI/WinApp.h"
 #include "UI/WindowsShellIcon.h"
 #include "UI/WinMenu.h"
