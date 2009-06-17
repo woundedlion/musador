@@ -22,8 +22,32 @@ namespace Musador
             MSG_SOCKET_ACCEPT_COMPLETE,
             MSG_PIPE_ACCEPT_COMPLETE,
             MSG_SOCKET_CONNECT_COMPLETE,
-            MSG_PIPE_CONNECT_COMPLETE,
-            MSG_ERROR
+            MSG_PIPE_CONNECT_COMPLETE
+        };
+
+        class Error
+        {
+        public:
+
+            typedef int ErrorCode;
+
+            /// @brief Constructor
+            Error() : code(0) {}
+
+            /// @brief Check if the Error object indicates success
+            /// @returns True if the Error object indicates success, false otherwise
+            bool success() const { return this->code != 0; }
+
+            /// @brief Get the system-specific error code
+            /// @returns A numeric error code
+            ErrorCode get() const { return this->code; }
+
+            /// @brief Set the system-specific error code
+            void set(ErrorCode code) { this->code = code; }
+
+        private:
+
+            ErrorCode code;
         };
 
         /// @class Msg
@@ -41,8 +65,8 @@ namespace Musador
             /// @returns A member of the MsgType enumeration indicating the type of this message.
             inline MsgType getType() { return type; }
 
-            /// @brief A shared pointer to the Connection object to which this message refers.
-            boost::shared_ptr<Connection> conn;
+            /// @brief Contains any error information associated with this message
+            Error err;
 
         private: 
 
@@ -67,6 +91,9 @@ namespace Musador
                 buf(buf)
             {
             }
+
+            /// @brief A shared pointer to the Connection object to which this message refers.
+            boost::shared_ptr<Connection> conn;
 
             /// @brief Buffer containing the data that was requested to be written.
             Buffer<char> buf;
@@ -94,6 +121,9 @@ namespace Musador
             {
             }
 
+            /// @brief A shared pointer to the Connection object to which this message refers.
+            boost::shared_ptr<Connection> conn;
+
             /// @brief Buffer containing the data which was read.
             Buffer<char> buf;
 
@@ -113,6 +143,9 @@ namespace Musador
             {
             }
 
+            /// @brief A shared pointer to the Connection object to which this message refers.
+            boost::shared_ptr<Connection> conn;
+
             /// @brief Shared pointer to the Listener object which accepted this connection.
             boost::shared_ptr<Listener> listener;
 
@@ -131,8 +164,11 @@ namespace Musador
             {
             }
 
-          /// @brief Shared pointer to the Listener object which accepted this connection.
-          boost::shared_ptr<Listener> listener;
+            /// @brief A shared pointer to the Connection object to which this message refers.
+            boost::shared_ptr<Connection> conn;
+
+            /// @brief Shared pointer to the Listener object which accepted this connection.
+            boost::shared_ptr<Listener> listener;
         };
 
        /// @class MsgSocketConnectComplete
@@ -145,6 +181,9 @@ namespace Musador
             inline MsgSocketConnectComplete() : Msg(MSG_SOCKET_CONNECT_COMPLETE)
             {
             }
+
+            /// @brief A shared pointer to the Connection object to which this message refers.
+            boost::shared_ptr<Connection> conn;
         };
 
         /// @class MsgPipeConnectComplete
@@ -157,27 +196,9 @@ namespace Musador
             inline MsgPipeConnectComplete() : Msg(MSG_PIPE_CONNECT_COMPLETE)
             {
             }
-        };
 
-        /// @class MsgError
-        /// @brief Message indication an error while completing a request.
-        class MsgError : public Msg
-        {
-        public:
-
-            /// @brief Constructor.
-            inline MsgError() : Msg(MSG_ERROR),
-                err(0)
-            {
-            }
-
-            /// @brief System-specific error code.
-            int err;
-
-            /// @brief User-defined data which were originnaly passed to the 
-            /// asynchronous request which caused this error.
-            boost::any tag;
-
+            /// @brief A shared pointer to the Connection object to which this message refers.
+            boost::shared_ptr<Connection> conn;
         };
 
         /// @brief Type of the callback invoked for completion events.

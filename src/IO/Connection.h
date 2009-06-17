@@ -83,21 +83,18 @@ namespace Musador
 
             /// @brief Completion routine invoked by the IO engine when a connection is first connected.
             /// @param[in] msg Shared pointer to a Msg object specifying the result of the asynchronous CONNECT.
-            /// Currently, this is either a MsgConnectComplete or MsgError.
             /// @param[in] tag User-defined data which was originally passed into beginConnect.
             virtual void onConnectComplete(boost::shared_ptr<Msg> msg, boost::any tag = NULL) = 0;		
 
             /// @brief Completion routine invoked by the IO engine whenever an asynchronous READ 
             /// on this connection completes.
             /// @param[in] msg Shared pointer to a Msg object specifying the result of the asynchronous READ.
-            /// Currently, this is either a MsgReadComplete or MsgError.
             /// @param[in] tag User-defined data which was originally passed into beginRead.
             virtual void onReadComplete(boost::shared_ptr<Msg> msg, boost::any tag = NULL) = 0;
 
             /// @brief Completion routine invoked by the IO engine whenever an asynchronous WRITE 
             /// on this connection completes.
             /// @param[in] msg Shared pointer to a Msg object specifying the result of the asynchronous WRITE.
-            /// Currently, this is either a MsgWriteComplete or MsgError.
             /// @param[in] tag User-defined data which was originally passed into beginWrite.
             virtual void onWriteComplete(boost::shared_ptr<Msg> msg, boost::any tag = NULL) = 0;
 

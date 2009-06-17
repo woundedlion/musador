@@ -41,7 +41,7 @@ namespace Musador
             void beginAccept(EventHandler handler, boost::any tag = NULL);
 
             /// @brief Close this SocketListener.
-            /// Any outstanding ACCEPTS on this SocketListener will complete with a MsgError.
+            /// Any outstanding ACCEPTS on this SocketListener will complete with an error.
              void close();
 
             /// @brief Get the underlying Socket belonging to this SocketListener.

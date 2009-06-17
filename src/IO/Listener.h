@@ -36,7 +36,7 @@ namespace Musador
             virtual void beginAccept(EventHandler handler, boost::any tag = NULL) = 0;
 
             /// @brief Close this Listener.
-            /// Any outstanding ACCEPTS on this Listener will complete with a MsgError.
+            /// Any outstanding ACCEPTS on this Listener will complete with an error.
             virtual void close() = 0;
 
             /// @brief Factory method for producing a Connection object accepted by this Listener.
