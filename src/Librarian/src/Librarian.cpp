@@ -131,30 +131,22 @@ Librarian::index(const std::wstring& outfile,const std::vector<std::wstring>& pa
 void
 Librarian::onGUIAccept(boost::shared_ptr<IO::Msg> msg, boost::any /*tag = NULL*/)
 {
-    switch (msg->getType())
+    assert(msg->getType() == IO::MSG_PIPE_ACCEPT_COMPLETE);
+    boost::shared_ptr<IO::MsgPipeAcceptComplete>& msgAccept = boost::shared_static_cast<IO::MsgPipeAcceptComplete>(msg);
+    if (msgAccept->err.success()) 
     {
-    case IO::MSG_PIPE_ACCEPT_COMPLETE:
-        {
-            boost::shared_ptr<IO::MsgPipeAcceptComplete>& msgAccept = boost::shared_static_cast<IO::MsgPipeAcceptComplete>(msg);
+        // Notify the GUI of the new connection
+        this->gui = boost::shared_static_cast<GUIConnection>(msgAccept->conn);
+        this->gui->setHandler(boost::bind(&Librarian::onGUIMsg,this,_1));
+        this->notifyGUI<GUIMsgEnabledNotify>();        
 
-            this->gui = boost::shared_static_cast<GUIConnection>(msgAccept->conn);
-            this->gui->setHandler(boost::bind(&Librarian::onGUIMsg,this,_1));
-
-            this->notifyGUI<GUIMsgEnabledNotify>();        
-
-            // Keep listening for new connections
-            this->listener->beginAccept(boost::bind(&Librarian::onGUIAccept,this,_1,_2));
-
-            this->gui->beginRead();
-
-        }
-        break;
-    case IO::MSG_ERROR:
-        {
-            boost::shared_ptr<IO::MsgError> msgErr(boost::shared_static_cast<IO::MsgError>(msg));
-            LOG(Error) << "Error accepting GUI Connection: " << msgErr->err;
-        }
-        break;
+        // Keep listening
+        this->listener->beginAccept(boost::bind(&Librarian::onGUIAccept,this,_1,_2));
+        this->gui->beginRead();
+    }
+    else 
+    {
+        LOG(Error) << "Error accepting GUI Connection: " << msgAccept->err.get();
     }
 }
 
