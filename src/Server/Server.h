@@ -59,8 +59,9 @@ namespace Musador
         void onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag);
 
         /// @brief Invoked when on a Connection error
-        /// @param[in] msg Shared pointer to a Msg object specifying the error
-        void onError(boost::shared_ptr<IO::MsgError> msgErr);
+        /// @param[in] msg Shared pointer to the Connection on which the error occurred
+        /// @param[in] msg The error which occurred
+        void onError(boost::shared_ptr<IO::Connection> conn, const IO::Error& err);
 
         /// @brief Get the global Session collection for this Server
         Session & getSession(const std::string& key);

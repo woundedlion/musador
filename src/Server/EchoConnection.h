@@ -1,6 +1,7 @@
 #ifndef ECHO_CONNECTION_H_66E5DEFA_BA19_45d1_8990_2F5FBD85F9DD
 #define ECHO_CONNECTION_H_66E5DEFA_BA19_45d1_8990_2F5FBD85F9DD
 
+#include "Logger/Logger.h"
 #include "IO/SocketConnection.h"
 
 namespace Musador
@@ -38,16 +39,15 @@ namespace Musador
         /// @param[in] tag User-defined data which was originally passed into beginRead.
         void onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL) 
         { 
-            switch (msg->getType())
+            assert(msg->getType() == IO::MSG_READ_COMPLETE);
+            boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
+            if (msgRead->err.success()) 
             {
-            case IO::MSG_READ_COMPLETE:
-                {
-                    boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
-                    this->beginWrite(msgRead->buf);
-                }
-                break;
-            case IO::MSG_ERROR:
-                break;
+                this->beginWrite(msgRead->buf);
+            }
+            else 
+            {
+
             }
         }
 

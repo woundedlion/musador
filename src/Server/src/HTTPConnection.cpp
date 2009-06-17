@@ -44,41 +44,32 @@ HTTPConnection::onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag 
 void 
 HTTPConnection::onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /*= NULL*/)
 {
-    switch (msg->getType())
+    assert(msg->getType() == IO::MSG_READ_COMPLETE);
+    boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
+    if (msgRead->err.success())
     {
-    case IO::MSG_READ_COMPLETE:
-        {
-            boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
-            Guard lock(this->fsmMutex);
-            this->fsm.process_event(HTTP::EvtReadComplete(msgRead));
-        }
-        break;
-
-    case IO::MSG_ERROR:
-        {
-            this->env.server->onError(boost::shared_static_cast<IO::MsgError>(msg));
-        }
-        break;
+        Guard lock(this->fsmMutex);
+        this->fsm.process_event(HTTP::EvtReadComplete(msgRead));
+    }
+    else
+    {
+        this->env.server->onError(msgRead->conn, msgRead->err);
     }
 }
 
 void 
 HTTPConnection::onWriteComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /*= NULL*/)
 {
-    switch (msg->getType())
+    assert(msg->getType() == IO::MSG_WRITE_COMPLETE);
+    boost::shared_ptr<IO::MsgWriteComplete> & msgWrite = boost::shared_static_cast<IO::MsgWriteComplete>(msg);
+    if (msgWrite->err.success())
     {
-    case IO::MSG_WRITE_COMPLETE:
-        {
-            boost::shared_ptr<IO::MsgWriteComplete> & msgWrite = boost::shared_static_cast<IO::MsgWriteComplete>(msg);
-            Guard lock(this->fsmMutex);
-            this->fsm.process_event(HTTP::EvtWriteComplete(msgWrite));
-        }
-        break;
-    case IO::MSG_ERROR:
-        {
-            this->env.server->onError(boost::shared_static_cast<IO::MsgError>(msg));
-        }
-        break;
+        Guard lock(this->fsmMutex);
+        this->fsm.process_event(HTTP::EvtWriteComplete(msgWrite));
+    }
+    else
+    {
+        this->env.server->onError(msgWrite->conn, msgWrite->err);
     }
 }
 
@@ -88,9 +79,9 @@ HTTPConnection::close()
     SocketConnection::close();
     if (NULL != this->env.server)
     {
-        boost::shared_ptr<IO::MsgError> msgErr(new IO::MsgError());
-        msgErr->conn = shared_from_this();
-        this->env.server->onError(msgErr);
+        IO::Error err;
+        boost::shared_ptr<IO::Connection> conn = shared_from_this();
+        this->env.server->onError(conn, err);
     }
 }
 
