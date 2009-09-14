@@ -42,7 +42,7 @@ namespace Musador
 
             /// @brief Close this SocketListener.
             /// Any outstanding ACCEPTS on this SocketListener will complete with an error.
-             void close();
+            void close();
 
             /// @brief Get the underlying Socket belonging to this SocketListener.
             /// @returns A system-specific handle to the underlying Socket.
