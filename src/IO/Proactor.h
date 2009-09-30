@@ -148,13 +148,9 @@ namespace Musador
 
            /// non-I/O Events
 
-           /// @brief Asynchronously post a message to an EventHandler
-           /// @param[in] handler The EventHandler which is called with the posted msg.
-           /// @param[in] msgNotify Shared pointer to a MsgNotify to post to the EventHandler.
-           /// @param[in] tag User-defined data which are passed along to handler.
-           void beginNotify(EventHandler handler, 
-               boost::shared_ptr<MsgNotify> msgNotify, 
-               boost::any tag = NULL);
+           /// @brief Asynchronously invoke a function
+           /// @param[in] f The function to invoke asynronously from an IO thread
+           void beginInvoke(boost::function<void ()> f);
 
            // Control Methods
 
@@ -163,7 +159,7 @@ namespace Musador
            /// @param[in] numWorkers The number of worker threads to spawn which will service I/O requests.
            /// @remarks The Proactor will attempt to maintain one active worker thread for each core
            /// available on the machine. So, for instance, a good value for numWorkers would be double the number of cores.
-           /// That way, if any I/O threads are sleeping, the Proactor will automaticaly wake additional threads from the worker pool 
+           /// That way, if any I/O threads are sleeping, the Proactor will automatically wake additional threads from the worker pool 
            /// to service outstanding I/O requests, to fill out the number of currently active threads until it again
            /// reaches the # of available cores. A value of 0, which is the default, will automatically use a value of double 
            /// the hardware concurrency available on the machine.
@@ -207,7 +203,7 @@ namespace Musador
             void completeWrite(boost::shared_ptr<Job> ctx, unsigned long nBytes);
             void completeSocketConnect(boost::shared_ptr<Job> ctx);
             void completePipeConnect(boost::shared_ptr<Job> ctx);
-            void completeNotify(boost::shared_ptr<Job> ctx);
+            void completeInvoke(boost::shared_ptr<Job> ctx);
 
             Mutex jobsMutex;
             JobCollection jobs;

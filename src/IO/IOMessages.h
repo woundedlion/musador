@@ -24,7 +24,7 @@ namespace Musador
             MSG_PIPE_ACCEPT_COMPLETE,
             MSG_SOCKET_CONNECT_COMPLETE,
             MSG_PIPE_CONNECT_COMPLETE,
-            MSG_NOTIFY
+            MSG_INVOKE
         };
 
         /// @class Msg
@@ -191,12 +191,12 @@ namespace Musador
             boost::shared_ptr<Connection> conn;
         };
 
-        class MsgNotify : public Msg
+        class MsgInvoke : public Msg
         {
         public:
 
             /// @brief Constructor.
-            inline MsgNotify() : Msg(MSG_NOTIFY)
+            inline MsgInvoke() : Msg(MSG_INVOKE)
             {
             }
         };

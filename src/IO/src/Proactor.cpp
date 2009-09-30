@@ -73,8 +73,8 @@ void Proactor::runIO()
                 case MSG_WRITE_COMPLETE:
                     this->completeWrite(job, nBytes);
                     break;
-                case MSG_NOTIFY:
-                    this->completeNotify(job);
+                case MSG_INVOKE:
+                    this->completeInvoke(job);
                 }
             }
             else 
@@ -608,25 +608,23 @@ Proactor::completeWrite(boost::shared_ptr<Job> job, unsigned long nBytes)
 }
 
 void
-Proactor::beginNotify(EventHandler handler, boost::shared_ptr<MsgNotify> msgNotify, boost::any tag /* = NULL */)
+Proactor::beginInvoke(boost::function<void ()> f)
 {
     boost::shared_ptr<Job> job(new Job());
-    job->handler = handler;
-    job->msg = msgNotify;
-    job->tag = tag;
+    boost::shared_ptr<MsgInvoke> msgInvoke(new MsgInvoke());
+    job->msg = msgInvoke;
+    job->tag = f;
     this->addJob(job);
     this->postJob(job);	
     return;
 }
 
 void
-Proactor::completeNotify(boost::shared_ptr<Job> job)
+Proactor::completeInvoke(boost::shared_ptr<Job> job)
 {
-    LOG(Debug)	<< "Notify completed.";
-    boost::shared_ptr<MsgNotify> msgNotify(boost::shared_static_cast<MsgNotify>(job->msg));
-    // notify the handler
-    assert(NULL != job->handler);
-    job->handler(msgNotify,job->tag);
+    LOG(Debug)	<< "Invoking Handler...";
+    boost::function<void ()> f(boost::any_cast<boost::function<void ()> >(job->tag));
+    f();
 }
 
 void 
