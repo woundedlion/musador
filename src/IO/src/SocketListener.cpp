@@ -59,3 +59,11 @@ SocketListener::close()
     }
 }
 
+std::string 
+SocketListener::toString()
+{
+    std::stringstream r;
+    r << ::inet_ntoa(this->localEP.sin_addr) << ":" << ::ntohs(this->localEP.sin_port) << " [" << this->getSocket() << "]";
+    return r.str();
+}
+

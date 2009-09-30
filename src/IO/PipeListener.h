@@ -40,6 +40,10 @@ namespace Musador
             /// @returns The unique name identifying this Connection's underlying NamedPipe.
             std::wstring getName();
 
+            /// @brief Get a string representation of this Listener.
+            /// @returns A string representing this Listener.
+            std::string toString();
+
         private:
 
             std::wstring name;

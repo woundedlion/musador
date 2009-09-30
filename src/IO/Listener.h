@@ -42,6 +42,9 @@ namespace Musador
             /// @brief Factory method for producing a Connection object accepted by this Listener.
             virtual boost::shared_ptr<Connection> createConnection() = 0;
 
+            /// @brief Get a string representation of this Listener.
+            /// @returns A string representing this Listener.
+            virtual std::string toString() = 0;
         };
     }
 }

@@ -48,6 +48,11 @@ namespace Musador
             /// @returns A system-specific handle to the underlying Socket.
             SOCKET getSocket();
 
+            /// @brief Get a string representation of this SocketListener.
+            /// @returns A string of the for X.X.X.X:Y representing the IP address and port 
+            /// to which the underlying socket is bound.
+            std::string toString();
+
         private:
 
             SOCKET sock;

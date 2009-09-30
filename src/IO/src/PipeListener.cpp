@@ -28,3 +28,10 @@ PipeListener::getName()
 {
     return this->name;
 }
+
+std::string 
+PipeListener::toString()
+{
+    return Util::unicodeToUtf8(this->getName());
+}
+
