@@ -61,7 +61,7 @@ namespace Musador
         /// @brief Invoked when on a Connection error
         /// @param[in] msg Shared pointer to the Connection on which the error occurred
         /// @param[in] msg The error which occurred
-        void onError(boost::shared_ptr<IO::Connection> conn, const IO::Error& err);
+        void onError(boost::shared_ptr<IO::Connection> conn, const IO::Msg::ErrorCode& err);
 
         /// @brief Get the global Session collection for this Server
         Session & getSession(const std::string& key);

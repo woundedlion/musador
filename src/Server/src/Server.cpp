@@ -147,7 +147,12 @@ Server::onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag)
 {
     assert(msg->getType() == IO::MSG_SOCKET_ACCEPT_COMPLETE);
     boost::shared_ptr<IO::MsgSocketAcceptComplete> msgAccept(boost::shared_static_cast<IO::MsgSocketAcceptComplete>(msg));
-    if (msgAccept->err.success())
+    if (msgAccept->isError())
+    {
+        LOG(Error) << "Accept failed: " << msgAccept->getError();
+        // TODO: reschedule the accept on an error?
+    }
+    else
     {
         // Do another async accept
         msgAccept->listener->beginAccept(boost::bind(&Server::onAcceptComplete,this,_1,_2),tag);
@@ -155,17 +160,12 @@ Server::onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag)
         // Set up the new connection
         this->addConnection(msgAccept->conn);
     }
-    else
-    {
-        LOG(Error) << "Accept failed: " << msgAccept->err.get();
-        // TODO: reschedule the accept on an error?
-    }
 }
 
 void 
-Server::onError(boost::shared_ptr<IO::Connection> conn, const IO::Error& err)
+Server::onError(boost::shared_ptr<IO::Connection> conn, const IO::Msg::ErrorCode& err)
 {
-    LOG(Info) << "Socket error detected on " << conn->toString() << ": " << err.get();
+    LOG(Info) << "Socket error detected on " << conn->toString() << ": " << err;
     this->killConnection(conn);
 }
 

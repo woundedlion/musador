@@ -1,5 +1,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "Librarian.h"
 #include "Network/Network.h"
@@ -133,7 +134,11 @@ Librarian::onGUIAccept(boost::shared_ptr<IO::Msg> msg, boost::any /*tag = NULL*/
 {
     assert(msg->getType() == IO::MSG_PIPE_ACCEPT_COMPLETE);
     boost::shared_ptr<IO::MsgPipeAcceptComplete>& msgAccept = boost::shared_static_cast<IO::MsgPipeAcceptComplete>(msg);
-    if (msgAccept->err.success()) 
+    if (msgAccept->isError()) 
+    {
+        LOG(Error) << "Error accepting GUI Connection: " << msgAccept->getError();
+    }
+    else 
     {
         // Notify the GUI of the new connection
         this->gui = boost::shared_static_cast<GUIConnection>(msgAccept->conn);
@@ -143,10 +148,6 @@ Librarian::onGUIAccept(boost::shared_ptr<IO::Msg> msg, boost::any /*tag = NULL*/
         // Keep listening
         this->listener->beginAccept(boost::bind(&Librarian::onGUIAccept,this,_1,_2));
         this->gui->beginRead();
-    }
-    else 
-    {
-        LOG(Error) << "Error accepting GUI Connection: " << msgAccept->err.get();
     }
 }
 

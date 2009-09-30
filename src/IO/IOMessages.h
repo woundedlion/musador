@@ -3,6 +3,7 @@
 
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/any.hpp>
 #include <cassert>
 #include "Network/Network.h"
 #include "BufferChain.h"
@@ -26,31 +27,6 @@ namespace Musador
             MSG_NOTIFY
         };
 
-        class Error
-        {
-        public:
-
-            typedef int ErrorCode;
-
-            /// @brief Constructor
-            Error() : code(0) {}
-
-            /// @brief Check if the Error object indicates success
-            /// @returns True if the Error object indicates success, false otherwise
-            bool success() const { return this->code != 0; }
-
-            /// @brief Get the system-specific error code
-            /// @returns A numeric error code
-            ErrorCode get() const { return this->code; }
-
-            /// @brief Set the system-specific error code
-            void set(ErrorCode code) { this->code = code; }
-
-        private:
-
-            ErrorCode code;
-        };
-
         /// @class Msg
         /// @brief Base class for all IO messages.
         /// Messages derived from this class are used to deliver completion events.
@@ -58,20 +34,33 @@ namespace Musador
         {
         public:
 
+            /// @brief System-specific error code type
+            typedef int ErrorCode;
+
             /// @brief constructor.
             /// @param[in] type A member of the MsgType enumeration indicating the type of this message.
-            Msg(MsgType type) : type(type) {}
+            Msg(MsgType type) : type(type), error(0) {}
 
             /// @brief Get the type of this connection.
             /// @returns A member of the MsgType enumeration indicating the type of this message.
             inline MsgType getType() { return type; }
 
-            /// @brief Contains any error information associated with this message
-            Error err;
+            /// @brief Check if this message indicates an error
+            /// @returns True if this Msg indicates an error
+            bool isError() { return error != 0; }
+
+            /// @brief Get the system-specific error code
+            /// @returns An error code
+            ErrorCode getError() const { return this->error; }
+
+            /// @brief Set the system-specific error code
+            /// @param[in] code An error code
+            void setError(ErrorCode code) { this->error = code; }
 
         private: 
 
             MsgType type;
+            ErrorCode error;
         };
 
         /// @class MsgWriteComplete

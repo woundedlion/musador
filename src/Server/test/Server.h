@@ -58,7 +58,7 @@ public:
         sockaddr_in localEP = {0};
         localEP.sin_family = AF_INET;
         localEP.sin_addr.s_addr = ::inet_addr("0.0.0.0");
-        localEP.sin_port = ::htons(5152);
+        localEP.sin_port = ::htons(51520);
         boost::shared_ptr<IO::Listener> listener(new EchoListener(localEP));
         s.acceptConnections(listener);
 
@@ -113,7 +113,7 @@ public:
         sockaddr_in serverEP = {0};
         serverEP.sin_family = AF_INET;
         serverEP.sin_addr.s_addr = ::inet_addr("127.0.0.1");
-        serverEP.sin_port = ::htons(5152);
+        serverEP.sin_port = ::htons(51520);
 
         try
         {

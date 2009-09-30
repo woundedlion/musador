@@ -21,7 +21,16 @@ GUIConnection::onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /* 
 {
     assert(msg->getType() == IO::MSG_READ_COMPLETE);
     boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
-    if (msgRead->err.success()) 
+    if (msgRead->isError()) 
+    {
+        if (NULL != this->handler)
+        {
+            boost::shared_ptr<GUIMsg> msgGUI(new GUIMsgDisabledNotify());
+            this->handler(msgGUI);
+        }
+        this->beginConnect();
+    } 
+    else
     {
         if (NULL != this->handler)
         {
@@ -38,15 +47,6 @@ GUIConnection::onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /* 
 
         // keep reading more messages
         this->beginRead();
-    } 
-    else
-    {
-        if (NULL != this->handler)
-        {
-            boost::shared_ptr<GUIMsg> msgGUI(new GUIMsgDisabledNotify());
-            this->handler(msgGUI);
-        }
-        this->beginConnect();
     }
 }
 
@@ -65,14 +65,14 @@ GUIConnection::onConnectComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag 
 {
     assert (msg->getType() == IO::MSG_PIPE_CONNECT_COMPLETE);
     boost::shared_ptr<IO::MsgPipeConnectComplete>& msgConnect = boost::shared_static_cast<IO::MsgPipeConnectComplete>(msg);
-    if (msgConnect->err.success()) 
+    if (msgConnect->isError()) 
     {
-        this->beginRead();
+        LOG(Debug) << "GUI could not connect to service: " << msgConnect->getError();
+        Util::TimerQueue::instance()->createTimer(500, boost::bind(&PipeConnection::beginConnect,this,tag));
     }
     else
     {
-        LOG(Debug) << "GUI could not connect to service: " << msgConnect->err.get();
-        Util::TimerQueue::instance()->createTimer(500, boost::bind(&PipeConnection::beginConnect,this,tag));
+        this->beginRead();
     }
 }
 

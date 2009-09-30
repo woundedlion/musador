@@ -46,14 +46,14 @@ HTTPConnection::onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /*
 {
     assert(msg->getType() == IO::MSG_READ_COMPLETE);
     boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
-    if (msgRead->err.success())
+    if (msgRead->isError())
     {
-        Guard lock(this->fsmMutex);
-        this->fsm.process_event(HTTP::EvtReadComplete(msgRead));
+        this->env.server->onError(msgRead->conn, msgRead->getError());
     }
     else
     {
-        this->env.server->onError(msgRead->conn, msgRead->err);
+        Guard lock(this->fsmMutex);
+        this->fsm.process_event(HTTP::EvtReadComplete(msgRead));
     }
 }
 
@@ -62,14 +62,14 @@ HTTPConnection::onWriteComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /
 {
     assert(msg->getType() == IO::MSG_WRITE_COMPLETE);
     boost::shared_ptr<IO::MsgWriteComplete> & msgWrite = boost::shared_static_cast<IO::MsgWriteComplete>(msg);
-    if (msgWrite->err.success())
+    if (msgWrite->isError())
     {
-        Guard lock(this->fsmMutex);
-        this->fsm.process_event(HTTP::EvtWriteComplete(msgWrite));
+        this->env.server->onError(msgWrite->conn, msgWrite->getError());
     }
     else
     {
-        this->env.server->onError(msgWrite->conn, msgWrite->err);
+        Guard lock(this->fsmMutex);
+        this->fsm.process_event(HTTP::EvtWriteComplete(msgWrite));
     }
 }
 
@@ -79,9 +79,8 @@ HTTPConnection::close()
     SocketConnection::close();
     if (NULL != this->env.server)
     {
-        IO::Error err;
         boost::shared_ptr<IO::Connection> conn = shared_from_this();
-        this->env.server->onError(conn, err);
+        this->env.server->onError(conn, 0);
     }
 }
 

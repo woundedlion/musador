@@ -2,9 +2,9 @@
 #define PROACTOR_A8167A71
 
 #include <vector>
-#include "boost/signals.hpp"
-#include "boost/any.hpp"
-#include "boost/thread.hpp"
+#include <boost/signals.hpp>
+#include <boost/any.hpp>
+#include <boost/thread.hpp>
 #include "Utilities/Singleton.h"
 #include "Utilities/StreamException.h"
 #include "Network/Network.h"
@@ -29,8 +29,6 @@ namespace Musador
         class SocketConnection;
         class PipeListener;
         class PipeConnection;
-        class CompletionCtx;
-        class Job;
 
         /// @class Proactor 
         /// @brief Implementation of the Proactor Pattern providing an interface to perform asynchronous I/O operations.
@@ -133,7 +131,7 @@ namespace Musador
             /// @param[in] handler The EventHandler which is called back on completion or error.
             /// @param[in] data A Buffer containing data to write to the connection.
             /// @param[in] tag User-defined data which are passed along to handler on completion or error.
-           void beginWrite(boost::shared_ptr<PipeConnection> conn, 
+            void beginWrite(boost::shared_ptr<PipeConnection> conn, 
                 EventHandler handler, 
                 const Buffer<char>& data, 
                 boost::any tag = NULL);
@@ -148,6 +146,8 @@ namespace Musador
                 boost::shared_ptr<MsgWriteComplete> msgWrite, 
                 boost::any tag = NULL);
 
+           /// non-I/O Events
+
            /// @brief Asynchronously post a message to an EventHandler
            /// @param[in] handler The EventHandler which is called with the posted msg.
            /// @param[in] msgNotify Shared pointer to a MsgNotify to post to the EventHandler.
@@ -155,6 +155,8 @@ namespace Musador
            void beginNotify(EventHandler handler, 
                boost::shared_ptr<MsgNotify> msgNotify, 
                boost::any tag = NULL);
+
+           // Control Methods
 
            /// @brief Start the IO engine running.
            /// A user must call this before I/O requests will be serviced.
@@ -172,12 +174,40 @@ namespace Musador
 
         private:
 
-            typedef std::map<CompletionCtx *, boost::shared_ptr<CompletionCtx> > JobCollection;
+#ifdef WIN32
+            class Job : public OVERLAPPED
+#else
+            class Job
+#endif
+            {
+                friend class Proactor;
+
+            public:
+
+                Job();
+
+            private:
+
+                boost::shared_ptr<Msg> msg;
+                EventHandler handler;
+                boost::any tag;
+            };
+
+            typedef std::map<Job *, boost::shared_ptr<Job> > JobCollection;
 
             void runIO();
 
-            void addJob(CompletionCtx * key, boost::shared_ptr<CompletionCtx> job);
-            boost::shared_ptr<CompletionCtx> releaseJob(CompletionCtx * key);
+            void addJob(boost::shared_ptr<Job> job);
+            boost::shared_ptr<Job> releaseJob(Job * key);
+            void postJob(boost::shared_ptr<Job> job);
+
+            void completeSocketAccept(boost::shared_ptr<Job> ctx, unsigned long nBytes);
+            void completePipeAccept(boost::shared_ptr<Job> ctx);
+            void completeRead(boost::shared_ptr<Job> ctx, unsigned long nBytes);
+            void completeWrite(boost::shared_ptr<Job> ctx, unsigned long nBytes);
+            void completeSocketConnect(boost::shared_ptr<Job> ctx);
+            void completePipeConnect(boost::shared_ptr<Job> ctx);
+            void completeNotify(boost::shared_ptr<Job> ctx);
 
             Mutex jobsMutex;
             JobCollection jobs;
@@ -187,20 +217,11 @@ namespace Musador
 
             std::vector<boost::thread *> workers;
 
-            void completeSocketAccept(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
-            void completePipeAccept(boost::shared_ptr<CompletionCtx> ctx);
-            void completeRead(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
-            void completeWrite(boost::shared_ptr<CompletionCtx> ctx, unsigned long nBytes);
-            void completeSocketConnect(boost::shared_ptr<CompletionCtx> ctx);
-            void completePipeConnect(boost::shared_ptr<CompletionCtx> ctx);
-            void completeNotify(boost::shared_ptr<CompletionCtx> ctx);
-
 #ifdef WIN32
             HANDLE iocp;
             LPFN_ACCEPTEX fnAcceptEx;
             LPFN_GETACCEPTEXSOCKADDRS fnGetAcceptExSockaddrs;
 #endif
-
         };
 
         inline void Proactor::beginRead(boost::shared_ptr<SocketConnection> conn, EventHandler handler, boost::any tag /* = NULL */)
@@ -234,20 +255,6 @@ namespace Musador
         }
 
         class IOException : public Util::StreamException<IOException> { };
-
-#ifdef WIN32
-        class CompletionCtx : public OVERLAPPED
-        {
-        public:
-
-            boost::shared_ptr<Msg> msg;
-
-            EventHandler handler;
-
-            boost::any tag;
-        };
-#endif
-
     }
 }
 

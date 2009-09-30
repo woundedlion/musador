@@ -41,13 +41,13 @@ namespace Musador
         { 
             assert(msg->getType() == IO::MSG_READ_COMPLETE);
             boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
-            if (msgRead->err.success()) 
+            if (msgRead->isError()) 
             {
-                this->beginWrite(msgRead->buf);
+                Logging::log(Logging::Error, L"EchoConnection") << "Error reading from Echo connection: " << msgRead->getError();
             }
             else 
             {
-
+                this->beginWrite(msgRead->buf);
             }
         }
 
