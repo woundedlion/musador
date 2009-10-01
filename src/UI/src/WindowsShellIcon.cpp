@@ -96,8 +96,8 @@ void WindowsShellIcon::setToolTip(const std::wstring& toolTip)
     {
         tipSize = 128;
     }
-    toolTip.copy(this->nid.szTip, tipSize);
-    this->nid.szTip[tipSize - 1] = L'\0';
+    tipSize = toolTip.copy(this->nid.szTip, tipSize - 1);
+    this->nid.szTip[tipSize] = L'\0';
 }
 
 void WindowsShellIcon::show()

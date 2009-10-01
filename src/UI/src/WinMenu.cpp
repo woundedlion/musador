@@ -75,4 +75,5 @@ WinMenu::popupAtCursor(HWND owner)
     ::GetCursorPos(&p);
     ::SetForegroundWindow(owner);
     ::TrackPopupMenu(this->hMenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN, p.x, p.y, 0, owner, NULL);
+    ::PostMessage(owner,  WM_NULL, 0, 0);
 }
