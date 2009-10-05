@@ -15,7 +15,7 @@
 using namespace Musador;
 
 LibrarianGUI::LibrarianGUI() :
-UI::WinApp(L"Musador Librarian"),
+UI::App(L"Musador Librarian"),
 trayIcon(NULL)
 {
     IO::Proactor::instance()->start();

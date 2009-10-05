@@ -1,4 +1,4 @@
-#include "WinApp.h"
+#include "App.h"
 #include "boost/bind.hpp"
 #include "boost/format.hpp"
 #include <cassert>
@@ -8,24 +8,24 @@ using namespace Musador;
 
 using namespace Musador::UI;
 
-WinApp::WinApp(const std::wstring& appName) :
+App::App(const std::wstring& appName) :
 appName(appName),
 hWndMain(NULL),
 hInst(::GetModuleHandle(NULL))
 {
 }
 
-WinApp::~WinApp()
+App::~App()
 {
 }
 
 void 
-WinApp::run()
+App::run()
 {
     WNDCLASSEX wndClass = {0};
     wndClass.cbSize = sizeof(WNDCLASSEX);
     wndClass.style = NULL;
-    wndClass.lpfnWndProc = &WinApp::_wndProc;
+    wndClass.lpfnWndProc = &App::_wndProc;
     wndClass.hInstance = this->hInst;
     wndClass.lpszClassName = this->appName.c_str();
     ATOM atom = ::RegisterClassEx(&wndClass);
@@ -82,14 +82,14 @@ WinApp::run()
 }
 
 LRESULT 
-WinApp::_wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+App::_wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch(uMsg) 
     {
     case WM_NCCREATE:
         ::SetWindowLongPtr(hWnd,GWL_USERDATA, (LONG)reinterpret_cast<CREATESTRUCT *>(lParam)->lpCreateParams);
     default:
-        WinApp * app = reinterpret_cast<WinApp *>(::GetWindowLongPtr(hWnd,GWL_USERDATA));
+        App * app = reinterpret_cast<App *>(::GetWindowLongPtr(hWnd,GWL_USERDATA));
         if (NULL != app)
         {
             return app->wndProcMain(hWnd,uMsg,wParam,lParam);
@@ -101,7 +101,7 @@ WinApp::_wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 /*
 LRESULT 
-WinApp::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+App::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 LOG(Debug) << "wndProcMain received msg: " << (boost::wformat(L"%|#02x|") % uMsg) << " [wParam=" << wParam << "],[lParam=" << lParam << "]";
 return 1;

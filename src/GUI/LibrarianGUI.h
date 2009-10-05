@@ -7,7 +7,7 @@
 #include <boost/interprocess/sync/named_condition.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 
-#include "UI/WinApp.h"
+#include "UI/App.h"
 #include "UI/TrayIcon.h"
 #include "UI/Menu.h"
 #include "UI/Daemon.h"
@@ -38,7 +38,7 @@ namespace Musador
 
     /// @class LibrarianGUI
     /// @brief The LibrarianGUI application
-    class LibrarianGUI : public UI::WinApp
+    class LibrarianGUI : public UI::App
     {
     public:
 

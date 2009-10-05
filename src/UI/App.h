@@ -15,21 +15,15 @@ namespace Musador
         typedef boost::condition Condition;
         typedef boost::mutex::scoped_lock Guard;
 
-        class WinApp
+        class App
         {
         public:
 
-            WinApp(const std::wstring& appName);
+            App(const std::wstring& appName);
 
-            virtual ~WinApp();
+            virtual ~App();
 
             void run();
-
-            BOOL postMessage(UINT uMsg, WPARAM wParam = NULL, LPARAM lParam = NULL);
-
-            static HRESULT CALLBACK _wndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-            virtual HRESULT wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
 
             virtual void onRunning() {}
 
@@ -41,12 +35,11 @@ namespace Musador
             HWND hWndMain;
             HINSTANCE hInst;
 
-        };
+            static HRESULT CALLBACK _wndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+            virtual HRESULT wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
 
-        inline BOOL WinApp::postMessage(UINT uMsg, WPARAM wParam /* = NULL */, LPARAM lParam /* = NULL */)
-        {
-            return ::PostMessage(this->hWndMain, uMsg, wParam, lParam);
-        }
+
+        };
     }
 }
 
