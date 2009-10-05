@@ -98,7 +98,7 @@ HRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 void 
 LibrarianGUI::onRunning()
 {
-    this->trayIcon.reset(new UI::WindowsShellIcon(this->hWndMain,WM_APP_TRAYICON));
+    this->trayIcon.reset(new UI::TrayIcon(this->hWndMain,WM_APP_TRAYICON));
     this->trayIcon->setToolTip(L"Musador Librarian : Disabled");
     this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
     this->trayIcon->show();

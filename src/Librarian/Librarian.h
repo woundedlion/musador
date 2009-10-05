@@ -5,7 +5,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 
 #include "UI/Console.h"
-#include "UI/WindowsService.h"
+#include "UI/Daemon.h"
 #include "Indexer/Indexer.h"
 #include "Server/Server.h"
 #include "Config/Config.h"
@@ -22,10 +22,10 @@ namespace Musador
     /// @brief The daemon component of the Musador system.
     /// This module contains the web server, services requests from web clients, manages config data,
     /// and manages library index files.
-    class Librarian : public UI::WindowsService<Librarian>
+    class Librarian : public UI::Daemon<Librarian>
     {
 
-        friend class UI::WindowsService<Librarian>;
+        friend class UI::Daemon<Librarian>;
 
     public:
 

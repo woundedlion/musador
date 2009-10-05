@@ -15,7 +15,7 @@ using namespace Musador;
 namespace fs = boost::filesystem;
 
 Librarian::Librarian() :
-UI::WindowsService<Librarian>(L"Musador Librarian")
+UI::Daemon<Librarian>(L"Musador Librarian")
 {
     Network::instance();
     Util::MIMEResolver::instance();

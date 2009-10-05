@@ -18,13 +18,13 @@ namespace Musador
     namespace UI
     {
         template <class T>
-        class WindowsService : public Util::Singleton<T>
+        class Daemon : public Util::Singleton<T>
         {
         public:
 
-            WindowsService(const tstring& svcName);
+            Daemon(const tstring& svcName);
 
-            ~WindowsService();
+            ~Daemon();
 
             void install();
 
@@ -37,16 +37,6 @@ namespace Musador
             void start();
 
             void terminate();
-
-            static void WINAPI runThunk(DWORD argc, LPTSTR argv[])
-            {
-                T::instance()->_run(argc, argv);
-            }
-
-            static void WINAPI ctrlThunk(DWORD opCode)
-            {
-                T::instance()->_ctrl(opCode);
-            }
 
             void waitForStop();
 
@@ -62,6 +52,16 @@ namespace Musador
             HANDLE evtStop;
             HANDLE evtSrc;
             SC_HANDLE hSvc;
+
+            static void WINAPI runThunk(DWORD argc, LPTSTR argv[])
+            {
+                T::instance()->_run(argc, argv);
+            }
+
+            static void WINAPI ctrlThunk(DWORD opCode)
+            {
+                T::instance()->_ctrl(opCode);
+            }
 
             void _run(DWORD argc, LPTSTR argv[]);
             void _ctrl(DWORD opCode);
@@ -83,7 +83,7 @@ namespace Musador
         {};
 
         template <class T>
-        WindowsService<T>::WindowsService(const tstring& svcName) :
+        Daemon<T>::Daemon(const tstring& svcName) :
         svcName(svcName),
             hSvc(NULL)
         {
@@ -92,14 +92,14 @@ namespace Musador
         }
 
         template <class T>
-        WindowsService<T>::~WindowsService()
+        Daemon<T>::~Daemon()
         {
             ::CloseHandle(this->evtStop);
             ::DeregisterEventSource(this->evtSrc);
         }
 
         template <class T>
-        void WindowsService<T>::install()
+        void Daemon<T>::install()
         {
             SC_HANDLE schSCManager;
             TCHAR szPath[MAX_PATH];
@@ -159,7 +159,7 @@ namespace Musador
         }
 
         template <class T>
-        void WindowsService<T>::uninstall()
+        void Daemon<T>::uninstall()
         {
             SC_HANDLE schSCManager;
             TCHAR szPath[MAX_PATH];
@@ -216,11 +216,11 @@ namespace Musador
         }
 
         template <class T>
-        void WindowsService<T>::serviceStart()
+        void Daemon<T>::serviceStart()
         {
             SERVICE_TABLE_ENTRY dispatchTable[] = 
             { 
-                { const_cast<wchar_t *>(this->svcName.c_str()),&WindowsService::runThunk}, 
+                { const_cast<wchar_t *>(this->svcName.c_str()),&Daemon::runThunk}, 
                 { NULL, NULL } 
             }; 
 
@@ -232,13 +232,13 @@ namespace Musador
         }
 
         template <class T>
-        void WindowsService<T>::stop()
+        void Daemon<T>::stop()
         {
             ::SetEvent(this->evtStop);
         }
 
         template <class T>
-        void WindowsService<T>::start()
+        void Daemon<T>::start()
         {
             if (NULL == this->hSvc)
             {
@@ -290,7 +290,7 @@ namespace Musador
         }
 
         template <class T>
-        void WindowsService<T>::terminate()
+        void Daemon<T>::terminate()
         {
             // Stop the Service through the SCM
             SERVICE_STATUS st;
@@ -301,15 +301,15 @@ namespace Musador
         }
 
         template <class T>
-        void WindowsService<T>::waitForStop()
+        void Daemon<T>::waitForStop()
         {
             ::WaitForSingleObject(this->evtStop,INFINITE);
         }
 
         template <class T>
-        void WindowsService<T>::_run(DWORD argc, LPTSTR argv[])
+        void Daemon<T>::_run(DWORD argc, LPTSTR argv[])
         {
-            this->hStatus = ::RegisterServiceCtrlHandler(this->svcName.c_str(),&WindowsService::ctrlThunk);
+            this->hStatus = ::RegisterServiceCtrlHandler(this->svcName.c_str(),&Daemon::ctrlThunk);
             if (!this->hStatus)
             {
                 throw ServiceException() << "RegisterServiceCtrlHandler() failed: " << ::GetLastError();
@@ -329,7 +329,7 @@ namespace Musador
         }
 
         template <class T>
-        void WindowsService<T>::_ctrl(DWORD opCode)
+        void Daemon<T>::_ctrl(DWORD opCode)
         {
             switch(opCode) 
             {
@@ -348,7 +348,7 @@ namespace Musador
         }
 
         template <class T>
-        void WindowsService<T>::setStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint)
+        void Daemon<T>::setStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint)
         {
             static DWORD dwCheckPoint = 1;
 
@@ -369,7 +369,7 @@ namespace Musador
         }
 
         template <class T>
-        void WindowsService<T>::logEvent(WORD wType, const tstring& msg)
+        void Daemon<T>::logEvent(WORD wType, const tstring& msg)
         {
             const TCHAR * message = msg.c_str();
             ::ReportEvent(	this->evtSrc,

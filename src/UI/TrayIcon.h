@@ -12,13 +12,13 @@ namespace Musador
 {
     namespace UI
     {
-        class WindowsShellIcon
+        class TrayIcon
         {
         public:
 
-            WindowsShellIcon(HWND hWnd, UINT uCallbackMsg);
+            TrayIcon(HWND hWnd, UINT uCallbackMsg);
 
-            ~WindowsShellIcon();
+            ~TrayIcon();
 
             void setIcon(const Icon& icon);
 

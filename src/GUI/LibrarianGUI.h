@@ -8,9 +8,9 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 
 #include "UI/WinApp.h"
-#include "UI/WindowsShellIcon.h"
-#include "UI/WinMenu.h"
-#include "UI/WindowsService.h"
+#include "UI/TrayIcon.h"
+#include "UI/Menu.h"
+#include "UI/Daemon.h"
 
 #include "Protocol/GUIConnection.h"
 
@@ -23,16 +23,16 @@ namespace Musador
 
     /// @class LibrarianService
     /// @brief A stub service used to control the Librarian service.
-    class LibrarianService : public UI::WindowsService<LibrarianService>
+    class LibrarianService : public UI::Daemon<LibrarianService>
     {
-        friend class UI::WindowsService<LibrarianService>;
+        friend class UI::Daemon<LibrarianService>;
 
     public:
 
         /// @brief Constructor.
-        LibrarianService() : WindowsService(L"Musador Librarian") {}
+        LibrarianService() : Daemon(L"Musador Librarian") {}
 
-        /// @brief Stub method satisfy the WindowsService interface. NOT USED.
+        /// @brief Stub method satisfy the Daemon interface. NOT USED.
         int run(unsigned long argc, LPTSTR argv[]) { return 0; }
     };
 
@@ -73,8 +73,8 @@ namespace Musador
         void notifyService();
 
         boost::shared_ptr<GUIConnection> service;
-        std::auto_ptr<UI::WindowsShellIcon> trayIcon;
-        UI::WinMenu trayMenu;
+        std::auto_ptr<UI::TrayIcon> trayIcon;
+        UI::Menu trayMenu;
 
     };
 

@@ -19,13 +19,13 @@ namespace Musador
             bool enabled;
         };
 
-        class WinMenu
+        class Menu
         {
         public:
 
-            WinMenu();
+            Menu();
 
-            ~WinMenu();
+            ~Menu();
 
             void insertItem(UINT pos, WORD id, const std::wstring& text, bool enabled = true, bool checked = false);
 
@@ -37,7 +37,7 @@ namespace Musador
 
             operator HMENU();		
 
-            //		void insertSubMenu(DWORD id, const std::wstring& text, WinMenu& subMenu, int pos);
+            //		void insertSubMenu(DWORD id, const std::wstring& text, Menu& subMenu, int pos);
 
             void popupAtCursor(HWND owner);
 

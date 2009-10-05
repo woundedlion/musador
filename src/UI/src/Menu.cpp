@@ -1,4 +1,4 @@
-#include "WinMenu.h"
+#include "Menu.h"
 
 #include "Logger/Logger.h"
 #define LOG_SENDER L"GUI"
@@ -6,23 +6,23 @@ using namespace Musador;
 
 using namespace Musador::UI;
 
-WinMenu::WinMenu() :
+Menu::Menu() :
 hMenu(::CreatePopupMenu())
 {
 }
 
-WinMenu::~WinMenu()
+Menu::~Menu()
 {
     ::DestroyMenu(this->hMenu);
 }
 
-WinMenu::operator HMENU()
+Menu::operator HMENU()
 {
     return this->hMenu;
 }
 
 void
-WinMenu::insertItem(UINT pos, WORD id, const std::wstring& text, bool enabled /* = true */, bool checked /* = false */)
+Menu::insertItem(UINT pos, WORD id, const std::wstring& text, bool enabled /* = true */, bool checked /* = false */)
 {
     MENUITEMINFO item;
     item.cbSize = sizeof(MENUITEMINFO);
@@ -38,7 +38,7 @@ WinMenu::insertItem(UINT pos, WORD id, const std::wstring& text, bool enabled /*
 }
 
 void 
-WinMenu::updateItem(WORD oldID, WORD newID, const std::wstring& text, bool enabled /* = true */, bool checked /* = false */)
+Menu::updateItem(WORD oldID, WORD newID, const std::wstring& text, bool enabled /* = true */, bool checked /* = false */)
 {
     MENUITEMINFO item;
     item.cbSize = sizeof(MENUITEMINFO);
@@ -54,7 +54,7 @@ WinMenu::updateItem(WORD oldID, WORD newID, const std::wstring& text, bool enabl
 }
 
 void
-WinMenu::insertSep(UINT pos, WORD id)
+Menu::insertSep(UINT pos, WORD id)
 {
     MENUITEMINFO item;
     item.cbSize = sizeof(MENUITEMINFO);
@@ -69,7 +69,7 @@ WinMenu::insertSep(UINT pos, WORD id)
 }
 
 void
-WinMenu::popupAtCursor(HWND owner)
+Menu::popupAtCursor(HWND owner)
 {
     POINT p;
     ::GetCursorPos(&p);

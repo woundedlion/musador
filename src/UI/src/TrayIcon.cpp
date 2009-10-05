@@ -1,4 +1,4 @@
-#include "WindowsShellIcon.h"
+#include "TrayIcon.h"
 #include <shlwapi.h>
 #pragma comment(lib, "shell32.lib")
 
@@ -8,9 +8,9 @@ using namespace Musador;
 
 using namespace Musador::UI;
 
-volatile LONG WindowsShellIcon::counter = 0;
+volatile LONG TrayIcon::counter = 0;
 
-WindowsShellIcon::WindowsShellIcon(HWND hWnd, UINT uCallbackMsg) :
+TrayIcon::TrayIcon(HWND hWnd, UINT uCallbackMsg) :
 visible(false),
 hWnd(hWnd)
 {
@@ -62,17 +62,17 @@ hWnd(hWnd)
     }
 
     this->nid.hWnd = hWnd;
-    this->nid.uID = ::InterlockedIncrement(&WindowsShellIcon::counter);
+    this->nid.uID = ::InterlockedIncrement(&TrayIcon::counter);
     this->nid.hIcon = ::LoadIcon(NULL,IDI_APPLICATION);
     this->nid.uCallbackMessage = uCallbackMsg;
 }
 
-WindowsShellIcon::~WindowsShellIcon()
+TrayIcon::~TrayIcon()
 {
     this->hide();
 }
 
-void WindowsShellIcon::setIcon(const Icon& icon)
+void TrayIcon::setIcon(const Icon& icon)
 {
     HICON hIcon = ::LoadIcon(::GetModuleHandle(NULL),icon);
     if (NULL == hIcon)
@@ -85,7 +85,7 @@ void WindowsShellIcon::setIcon(const Icon& icon)
     }
 }
 
-void WindowsShellIcon::setToolTip(const std::wstring& toolTip)
+void TrayIcon::setToolTip(const std::wstring& toolTip)
 {
     DWORD tipSize;
     if (this->nid.cbSize == sizeof(NOTIFYICONDATAW_V1_SIZE))
@@ -100,7 +100,7 @@ void WindowsShellIcon::setToolTip(const std::wstring& toolTip)
     this->nid.szTip[tipSize] = L'\0';
 }
 
-void WindowsShellIcon::show()
+void TrayIcon::show()
 {
     this->nid.uFlags = NIF_MESSAGE;
 
@@ -116,7 +116,7 @@ void WindowsShellIcon::show()
     }
 }
 
-void WindowsShellIcon::hide()
+void TrayIcon::hide()
 {
     if (this->visible)
     {
@@ -128,7 +128,7 @@ void WindowsShellIcon::hide()
 
 
 UINT
-WindowsShellIcon::getID()
+TrayIcon::getID()
 {
     return this->nid.uID;
 }
