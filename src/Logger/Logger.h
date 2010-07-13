@@ -17,7 +17,7 @@ namespace Musador
 {
     namespace Logging
     {
-        typedef boost::condition Condition;
+        typedef boost::condition_variable Condition;
         typedef boost::thread Thread;
         typedef boost::mutex Mutex;
         typedef boost::mutex::scoped_lock Guard;

@@ -4,15 +4,18 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 FILE(GLOB srcs src/*.cpp)
 FILE(GLOB hdrs *.h)
-SET(libs
-		Boost.Serialization
-		Boost.Filesystem		
-		Server
-)
 
 ADD_LIBRARY(${PROJECT_NAME} ${hdrs} ${srcs})
 
 ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
-ADD_DEPENDENCIES(${PROJECT_NAME} ${libs})
 
+SET(libs
+        BoostRegex
+		BoostSerialization
+		BoostFilesystem		
+        BoostThread
+		Server
+        UI
+        Utilities
+)
 cxxTestLink(${libs} Logger)

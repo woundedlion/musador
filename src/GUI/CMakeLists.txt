@@ -6,10 +6,15 @@ FILE(GLOB srcs src/*.cpp)
 FILE(GLOB hdrs *.h)
 FILE(GLOB rsrcs res/*.rc res/*.h)
 SET(libs 
+        BoostDateTime
+		BoostSerialization
+        BoostThread
 		Utilities
 		Logger
 		LibrarianProtocol
-		Boost.Serialization
+        Network
+        UI
+        IO
 )
 
 ADD_EXECUTABLE(${PROJECT_NAME} WIN32 ${hdrs} ${srcs} ${rsrcs})

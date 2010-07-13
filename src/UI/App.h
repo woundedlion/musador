@@ -12,7 +12,7 @@ namespace Musador
     namespace UI
     {
         typedef boost::mutex Mutex;
-        typedef boost::condition Condition;
+        typedef boost::condition_variable Condition;
         typedef boost::mutex::scoped_lock Guard;
 
         class App

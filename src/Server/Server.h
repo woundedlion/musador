@@ -12,7 +12,7 @@
 
 typedef boost::mutex Mutex;
 typedef boost::mutex::scoped_lock Guard;
-typedef boost::condition Condition;
+typedef boost::condition_variable Condition;
 typedef boost::thread Thread;
 
 namespace Musador

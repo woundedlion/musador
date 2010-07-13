@@ -65,7 +65,7 @@ PipeConnection::beginWrite(std::istream& dataStream, boost::any tag /*= NULL*/)
 {
     boost::shared_array<char> data(new char[MsgWriteComplete::MAX]);
     dataStream.read(data.get(),MsgWriteComplete::MAX);
-    int len = dataStream.gcount();
+    size_t len = static_cast<size_t>(dataStream.gcount());
     Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), Buffer<char>(data, len, len), tag);
 }
 

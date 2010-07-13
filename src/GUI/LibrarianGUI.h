@@ -3,9 +3,6 @@
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/shared_ptr.hpp>
-#include <boost/interprocess/sync/named_mutex.hpp>
-#include <boost/interprocess/sync/named_condition.hpp>
-#include <boost/interprocess/shared_memory_object.hpp>
 
 #include "UI/App.h"
 #include "UI/TrayIcon.h"
