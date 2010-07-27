@@ -424,7 +424,7 @@ HTTP::StateSendResBody::StateSendResBody(my_context ctx) : my_base(ctx)
     else
     {
         // Done writing the response, move on
-        if (!boost::ilexicographical_compare(req.headers["Connection"],"close") && req.protocol != "HTTP/1.0")
+        if (!boost::iequals(req.headers["Connection"],"close") && req.protocol != "HTTP/1.0")
         {
             post_event(EvtKeepAlive());
         }
@@ -447,7 +447,7 @@ HTTP::StateSendResBody::react(const EvtWriteComplete& evt)
     }
 
     // Done writing the response, move on
-    if (!boost::ilexicographical_compare(req.headers["Connection"],"close") && req.protocol != "HTTP/1.0")
+    if (!boost::iequals(req.headers["Connection"],"close") && req.protocol != "HTTP/1.0")
     {
         post_event(EvtKeepAlive());
     }

@@ -15,6 +15,7 @@ template LogWriter& LogWriter::operator<<<std::wstring>(const std::wstring&);
 //////////////////////////////////////////////////////////////////////////
 
 Logger::Logger() :
+logMessages(new LogStatementQueue()),
 level(Info)
 {
     this->logThread = new Thread(boost::bind(&Logger::run,this));
@@ -37,19 +38,34 @@ void
 Logger::run()
 {
     ConsoleLogListener listener;
-    while (true)
+    bool shutdown = false;
+    while (!shutdown)
     {
-        Guard guard(this->logLock);
-        while (this->logMessages.size() <= 0) this->logPending.wait(guard);
-        if (this->logMessages.front().msg == L"SHUTDOWN")
+        boost::shared_ptr<LogStatementQueue> msgs;
         {
-            listener.send(LogStatement(Info,L"Logger shutting down..."));
-            break;
+            Guard guard(this->logLock);
+            // Wait for an incoming message
+            while (this->logMessages->size() <= 0) 
+            {
+                this->logPending.wait(guard);
+            }
+            // Pull all messages off the queue as fast as we can
+            msgs = this->logMessages;
+            this->logMessages = boost::shared_ptr<LogStatementQueue>(new LogStatementQueue);
         }
-        else
-        {
-            listener.send(this->logMessages.front());
-            this->logMessages.pop();
+
+        while (!msgs->empty()) {
+            if (msgs->front().msg == L"SHUTDOWN")
+            {
+                listener.send(LogStatement(Info,L"Logger shutting down..."));
+                shutdown = true;
+                break;
+            }
+            else
+            {
+                listener.send(msgs->front());
+                msgs->pop();
+            }
         }
     }
 }
@@ -82,7 +98,7 @@ void
 Logger::send(const LogStatement& stmt)
 {
     Guard guard(this->logLock);
-    this->logMessages.push(stmt);
+    this->logMessages->push(stmt);
     this->logPending.notify_one();
 }
 

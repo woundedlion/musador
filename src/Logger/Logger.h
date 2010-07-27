@@ -132,12 +132,14 @@ namespace Musador
 
         private:
 
+            typedef std::queue<LogStatement> LogStatementQueue;
+
             void run();
             void send(const LogStatement& stmt);
 
             Mutex logLock;
             Condition logPending;	
-            std::queue<LogStatement> logMessages;
+            boost::shared_ptr<LogStatementQueue> logMessages;
 
             LogLevel level;
 

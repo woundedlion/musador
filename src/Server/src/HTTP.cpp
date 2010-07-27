@@ -13,6 +13,8 @@ using namespace Musador;
 namespace
 {
     MTRand randGen;
+    const boost::regex HEADER_REGEX = boost::regex("([[:alpha:]]+)[[:s:]]+([^[:s:]?]+)(?:\\?(\\S*))?[[:s:]]+(HTTP/1.[01])\\r\\n(?:([[:alnum:]\\-]+):[[:s:]]*([^\\r\\n]*)\\r\\n)*\\r\\n"); 
+    const boost::regex QUERY_STRING_REGEX = boost::regex("(?:([^\\s=&;]+)=?([^\\s=&;]*)[&;]*)*");
 }
 
 void 
@@ -265,11 +267,10 @@ HTTP::parseRequest(const IO::BufferChain<char>& data, Request& req, size_t& leng
     IO::BufferChain<char>::const_iterator start = data.begin();
     IO::BufferChain<char>::const_iterator end = data.end();
     bool valid = false;
-    boost::regex expr("([[:alpha:]]+)[[:s:]]+([^[:s:]?]+)(?:\\?(\\S*))?[[:s:]]+(HTTP/1.[01])\\r\\n(?:([[:alnum:]\\-]+):[[:s:]]*([^\\r\\n]*)\\r\\n)*\\r\\n"); 
     boost::match_results<IO::BufferChain<char>::const_iterator> matches;
     try
     {
-        valid = boost::regex_search(start, end, matches, expr, boost::match_extra);
+        valid = boost::regex_search(start, end, matches, HEADER_REGEX, boost::match_extra);
     }
     catch (const std::runtime_error&)
     {
@@ -295,9 +296,8 @@ HTTP::parseRequest(const IO::BufferChain<char>& data, Request& req, size_t& leng
         if (matches[3].matched)
         {
             req.queryString = matches[3];
-            boost::regex e("(?:([^\\s=&;]+)=?([^\\s=&;]*)[&;]*)*");
             boost::smatch m;
-            bool v = boost::regex_match(req.queryString, m, e, boost::match_extra);
+            bool v = boost::regex_match(req.queryString, m, QUERY_STRING_REGEX, boost::match_extra);
             if (v)
             {
                 for (size_t i = 0; i < m.captures(1).size(); ++i)
