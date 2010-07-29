@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <list>
+#include <bitset>
 #include "boost/shared_ptr.hpp"
 #include "boost/shared_array.hpp"
 
@@ -10,6 +11,9 @@ namespace Musador
 {
     namespace IO
     {
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////
+
         /// @class Buffer
         /// @brief A fixed-size buffer template
         template<typename T>
@@ -55,6 +59,8 @@ namespace Musador
             /// @brief Destructor
             ~Buffer();
 
+            Buffer<T>& operator=(const Buffer<T>& buf);
+
             /// @brief Get the length of the readable data in the buffer
             /// @returns The length of the readable data in the buffer
             size_t numUsed() const;
@@ -96,14 +102,82 @@ namespace Musador
 
         };
 
+        //////////////////////////////////////////////////////////////////////////////////////////////////
+
         /// @class BufferChain
         /// A chain of Buffers
         template<typename T>
         class BufferChain
         {
-        private:
+        public:
+
+            class iterator;
+            class const_iterator;
 
             typedef std::list<Buffer<T> > BufferList;
+
+            /// @brief Constructor
+            BufferChain();
+
+            /// @brief Destructor
+            ~BufferChain();
+
+            /// @brief Get an iterator to the start of the readable data in the BufferChain
+            /// @returns An iterator to the start of the readable data in the BufferChain
+            iterator begin();
+
+            /// @brief Get an iterator past the end of the readable data in the BufferChain
+            /// @returns An iterator past the end of the readable data in the BufferChain
+            iterator end();
+
+            /// @brief Get a const iterator to the start of the readable data in the BufferChain
+            /// @returns An iterator to the start of the readable data in the BufferChain
+            const_iterator begin() const;
+
+            /// @brief Get a const iterator past the end of the readable data in the BufferChain
+            /// @returns An iterator past the end of the readable data in the BufferChain
+            const_iterator end() const;
+
+            /// @brief Append a Buffer to the BufferChain
+            /// @param[in] buf The Buffer to append to the chain
+            void append(const Buffer<T>& buf);
+
+            /// @brief Append a Buffer constructed from an array of data 
+            /// @param[in] buf A shared array of data to append to the chain
+            /// @param[in] len The length of the data pointed to by buf
+            void append(boost::shared_array<T> buf, size_t len);
+
+            /// @brief Append a Buffer of the specified capacity constructed from an array of data 
+            /// @param[in] buf A shared array of data to append to the chain
+            /// @param[in] capacity The capacity of the newly appended Buffer
+            /// @param[in] dataEnd The length of the data pointed to by buf
+            void append(boost::shared_array<T> buf, size_t capacity, size_t dataEnd);
+
+            /// @brief Append a Buffer of the specified capacity constructed from a specified range in an array of data 
+            /// @param[in] buf A shared array of data to append to the chain
+            /// @param[in] capacity The capacity of the newly appended Buffer
+            /// @param[in] dataBegin The position of the start of the data in buf
+            /// @param[in] dataEnd The position immediately past the end of the data in buf
+            void append(boost::shared_array<T> buf, size_t capacity, size_t dataBegin, size_t dataEnd);
+
+            /// @brief Increment the start of the readable data in the chain by num elements
+            /// As elements at the front  of the chain are popped, Buffers are automatically destroyed as they become unused
+            /// @param[in] num The number of elements to pop
+            void pop(size_t num);
+
+            /// @brief Check the BufferChain for emptiness
+            /// @returns True if the BufferChain contains no readable data
+            bool empty() const;
+
+            /// @brief Get the length of the readable data in the BufferChain
+            /// @returns The total length of all readable data in all Buffers in the chain
+            size_t length() const;
+
+            BufferList& buffers();
+
+        private:
+
+            BufferList data;
 
             class bidirectional_iterator_base : public std::iterator<
                 std::bidirectional_iterator_tag, 
@@ -112,10 +186,10 @@ namespace Musador
                 T *, 
                 T &> 
             {
+  
             public:
 
                 bidirectional_iterator_base() {};
-
                 virtual ~bidirectional_iterator_base() {};
 
             };
@@ -262,68 +336,39 @@ namespace Musador
                 const T * p;
 
             };
+        };
 
-            /// @brief Constructor
-            BufferChain();
+        //////////////////////////////////////////////////////////////////////////////////////////////////
 
-            /// @brief Destructor
-            ~BufferChain();
+        template <typename T>
+        class BufferStream
+        {
+        public:
+            
+            BufferStream();
 
-            /// @brief Get an iterator to the start of the readable data in the BufferChain
-            /// @returns An iterator to the start of the readable data in the BufferChain
-            iterator begin();
+            ~BufferStream();
 
-            /// @brief Get an iterator past the end of the readable data in the BufferChain
-            /// @returns An iterator past the end of the readable data in the BufferChain
-            iterator end();
+            BufferStream& operator<<(const T * data);
 
-            /// @brief Get a const iterator to the start of the readable data in the BufferChain
-            /// @returns An iterator to the start of the readable data in the BufferChain
-            const_iterator begin() const;
+            BufferStream& operator>>(T& data);
 
-            /// @brief Get a const iterator past the end of the readable data in the BufferChain
-            /// @returns An iterator past the end of the readable data in the BufferChain
-            const_iterator end() const;
+            bool eof() const;
 
-            /// @brief Append a Buffer to the BufferChain
-            /// @param[in] buf The Buffer to append to the chain
-            void append(const Buffer<T>& buf);
-
-            /// @brief Append a Buffer constructed from an array of data 
-            /// @param[in] buf A shared array of data to append to the chain
-            /// @param[in] len The length of the data pointed to by buf
-            void append(boost::shared_array<T> buf, size_t len);
-
-            /// @brief Append a Buffer of the specified capacity constructed from an array of data 
-            /// @param[in] buf A shared array of data to append to the chain
-            /// @param[in] capacity The capacity of the newly appended Buffer
-            /// @param[in] dataEnd The length of the data pointed to by buf
-            void append(boost::shared_array<T> buf, size_t capacity, size_t dataEnd);
-
-            /// @brief Append a Buffer of the specified capacity constructed from a specified range in an array of data 
-            /// @param[in] buf A shared array of data to append to the chain
-            /// @param[in] capacity The capacity of the newly appended Buffer
-            /// @param[in] dataBegin The position of the start of the data in buf
-            /// @param[in] dataEnd The position immediately past the end of the data in buf
-            void append(boost::shared_array<T> buf, size_t capacity, size_t dataBegin, size_t dataEnd);
-
-            /// @brief Increment the start of the readable data in the chain by num elements
-            /// As elements at the front  of the chain are popped, Buffers are automatically destroyed as they become unused
-            /// @param[in] num The number of elements to pop
-            void pop(size_t num);
-
-            /// @brief Check the BufferChain for emptiness
-            /// @returns True if the BufferChain contains no readable data
-            bool empty() const;
-
-            /// @brief Get the length of the readable data in the BufferChain
-            /// @returns The total length of all readable data in all Buffers in the chain
-            size_t length() const;
+            bool fail() const;
 
         private:
 
-            BufferList data;
+            enum Flags
+            {
+                fail_bit,
+                eof_bit,
+                NUM_FLAGS,
+            };
 
+            size_t nextAllocSize;
+            BufferChain<T> chain;
+            std::bitset<NUM_FLAGS> flags;
         };
 
         //////////////////////////////////////////////////////////////////////////
@@ -385,6 +430,17 @@ namespace Musador
         template<typename T>
         Buffer<T>::~Buffer()
         {}
+
+        template<typename T>
+        Buffer<T>& Buffer<T>::operator=(const Buffer<T>& newBuf)
+        {
+            this->buf = newBuf.buf;
+            this->capacity = newBuf.capacity;
+            this->endOffset = newBuf.endOffset;
+            this->beginOffset = newBuf.beginOffset;
+
+            return *this;
+        }
 
         template<typename T>
         size_t Buffer<T>::numUsed() const
@@ -554,6 +610,12 @@ namespace Musador
                 len += iter->numUsed();
             }
             return len;
+        }
+
+        template<typename T>
+        typename BufferChain<T>::BufferList& BufferChain<T>::buffers() 
+        {
+            return this->data;
         }
 
         // iterator
@@ -821,6 +883,71 @@ namespace Musador
             typename BufferChain<T>::iterator r(*this);
             --(*this);
             return r;
+        }
+    
+        // BufferStream
+
+        template <typename T>
+        BufferStream<T>::BufferStream() :
+        nextAllocSize(1024),
+        flags(0)
+        {
+
+        }
+
+        template <typename T>
+        BufferStream<T>::~BufferStream()
+        {
+
+        }
+            
+        template <typename T>
+        BufferStream<T>& BufferStream<T>::operator<<(const T * data) 
+        {
+            while (*data != NULL)
+            {
+                BufferChain<T>::BufferList& bufs = this->chain.buffers();
+                if (bufs.empty() || bufs.back().numFree() == 0)
+                { 
+                    // No room in the input Buffer, so make a new one and append it to the chain
+                    this->chain.append(Buffer<char>(this->nextAllocSize));
+                    this->nextAllocSize *= 2;
+                }
+                
+                // Copy as much as we can into the existing Buffer at the tail of chain
+                *(bufs.back().end()) = *data++;
+                bufs.back().advanceEnd(1);
+                this->flags.reset(eof_bit);
+            }
+
+            return *this;
+        }
+
+        template<typename T>
+        BufferStream<T>& BufferStream<T>::operator>>(T&  val)
+        {
+            if (this->chain.length() == 0) 
+            {
+                this->flags.set(eof_bit);
+            } 
+            else
+            {
+                val = *this->chain.begin();
+                this->chain.pop(1);
+            }
+            return *this;
+        }
+
+        template<typename T>
+        bool BufferStream<T>::eof() const
+        {
+            return this->flags.test(eof_bit);
+        }
+
+        template<typename T>
+        bool BufferStream<T>::fail() const
+        {
+            return this->flags.test(fail_bit);
         }
     }
 }
