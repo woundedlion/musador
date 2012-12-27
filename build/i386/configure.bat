@@ -1,1 +1,1 @@
-cmake -G "Visual Studio 10" ../..
+cmake -G "Visual Studio 11" ../..
