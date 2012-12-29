@@ -59,7 +59,7 @@ SET(RYPPL_DISABLE_EXAMPLES TRUE)
 ADD_SUBDIRECTORY(src/3rdParty/boost)
 
 ADD_SUBDIRECTORY(src/3rdParty/sqlite)
-ADD_SUBDIRECTORY(src/3rdParty/taglib)
+#ADD_SUBDIRECTORY(src/3rdParty/taglib)
 ADD_SUBDIRECTORY(src/Config)
 ADD_SUBDIRECTORY(src/Database)
 ADD_SUBDIRECTORY(src/Indexer)
