@@ -2,3 +2,6 @@
 [submodule "src/3rdParty/boost"]
 	path = src/3rdParty/boost
 	url = https://github.com/ryppl/boost-zero.git
+[submodule "src/3rdParty/taglib"]
+	path = src/3rdParty/taglib
+	url = https://github.com/taglib/taglib.git
