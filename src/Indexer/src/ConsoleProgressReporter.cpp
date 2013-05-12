@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <boost/chrono/chrono.hpp>
 
 #include "ConsoleProgressReporter.h"
 #include "Indexer.h"
@@ -59,10 +60,7 @@ void ConsoleProgressReporter::run()
             ++i %= 4;
         }
 
-        boost::xtime xt;
-        boost::xtime_get(&xt,boost::TIME_UTC);
-        xt.nsec += 250000000; 
-        boost::thread::sleep(xt);
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(250));
     } while (!p.done);
 
     std::wcout << std::endl;

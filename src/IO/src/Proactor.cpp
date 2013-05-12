@@ -51,30 +51,29 @@ void Proactor::runIO()
                     break;
                 }
 
-                // Look up job in internal job list
-                boost::shared_ptr<Job> job = this->releaseJob(ctxPtr);
+				std::unique_ptr<Job> job(ctxPtr);
 
                 switch(job->msg->getType())
                 {
                 case MSG_SOCKET_ACCEPT_COMPLETE:
-                    this->completeSocketAccept(job, nBytes);
+                    this->completeSocketAccept(std::move(job), nBytes);
                     break;
                 case MSG_PIPE_ACCEPT_COMPLETE:
-                    this->completePipeAccept(job);
+                    this->completePipeAccept(std::move(job));
                     break;
                 case MSG_SOCKET_CONNECT_COMPLETE:
                     break;
                 case MSG_PIPE_CONNECT_COMPLETE:
-                    this->completePipeConnect(job);
+                    this->completePipeConnect(std::move(job));
                     break;
                 case MSG_READ_COMPLETE:
-                    this->completeRead(job, nBytes);
+                    this->completeRead(std::move(job), nBytes);
                     break;
                 case MSG_WRITE_COMPLETE:
-                    this->completeWrite(job, nBytes);
+                    this->completeWrite(std::move(job), nBytes);
                     break;
                 case MSG_INVOKE:
-                    this->completeInvoke(job);
+                    this->completeInvoke(std::move(job));
                 }
             }
             else 
@@ -87,8 +86,7 @@ void Proactor::runIO()
                     } 
                     else 
                     {
-                        // Look up job in internal job list
-                        boost::shared_ptr<Job> job = this->releaseJob(ctxPtr);
+						std::unique_ptr<Job> job(ctxPtr);
 
                         if (NULL != job->handler)
                         {
@@ -109,22 +107,22 @@ Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
                       boost::any tag /* = NULL */)
 {
 
-    // Create the completion data
-    boost::shared_ptr<MsgSocketAcceptComplete> msgAccept(new MsgSocketAcceptComplete());
+    auto msgAccept = boost::make_shared<MsgSocketAcceptComplete>();
     msgAccept->listener = listener;
     boost::shared_ptr<Connection> conn(listener->createConnection());
     msgAccept->conn = conn;
-    boost::shared_ptr<Job> job(new Job());
+
+	auto job = makeJob();
     job->msg = msgAccept;
     job->handler = handler;
     job->tag = tag;
 
-    // Load AcceptEx function
     if (NULL == this->fnAcceptEx)
     {
         GUID guid = WSAID_ACCEPTEX;
         DWORD nBytes = 0;
-        DWORD err = ::WSAIoctl(	listener->getSocket(), 
+        DWORD err = ::WSAIoctl(
+			listener->getSocket(), 
             SIO_GET_EXTENSION_FUNCTION_POINTER, 
             &guid, 
             sizeof(guid),
@@ -141,16 +139,17 @@ Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
 
             // Schedule error notification
             job->msg->setError(err);
-            this->postJob(job);
+            this->postJob(std::move(job));
             return;
         }
     }
-    // Load GetAcceptExSockaddrs function
-    if (NULL == this->fnGetAcceptExSockaddrs)
+
+	if (NULL == this->fnGetAcceptExSockaddrs)
     {
         GUID guid = WSAID_GETACCEPTEXSOCKADDRS;
         DWORD nBytes = 0;
-        DWORD err = ::WSAIoctl(	listener->getSocket(), 
+        DWORD err = ::WSAIoctl(
+			listener->getSocket(), 
             SIO_GET_EXTENSION_FUNCTION_POINTER, 
             &guid, 
             sizeof(guid),
@@ -167,7 +166,7 @@ Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
 
             // Schedule error notification
             job->msg->setError(err);
-            this->postJob(job);
+            this->postJob(std::move(job));
             return;
         }
     }
@@ -177,8 +176,8 @@ Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
 
     // Make the async accept request
     DWORD nBytes = 0;
-    this->addJob(job);
-    if ( !this->fnAcceptEx(	listener->getSocket(),
+    if (!this->fnAcceptEx(
+		listener->getSocket(),
         boost::static_pointer_cast<SocketConnection>(conn)->getSocket(), 
         msgAccept->buf.begin(), 
         0, 
@@ -200,10 +199,10 @@ Proactor::beginAccept(boost::shared_ptr<SocketListener> listener,
 
             // Schedule error notification
             job->msg->setError(err);
-            this->postJob(job);	
+            this->postJob(std::move(job));	
         }
-    }
-    return;
+    } 
+	job.release();
 }
 
 void
@@ -211,13 +210,12 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
                       EventHandler handler, 
                       boost::any tag /* = NULL */)
 {
-    // Create the completion data
-    boost::shared_ptr<MsgPipeAcceptComplete> msgAccept(new MsgPipeAcceptComplete());
+    auto msgAccept = boost::make_shared<MsgPipeAcceptComplete>();
     msgAccept->listener = listener;
     boost::shared_ptr<PipeConnection> conn(boost::shared_static_cast<PipeConnection>(listener->createConnection()));
     msgAccept->conn = conn;
-    boost::shared_ptr<Job> job(new Job());
-    ::memset(job.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
+
+    auto job = makeJob();
     job->msg = msgAccept;
     job->handler = handler;
     job->tag = tag;
@@ -239,7 +237,7 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
 
         // Schedule error notification
         job->msg->setError(err);
-        this->postJob(job);
+        this->postJob(std::move(job));
         return;
     }
 
@@ -249,8 +247,7 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
     ::CreateIoCompletionPort(hPipe, this->iocp, reinterpret_cast<ULONG_PTR>(hPipe), NULL);
 
     // Make the async accept request
-    this->addJob(job);
-    if (!::ConnectNamedPipe(hPipe,job.get()))
+    if (!::ConnectNamedPipe(hPipe, job.get()))
     {
         DWORD err = ::GetLastError();
         if (ERROR_IO_PENDING != err)
@@ -259,22 +256,22 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
 
             // Schedule error notification
             job->msg->setError(err);
-            this->postJob(job);
+            this->postJob(std::move(job));
         }
     }
-    return;
+	job.release();
 }
 
 
 void 
-Proactor::completeSocketAccept(boost::shared_ptr<Job> job, unsigned long nBytes)
+Proactor::completeSocketAccept(std::unique_ptr<Job> job, unsigned long nBytes)
 {
     // Retrieve the addresses and any received data and notify the event handler
     sockaddr_in * localAddr;
     sockaddr_in * remoteAddr;
     int localAddrSize = 0;
     int remoteAddrSize = 0;
-    boost::shared_ptr<MsgSocketAcceptComplete> msgAccept(boost::shared_static_cast<MsgSocketAcceptComplete>(job->msg));
+    auto msgAccept(boost::shared_static_cast<MsgSocketAcceptComplete>(job->msg));
     this->fnGetAcceptExSockaddrs(msgAccept->buf.begin(), 
         0,
         sizeof(sockaddr_in) + 16,
@@ -306,9 +303,9 @@ Proactor::completeSocketAccept(boost::shared_ptr<Job> job, unsigned long nBytes)
 }
 
 void 
-Proactor::completePipeAccept(boost::shared_ptr<Job> job)
+Proactor::completePipeAccept(std::unique_ptr<Job> job)
 {
-    boost::shared_ptr<MsgPipeAcceptComplete> msgAccept(boost::shared_static_cast<MsgPipeAcceptComplete>(job->msg));
+    auto msgAccept(boost::shared_static_cast<MsgPipeAcceptComplete>(job->msg));
     LOG(Debug) << "Accept completed: " << msgAccept->conn->toString();
 
     // notify the handler
@@ -327,17 +324,13 @@ Proactor::beginConnect(boost::shared_ptr<PipeConnection> conn,
                        const std::wstring& dest, 
                        boost::any tag /* = NULL */)
 {
-    boost::shared_ptr<MsgPipeConnectComplete> msgConnect(new MsgPipeConnectComplete());
-
-    // Create completion context to send off into asynchronous land
+    auto msgConnect = boost::make_shared<MsgPipeConnectComplete>();
     msgConnect->conn = conn;
-    boost::shared_ptr<Job> job(new Job());
-    ::memset(job.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
+
+	auto job = makeJob();
     job->msg = msgConnect;
     job->handler = handler;
     job->tag = tag;
-
-    this->addJob(job);
 
     // Make the faux async connect request
     HANDLE p  = ::CreateFile(conn->getName().c_str(),
@@ -358,13 +351,11 @@ Proactor::beginConnect(boost::shared_ptr<PipeConnection> conn,
 
     // Connect will complete through completion port
     conn->setPipe(p);
-    this->postJob(job);
-
-    return;
+    this->postJob(std::move(job));
 }
 
 void
-Proactor::completePipeConnect(boost::shared_ptr<Job> job)
+Proactor::completePipeConnect(std::unique_ptr<Job> job)
 {
     boost::shared_ptr<MsgPipeConnectComplete> msgConnect(boost::shared_static_cast<MsgPipeConnectComplete>(job->msg));
     PipeConnection& conn = static_cast<PipeConnection&>(*msgConnect->conn);
@@ -391,10 +382,9 @@ Proactor::beginRead(boost::shared_ptr<SocketConnection> conn,
         throw IOException() << "Message overflow at " << msgRead->MAX << " bytes";
     }
 
-    // Create completion context to send off into asynchronous land
     msgRead->conn = conn;
-    boost::shared_ptr<Job> job(new Job());
-    ::memset(job.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
+	
+	auto job = makeJob();
     job->msg = msgRead;
     job->handler = handler;
     job->tag = tag;
@@ -404,9 +394,7 @@ Proactor::beginRead(boost::shared_ptr<SocketConnection> conn,
     DWORD flags = 0;
     WSABUF buf = {0};
     buf.buf = msgRead->buf.end();
-    buf.len = msgRead->buf.numFree();
-
-    this->addJob(job);
+    buf.len = static_cast<ULONG>(msgRead->buf.numFree());
 
     if ( 0 != ::WSARecv(conn->getSocket(),
         &buf,
@@ -426,10 +414,10 @@ Proactor::beginRead(boost::shared_ptr<SocketConnection> conn,
 
             // Schedule error notification
             job->msg->setError(err);
-            this->postJob(job);
+            this->postJob(std::move(job));
         }
     }
-    return;
+	job.release();
 }
 
 
@@ -446,18 +434,15 @@ Proactor::beginRead(boost::shared_ptr<PipeConnection> conn,
 
     // Create completion context to send off into asynchronous land
     msgRead->conn = conn;
-    boost::shared_ptr<Job> job(new Job());
-    ::memset(job.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
+    auto job = makeJob();
     job->msg = msgRead;
     job->handler = handler;
     job->tag = tag;
 
-    this->addJob(job);
-
     DWORD nBytes = 0;
     if (0 == ::ReadFile(conn->getPipe(), 
         msgRead->buf.end(), 
-        msgRead->buf.numFree(), 
+        static_cast<DWORD>(msgRead->buf.numFree()), 
         &nBytes,
         job.get()))
     {
@@ -468,14 +453,14 @@ Proactor::beginRead(boost::shared_ptr<PipeConnection> conn,
 
             // Schedule notification
             job->msg->setError(err);
-            this->postJob(job);	
+            this->postJob(std::move(job));	
         }
     }
-    return;
+	job.release();
 }
 
 void 
-Proactor::completeRead(boost::shared_ptr<Job> job, unsigned long nBytes)
+Proactor::completeRead(std::unique_ptr<Job> job, unsigned long nBytes)
 {
     boost::shared_ptr<MsgReadComplete> msgRead(boost::shared_static_cast<MsgReadComplete>(job->msg));
     msgRead->buf.advanceEnd(nBytes);
@@ -508,10 +493,9 @@ Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn,
                      boost::shared_ptr<MsgWriteComplete> msgWrite, 
                      boost::any tag /* = NULL */)
 {
-    // Create completion context to send off into asynchronous land
     msgWrite->conn = conn;
-    boost::shared_ptr<Job> job(new Job());
-    ::memset(job.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
+    
+	auto job = makeJob();
     job->msg = msgWrite;
     job->handler = handler;
     job->tag = tag;
@@ -520,9 +504,7 @@ Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn,
     DWORD nBytes = 0;
     WSABUF buf = {0};
     buf.buf = msgWrite->buf.begin();
-    buf.len = msgWrite->buf.numUsed();
-
-    this->addJob(job);
+    buf.len = static_cast<ULONG>(msgWrite->buf.numUsed());
 
     if ( 0 != ::WSASend(conn->getSocket(),
         &buf,
@@ -542,10 +524,10 @@ Proactor::beginWrite(boost::shared_ptr<SocketConnection> conn,
 
             // Schedule notification
             job->msg->setError(err);
-            this->postJob(job);	
+            this->postJob(std::move(job));	
         }
     }
-    return;
+	job.release();
 }
 
 void
@@ -554,21 +536,18 @@ Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn,
                      boost::shared_ptr<MsgWriteComplete> msgWrite, 
                      boost::any tag /* = NULL */)
 {
-    // Create completion context to send off into asynchronous land
     msgWrite->conn = conn;
-    boost::shared_ptr<Job> job(new Job());
-    ::memset(job.get(), 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
+
+	auto job = makeJob();
     job->msg = msgWrite;
     job->handler = handler;
     job->tag = tag;
-
-    this->addJob(job);
 
     // Make the async write request	
     DWORD nBytes = 0;
     if (0 == ::WriteFile(conn->getPipe(), 
         msgWrite->buf.begin(), 
-        msgWrite->buf.numUsed(), 
+        static_cast<DWORD>(msgWrite->buf.numUsed()), 
         &nBytes,
         job.get()))
     {
@@ -579,14 +558,14 @@ Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn,
 
             // Schedule notification
             job->msg->setError(err);
-            this->postJob(job);	
+            this->postJob(std::move(job));	
         }
     }
-    return;
+	job.release();
 }
 
 void 
-Proactor::completeWrite(boost::shared_ptr<Job> job, unsigned long nBytes)
+Proactor::completeWrite(std::unique_ptr<Job> job, unsigned long nBytes)
 {
     boost::shared_ptr<MsgWriteComplete> msgWrite(boost::shared_static_cast<MsgWriteComplete>(job->msg));
     msgWrite->buf.advanceBegin(nBytes);
@@ -610,17 +589,16 @@ Proactor::completeWrite(boost::shared_ptr<Job> job, unsigned long nBytes)
 void
 Proactor::beginInvoke(boost::function<void ()> f)
 {
-    boost::shared_ptr<Job> job(new Job());
-    boost::shared_ptr<MsgInvoke> msgInvoke(new MsgInvoke());
+    auto job = makeJob();
+	auto msgInvoke = boost::make_shared<MsgInvoke>();
     job->msg = msgInvoke;
     job->tag = f;
-    this->addJob(job);
-    this->postJob(job);	
+    this->postJob(std::move(job));	
     return;
 }
 
 void
-Proactor::completeInvoke(boost::shared_ptr<Job> job)
+Proactor::completeInvoke(std::unique_ptr<Job> job)
 {
     LOG(Debug)	<< "Invoking Handler...";
     boost::function<void ()> f(boost::any_cast<boost::function<void ()> >(job->tag));
@@ -656,28 +634,20 @@ Proactor::stop()
     }
 }
 
-void
-Proactor::addJob(boost::shared_ptr<Job> job)
-{
-    Guard lock(this->jobsMutex);
-    this->jobs[job.get()] = job;
-}
-
-boost::shared_ptr<Proactor::Job>
-Proactor::releaseJob(Job * key)
-{
-    Guard lock(this->jobsMutex);
-    JobCollection::iterator iter = this->jobs.find(key);
-    assert(iter != this->jobs.end());
-    boost::shared_ptr<Job> job = iter->second;
-    this->jobs.erase(iter);
-    return job;
+std::unique_ptr<Proactor::Job> 
+Proactor::makeJob() 
+{ 
+	return std::unique_ptr<Job>(new Job());
 }
 
 void
-Proactor::postJob(boost::shared_ptr<Proactor::Job> job)
+Proactor::postJob(std::unique_ptr<Proactor::Job> job)
 {
-    ::PostQueuedCompletionStatus(this->iocp, 0, reinterpret_cast<ULONG_PTR>(job.get()), job.get());	
+    if (::PostQueuedCompletionStatus(this->iocp, 0, reinterpret_cast<ULONG_PTR>(job.get()), job.release())) {
+		job.release();
+	} else {
+		LOG(Error) << "PostQueuedCompletionStatus() failed with " << ::GetLastError();
+	}
 }
 
 
@@ -685,7 +655,7 @@ Proactor::postJob(boost::shared_ptr<Proactor::Job> job)
 // Job
 //////////////////////////////////////////////////////////////////////////
 
-Proactor::Job::Job() 
+Proactor::Job::Job()
 {
     ::memset(this, 0, sizeof(OVERLAPPED)); // clear OVERLAPPED part of structure
 }

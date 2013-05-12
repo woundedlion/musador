@@ -87,9 +87,9 @@ App::_wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch(uMsg) 
     {
     case WM_NCCREATE:
-        ::SetWindowLongPtr(hWnd,GWL_USERDATA, (LONG)reinterpret_cast<CREATESTRUCT *>(lParam)->lpCreateParams);
+        ::SetWindowLongPtr(hWnd,GWLP_USERDATA, (LONG)reinterpret_cast<CREATESTRUCT *>(lParam)->lpCreateParams);
     default:
-        App * app = reinterpret_cast<App *>(::GetWindowLongPtr(hWnd,GWL_USERDATA));
+        App * app = reinterpret_cast<App *>(::GetWindowLongPtr(hWnd,GWLP_USERDATA));
         if (NULL != app)
         {
             return app->wndProcMain(hWnd,uMsg,wParam,lParam);

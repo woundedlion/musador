@@ -10,7 +10,7 @@
 #define BOOST_UTF8_DECL
 #define BOOST_UTF8_END_NAMESPACE }
 #include <boost/detail/utf8_codecvt_facet.hpp>
-#include <libs/detail/utf8_codecvt_facet.cpp>
+#include <boost/detail/utf8_codecvt_facet.ipp>
 #undef BOOST_UTF8_END_NAMESPACE
 #undef BOOST_UTF8_DECL
 #undef BOOST_UTF8_BEGIN_NAMESPACE

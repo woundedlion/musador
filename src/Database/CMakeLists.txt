@@ -11,6 +11,7 @@ ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
 
 SET(libs
     BoostDateTime
+	BoostSystem
 	BoostThread
 	sqlite
 	Utilities

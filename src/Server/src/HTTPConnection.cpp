@@ -276,7 +276,7 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
             if (fs::exists(fname / L"index.html"))
             {
                 fname /= L"index.html";
-                if (!this->sendFile(env,fname.file_string()))
+                if (!this->sendFile(env, fname.wstring()))
                 {
                     res.status = 403;
                     res.reason = "Forbidden";
@@ -286,7 +286,7 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
             }
             else
             {
-                if (!this->dirIndex(env,fname.directory_string()))
+                if (!this->dirIndex(env, fname.wstring()))
                 {
                     res.status = 403;
                     res.reason = "Forbidden";
@@ -297,7 +297,7 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
         }
         else if(fs::is_regular(fname))
         {
-            if (!this->sendFile(env,fname.file_string()))
+            if (!this->sendFile(env,fname.wstring()))
             {
                 res.status = 403;
                 res.reason = "Forbidden";
@@ -351,7 +351,7 @@ HTTP::StateReqProcess::sendFile(HTTP::Env& env, const std::wstring& path)
     env.res->headers["Accept_ranges"] = "bytes";
     env.res->headers["Content-transfer-encoding"] = "binary";
     env.res->headers["Content-Disposition"] = "inline; filename=\"";
-    env.res->headers["Content-Disposition"] += Util::unicodeToUtf8(fs::wpath(path).leaf());
+    env.res->headers["Content-Disposition"] += Util::unicodeToUtf8(fs::path(path).filename().wstring());
     env.res->headers["Content-Disposition"] += "\"";
 
     boost::uintmax_t fsize = fs::file_size(path);

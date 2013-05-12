@@ -181,6 +181,7 @@ namespace Musador
             public:
 
                 Job();
+				~Job () {}
 
             private:
 
@@ -189,24 +190,18 @@ namespace Musador
                 boost::any tag;
             };
 
-            typedef std::map<Job *, boost::shared_ptr<Job> > JobCollection;
-
             void runIO();
 
-            void addJob(boost::shared_ptr<Job> job);
-            boost::shared_ptr<Job> releaseJob(Job * key);
-            void postJob(boost::shared_ptr<Job> job);
+			std::unique_ptr<Job> makeJob();
+			void postJob(std::unique_ptr<Job> job);
 
-            void completeSocketAccept(boost::shared_ptr<Job> ctx, unsigned long nBytes);
-            void completePipeAccept(boost::shared_ptr<Job> ctx);
-            void completeRead(boost::shared_ptr<Job> ctx, unsigned long nBytes);
-            void completeWrite(boost::shared_ptr<Job> ctx, unsigned long nBytes);
-            void completeSocketConnect(boost::shared_ptr<Job> ctx);
-            void completePipeConnect(boost::shared_ptr<Job> ctx);
-            void completeInvoke(boost::shared_ptr<Job> ctx);
-
-            Mutex jobsMutex;
-            JobCollection jobs;
+            void completeSocketAccept(std::unique_ptr<Job> ctx, unsigned long nBytes);
+            void completePipeAccept(std::unique_ptr<Job> ctx);
+            void completeRead(std::unique_ptr<Job> ctx, unsigned long nBytes);
+            void completeWrite(std::unique_ptr<Job> ctx, unsigned long nBytes);
+            void completeSocketConnect(std::unique_ptr<Job> ctx);
+            void completePipeConnect(std::unique_ptr<Job> ctx);
+            void completeInvoke(std::unique_ptr<Job> ctx);
 
             bool doRecycle;
             bool doShutdown;

@@ -11,6 +11,7 @@ ADD_DEFINITIONS(-DUNICODE -D_UNICODE -DBOOST_REGEX_MATCH_EXTRA)
 
 SET(libs
     BoostDateTime
+	BoostSystem
 	BoostThread
 	BoostRegex
 	Utilities

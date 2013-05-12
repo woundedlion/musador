@@ -134,8 +134,8 @@ namespace Musador
 
         bool initDB();
         bool indexDB();
-        Database::id_t addDirectory(const fs::wdirectory_entry& dir);
-        Database::id_t addFile(const fs::wdirectory_entry& file, Database::id_t parentId);
+        Database::id_t addDirectory(const fs::directory_entry& dir);
+        Database::id_t addFile(const fs::directory_entry& file, Database::id_t parentId);
 
         static const int INVALID_ID = -1;
 

@@ -23,10 +23,6 @@ namespace Musador
 
             virtual void onNotify(boost::shared_ptr<IO::MsgNotify> msg, boost::any tag) = 0;
 
-        private:
-
-            typedef std::map<Job *, boost::shared_ptr<Job> > JobCollection;
-            JobCollection jobs;
         };
     }
 }

@@ -12,7 +12,8 @@ ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
 SET(libs
         BoostRegex
 		BoostSerialization
-		BoostFilesystem		
+		BoostFilesystem
+		BoostSystem		
         BoostThread
 		Server
         UI

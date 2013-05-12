@@ -35,8 +35,8 @@ namespace Musador
             HWND hWndMain;
             HINSTANCE hInst;
 
-            static HRESULT CALLBACK _wndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-            virtual HRESULT wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
+            static LRESULT CALLBACK _wndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+            virtual LRESULT wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
 
 
         };

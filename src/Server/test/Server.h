@@ -34,7 +34,7 @@ public:
 
     void setUp() 
     {
-        Logging::Logger::instance()->setLevel(Logging::Debug);
+		Logging::Logger::instance()->setLevel(Logging::Warning);
         IO::Proactor::instance()->start();
     }
 
@@ -58,13 +58,13 @@ public:
         sockaddr_in localEP = {0};
         localEP.sin_family = AF_INET;
         localEP.sin_addr.s_addr = ::inet_addr("0.0.0.0");
-        localEP.sin_port = ::htons(51520);
+        localEP.sin_port = ::htons(65534);
         boost::shared_ptr<IO::Listener> listener(new EchoListener(localEP));
         s.acceptConnections(listener);
 
-        const int BANK_COUNT = 10;
+        const int BANK_COUNT = 100;
         const int BANK_SIZE = 10;
-        const int BANK_DELAY = 100;
+        const int BANK_DELAY = 10;
 
         failed = 0;
         succeeded = 0;
@@ -113,7 +113,7 @@ public:
         sockaddr_in serverEP = {0};
         serverEP.sin_family = AF_INET;
         serverEP.sin_addr.s_addr = ::inet_addr("127.0.0.1");
-        serverEP.sin_port = ::htons(51520);
+        serverEP.sin_port = ::htons(65534);
 
         try
         {
@@ -129,7 +129,7 @@ public:
 
         // Fill Data
         MTRand r;
-        const int MAX = 4096;
+        const int MAX = 1 >> 16;
         std::vector<char> data(MAX);
         for (int i = 0; i < MAX; ++i)
         {

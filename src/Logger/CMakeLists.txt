@@ -10,6 +10,7 @@ ADD_LIBRARY(${PROJECT_NAME} ${hdrs} ${srcs})
 ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
 
 SET(libs 
+		BoostSystem
 		BoostThread
 		BoostDateTime
 		Utilities
