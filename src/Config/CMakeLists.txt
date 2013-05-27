@@ -12,6 +12,7 @@ ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
 SET(libs
         BoostRegex
 		BoostSerialization
+		BoostDateTime
 		BoostFilesystem
 		BoostSystem		
         BoostThread

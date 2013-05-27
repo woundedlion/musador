@@ -165,12 +165,12 @@ public:
                     LOG(Error) << e.what();
                 }
             }
-            TS_ASSERT(sent == recvd);
+            CHECK(sent == recvd);
         }
 
         for (int i = 0; i < MAX; ++i)
         {
-            TS_ASSERT(data[i] == echo[i]);
+            CHECK(data[i] == echo[i]);
         }
 
         // Clean up
@@ -182,5 +182,13 @@ private:
 
     Network * net;
 };
+
+int main()
+{
+	Musador::Logging::Logger::instance()->setLevel(Musador::Logging::Info);
+	auto err = UnitTest::RunAllTests();
+	Musador::Logging::Logger::instance()->destroy();
+	return err;
+}
 
 #endif

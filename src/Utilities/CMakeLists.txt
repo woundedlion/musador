@@ -12,6 +12,7 @@ ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
 SET(libs 
     BoostDateTime
     BoostThread
+	BoostSystem
     Logger
     UI
 )
