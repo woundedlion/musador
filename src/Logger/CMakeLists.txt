@@ -16,4 +16,4 @@ SET(libs
 		Utilities
 		UI
 )
-cxxTestLink(${libs})
+BUILD_UNIT_TEST(${libs})

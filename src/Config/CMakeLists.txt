@@ -19,4 +19,4 @@ SET(libs
         UI
         Utilities
 )
-cxxTestLink(${libs} Logger)
+BUILD_UNIT_TEST(${libs} Logger)

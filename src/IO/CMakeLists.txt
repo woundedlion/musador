@@ -19,4 +19,4 @@ SET(libs
 	Network
     UI
 )
-cxxTestLink(${libs})
+BUILD_UNIT_TEST(${libs})

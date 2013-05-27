@@ -1,296 +1,303 @@
-#include <sstream>
-#include <algorithm>
-#include "Utilities/Util.h"
-#include <cassert>
+#include "boost/lexical_cast.hpp"
 #include "DatabaseSqlite.h"
-#include "sqlite/sqlite3.h"
+#include "Utilities/Util.h"
 
-using namespace Musador::Database;
+namespace {
+	void onError(int code) 
+	{
+		throw std::runtime_error(boost::lexical_cast<std::string>(code));
+	}
 
-DatabaseSqlite::DatabaseSqlite(std::wstring databaseName) : 
-dbName(Util::unicodeToUtf8(databaseName.c_str())),
-db(&DatabaseSqlite::tssCleanup)
-{
-    this->open();
+	void onError(const char *msg) 
+	{
+		throw std::runtime_error(msg);
+	}
 }
 
-DatabaseSqlite::~DatabaseSqlite()
+using namespace storm::sqlite;
+
+Database::Database(const std::wstring& dbName) : 
+dbName(Util::unicodeToUtf8(dbName.c_str())),
+db(NULL)
 {
-    try
-    {
-        this->close();
-    }
-    catch (const DatabaseException&)
-    {
-        assert(false);
-    }
+    open();
 }
 
-void 
-DatabaseSqlite::txnBegin()
+Database::~Database()
 {
-    this->execute(L"BEGIN");	
+	close();
 }
 
 void
-DatabaseSqlite::txnRollback()
+Database::open()
 {
-    this->execute(L"ROLLBACK");	
+    if (db) return;
+		
+    int err = ::sqlite3_open(dbName.c_str(), &db);
+	if (err != SQLITE_OK) {
+		onError(err);
+    }
+}
+
+void
+Database::close()
+{
+    if (!db) return;
+
+	int err = ::sqlite3_close(db);
+	if (err != SQLITE_OK) {
+        onError(err);
+    }
+	db = NULL;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+Statement::Statement(Database& db, const std::wstring& sql)
+{
+	prepare(db, sql);
+}
+
+void
+Statement::prepare(Database& db, const std::wstring& sql)
+{
+	sqlite3_stmt *stmtPtr;
+	const char *next;
+	std::string sql8 = Util::unicodeToUtf8(sql);
+
+	int err = ::sqlite3_prepare_v2(
+		db, 
+		sql8.c_str(), 
+		static_cast<int>(sql8.size()),
+		&stmtPtr, 
+		&next);
+    
+	if (err != SQLITE_OK) {
+		onError(err);
+    }
+
+	stmt.reset(stmtPtr, &sqlite3_finalize);
+}
+
+void
+Statement::rewind()
+{
+	int err = ::sqlite3_reset(stmt.get());
+	if (err != SQLITE_OK) {
+		onError(err);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+Row::Row() :
+	stmt(NULL)
+{}
+
+Row::Row(const Statement& stmt) :
+	stmt(&stmt)
+{}
+
+template <>
+int
+Row::get<int>(uint32_t col) const
+{
+	assert(stmt);
+	return ::sqlite3_column_int(*stmt, static_cast<int>(col));
+}
+
+template <>
+int64_t
+Row::get<int64_t>(uint32_t col) const
+{
+	assert(stmt);
+	return ::sqlite3_column_int64(*stmt, static_cast<int>(col));
+}
+
+template <>
+double
+Row::get<double>(uint32_t col) const
+{
+	assert(stmt);
+	return ::sqlite3_column_double(*stmt, static_cast<int>(col));
+}
+
+template <>
+std::string
+Row::get<std::string>(uint32_t col) const
+{
+	assert(stmt);
+	return std::string(reinterpret_cast<const char *>(::sqlite3_column_text(*stmt, static_cast<int>(col))));
+}
+
+template <>
+std::wstring
+Row::get<std::wstring>(uint32_t col) const
+{
+	assert(stmt);
+	return Util::utf8ToUnicode(
+		reinterpret_cast<const char *>(::sqlite3_column_text(*stmt, static_cast<int>(col))));
+}
+
+template <>
+std::vector<unsigned char>
+Row::get<std::vector<unsigned char>>(uint32_t col) const
+{
+	assert(stmt);
+	auto b = static_cast<const unsigned char *>(::sqlite3_column_blob(*stmt, static_cast<int>(col)));
+	auto e = b + ::sqlite3_column_bytes(*stmt, static_cast<int>(col)); 
+	return std::vector<unsigned char>(b, e);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+ResultSet::ResultSet(const Statement& stmt) :
+	stmt(stmt)
+{}
+
+ResultSet::~ResultSet()
+{}
+
+ResultSet::iterator
+ResultSet::begin()
+{
+	stmt.rewind();
+	iterator b(&stmt);
+	b.increment();
+	return b;
+}
+
+ResultSet::iterator
+ResultSet::end()
+{
+	return iterator();
+}
+
+//////////////////////////////////////////////////////////////////////
+
+ResultSet::iterator::iterator() :
+	stmt(NULL)
+{}
+
+ResultSet::iterator::iterator(Statement *stmt) :
+	stmt(stmt),
+	row(*stmt)
+{}
+
+void
+ResultSet::iterator::increment()
+{
+	assert(stmt);
+	int err = ::sqlite3_step(*stmt);
+	switch (err) {
+	case SQLITE_ROW:
+		break;
+	case SQLITE_DONE:
+		stmt = NULL;
+		break;
+	default:
+		onError(err);
+	}
+}
+
+bool
+ResultSet::iterator::equal(const iterator& iter) const
+{
+	return iter.stmt == stmt;
+}
+
+const ResultSet::Row&
+ResultSet::iterator::dereference() const
+{
+	assert(stmt);
+	return row;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Transaction::Transaction(Database& db) :
+	db(db),
+	committed(false)
+{
+	execute(L"BEGIN");	
+}
+
+Transaction::~Transaction()
+{
+	if (!committed) {
+		execute(L"ROLLBACK");
+	}
+}
+
+void
+Transaction::commit()
+{
+	execute(L"COMMIT");
+	committed = true;
 }
 
 void 
-DatabaseSqlite::txnCommit()
+Transaction::execute(const std::wstring& sql)
 {
-    this->execute(L"COMMIT");	
-}
-
-bool 
-DatabaseSqlite::open()
-{
-    if (NULL != this->db.get())
-        return false;
-
-    int err;
-    sqlite3 * dbPtr;
-    if (SQLITE_OK != (err = ::sqlite3_open(this->dbName.c_str(),&dbPtr)))
-    {
-        DatabaseSqlite::err(err);
-    }
-    this->db.reset(dbPtr);
-    return true;
-}
-
-bool 
-DatabaseSqlite::close()
-{
-    if (NULL == this->db.get())
-        return false;
-
-    int err;
-    if (SQLITE_OK != (err = ::sqlite3_close(this->db.get())))
-    {
-        DatabaseSqlite::err(err);
-    }
-
-    this->db.release();
-    return true;
+	std::string sql8 = Util::unicodeToUtf8(sql);
+	char *errMsgPtr = NULL;
+	int err = sqlite3_exec(db, sql8.c_str(), NULL, NULL, &errMsgPtr);
+	std::unique_ptr<char, std::function<void (void *)>> errMsg(errMsgPtr, &sqlite3_free);
+	if (err != SQLITE_OK) {
+		onError(errMsg.get());
+	}
 }
 
 void 
-DatabaseSqlite::tssCleanup(sqlite3 * dbPtr)
+Transaction::execute(Statement& stmt)
 {
-    int err;
-    if (dbPtr && SQLITE_OK != (err = ::sqlite3_close(dbPtr)))
-    {
-        DatabaseSqlite::err(err);
-    }
-
-//    delete dbPtr;
+	int err = ::sqlite3_step(stmt);
+	switch (err) {
+	case SQLITE_DONE:
+	case SQLITE_ROW:
+		break;
+	default:
+		onError(err);
+	}
+	::sqlite3_reset(stmt);
 }
 
-boost::shared_ptr<ResultSet>
-DatabaseSqlite::select(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions)	
+ResultSet
+Transaction::select(const std::wstring& sql)
 {
-    std::wstringstream q;
-    q << "SELECT ";
-    if (columns.empty())
-        q << "*";
-    else
-    {
-        bool first = true;
-        for (std::vector<ColumnBase *>::const_iterator iter = columns.begin(); iter != columns.end(); iter++)
-        {
-            if (first)
-                first = false;
-            else
-                q << ",";
-            q << (*iter)->name().c_str();
-        }
-    }
+	return select(Statement(db, sql));
+}
 
-    q << " FROM " << table.c_str();
+ResultSet
+Transaction::select(Statement& stmt)
+{
+	return ResultSet(stmt);
+}
 
-    if (!conditions.empty())
-        q << " WHERE " << conditions.c_str();
+size_t
+Transaction::update(const std::wstring& sql)
+{
+	execute(sql);
+	return ::sqlite3_changes(db);
+}
 
-    return this->execute(q.str());
+size_t
+Transaction::update(Statement& stmt)
+{
+	execute(stmt);
+	return ::sqlite3_changes(db);
 }
 
 id_t
-DatabaseSqlite::insert(const std::wstring& table,  const std::vector<ColumnBase *>& columns)
+Transaction::insert(const std::wstring& sql)
 {
-    SQLStream q;
-    SQLStream valueStr;
-    q << "INSERT INTO " << table.c_str() << "(";
-    bool first = true;
-    for (std::vector<ColumnBase *>::const_iterator iter = columns.begin(); iter != columns.end(); iter++)
-    {
-        if (first)
-            first = false;
-        else
-        {
-            q << ",";
-            valueStr << ",";
-        }
-        q << (*iter)->name();
-        valueStr << **iter;
-    }
-    q << ") VALUES (" << valueStr.str() << ")";
-
-    this->execute(q.str());
-    return ::sqlite3_last_insert_rowid(this->db.get());
+	execute(sql);
+	return ::sqlite3_last_insert_rowid(db);
 }
 
-void 
-DatabaseSqlite::update(const std::wstring& table, const std::vector<ColumnBase *>& columns, const std::wstring& conditions )
+id_t
+Transaction::insert(Statement& stmt)
 {
-    SQLStream q;
-    q << "UPDATE " << table << " SET ";
-    bool first = true;
-    for (std::vector<ColumnBase *>::const_iterator iter = columns.begin(); iter != columns.end(); iter++)
-    {
-        if (first)
-            first = false;
-        else
-        {
-            q << ",";
-        }
-        q << (*iter)->name().c_str() << L"=";
-        q << **iter;
-    }
-
-    if (!conditions.empty())
-        q << " WHERE " << conditions;
-
-    this->execute(q.str());
-}
-
-void 
-DatabaseSqlite::remove(const std::wstring& table, const std::wstring& conditions)
-{
-    SQLStream q;
-    q << "DELETE FROM " << table << " WHERE " << conditions;
-    this->execute(q.str());
-}
-
-boost::shared_ptr<ResultSet>
-DatabaseSqlite::execute(const std::wstring& q)
-{
-    if (NULL == this->db.get())
-    {
-        throw sqlite::ErrSQL("The database was never opened.");
-    }
-
-    sqlite3_stmt * stmt;
-    const char * next;
-    std::string qUtf8 = Util::unicodeToUtf8(q.c_str());
-    // prepare statement
-    int err;
-    if (SQLITE_OK != (err = ::sqlite3_prepare_v2(this->db.get(),qUtf8.c_str(), static_cast<int>(qUtf8.size()),&stmt, &next)))
-    {
-        DatabaseSqlite::err(err);
-    }
-
-    if (SQLITE_ROW != ::sqlite3_step(stmt))
-    {
-        // cleanup statement
-        int err;
-        if (SQLITE_OK != (err = ::sqlite3_finalize(stmt)))
-        {
-            DatabaseSqlite::err(err);
-        }
-
-        return boost::shared_ptr<ResultSet>();
-    }
-
-    // return a real ResultSet if we have a row
-    return boost::shared_ptr<ResultSet>(new ResultSetSqlite(this->shared_from_this(),stmt));     
-}
-
-void 
-DatabaseSqlite::err(int errCode, const char * errMsg)
-{
-    switch (errCode)
-    {
-    case 1:
-        throw sqlite::ErrSQL(errMsg);
-        break;
-    case 2:
-        throw sqlite::ErrInternal();
-        break;
-    case 3:
-        throw sqlite::ErrPermission();
-        break;
-    case 4:
-        throw sqlite::ErrAbort();
-        break;
-    case 5:
-        throw sqlite::ErrBusy();
-        break;
-    case 6:
-        throw sqlite::ErrLocked();
-        break;
-    case 7:
-        throw sqlite::ErrNoMem();
-        break;
-    case 8:
-        throw sqlite::ErrReadOnly();
-        break;
-    case 9:
-        throw sqlite::ErrInterrupt();
-        break;
-    case 10:
-        throw sqlite::ErrIO();
-        break;
-    case 11:
-        throw sqlite::ErrCorrupt();
-        break;
-    case 12:
-        throw sqlite::ErrNotFound();
-        break;
-    case 13:
-        throw sqlite::ErrFull();
-        break;
-    case 14:
-        throw sqlite::ErrCantOpen();
-        break;
-    case 15:
-        throw sqlite::ErrProtocol();
-        break;
-    case 16:
-        throw sqlite::ErrEmpty();
-        break;
-    case 17:
-        throw sqlite::ErrSchema();
-        break;
-    case 18:
-        throw sqlite::ErrTooBig();
-        break;
-    case 19:
-        throw sqlite::ErrConstraint();
-        break;
-    case 20:
-        throw sqlite::ErrMismatch();
-        break;
-    case 21:
-        throw sqlite::ErrMisuse();
-        break;
-    case 22:
-        throw sqlite::ErrNoLFs();
-        break;
-    case 23:
-        throw sqlite::ErrAuth();
-        break;
-    case 24:
-        throw sqlite::ErrFormat();
-        break;
-    case 25:
-        throw sqlite::ErrRange();
-        break;
-    case 26:
-        throw sqlite::ErrNotDB();
-        break;
-    default:
-        throw sqlite::ErrUnknown();
-    }
+	execute(stmt);
+	return ::sqlite3_last_insert_rowid(db);
 }

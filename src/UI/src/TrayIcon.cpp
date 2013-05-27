@@ -96,7 +96,7 @@ void TrayIcon::setToolTip(const std::wstring& toolTip)
     {
         tipSize = 128;
     }
-    tipSize = toolTip.copy(this->nid.szTip, tipSize - 1);
+    tipSize = static_cast<DWORD>(toolTip.copy(this->nid.szTip, tipSize - 1));
     this->nid.szTip[tipSize] = L'\0';
 }
 

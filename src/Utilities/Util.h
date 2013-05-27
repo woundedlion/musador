@@ -17,49 +17,34 @@ namespace Util
     void cleanupUtf8Locale(std::locale *);
 
     std::string unicodeToUtf8(const std::wstring& in);
-
     std::string unicodeToUtf8(const wchar_t * in);
-
     std::string unicodeToUtf8(wchar_t in);
-
-    std::wstring utf8ToUnicode(const std::string& in);
-
+    
+	std::wstring utf8ToUnicode(const std::string& in);
     std::wstring utf8ToUnicode(const char * in);
-
     std::wstring utf8ToUnicode(char in);
-
-    std::wstring escapeQuotes(const std::wstring& in);
-
+    
+	std::wstring escapeQuotes(const std::wstring& in);
     std::wstring escapeQuotes(const wchar_t * in);
-
-    std::wstring bytesToString(unsigned long long bytes);
-
+    
+	std::wstring bytesToString(unsigned long long bytes);
     void tokenize(const std::string& str,std::vector<std::string>& tokens,const std::string& delimiters);
-
     int hexToDec(char digit);
-
     char hexToChar(const std::string& hex);
-
     bool parseNameValuePair(const std::string& pairString, char delim, std::pair<std::string,std::string>& resultPair);
-
     void replaceChar(std::string& str, char from, char to);
 
-    void genGUID(GUID& uuid);
-
+	void genGUID(GUID& uuid);
     void genGUID(std::string& guidStr);
 
     void guidToString(const GUID& guid, std::string& guidStr);
 
     INT16 ReadInt16(BYTE * buf);
-
     void WriteInt16(BYTE * buf, INT16 val);
-
     INT32 ReadInt32(BYTE * buf);
-
     void WriteInt32(BYTE * buf, INT32 val);
 
     std::wstring pathToDataDir();
-
 }
 
 #endif

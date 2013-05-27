@@ -13,9 +13,12 @@ SET(libs
     BoostDateTime
 	BoostSystem
 	BoostThread
+	BoostFilesystem
+	BoostSerialization
 	sqlite
 	Utilities
 	Logger
-    UI
+	UI
 )
-cxxTestLink(${libs})
+
+BUILD_UNIT_TEST(${libs})

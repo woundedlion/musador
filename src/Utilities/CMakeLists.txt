@@ -15,4 +15,4 @@ SET(libs
     Logger
     UI
 )
-cxxTestLink(${libs})
+BUILD_UNIT_TEST(${libs})

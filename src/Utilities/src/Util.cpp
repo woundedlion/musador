@@ -1,7 +1,9 @@
 #include <locale>
 #include <sstream>
+#include <cstdlib>
 
 #ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <objbase.h>
 #endif
 
@@ -119,7 +121,7 @@ std::wstring Util::bytesToString(unsigned long long bytes)
     std::wstringstream r;
     int p = 0;
 
-    unsigned long double v;
+    long double v;
     if (bytes >= 1024)
     {
         // to avoid overflow from unsigned long long to unisgned long double we divide once before assignment

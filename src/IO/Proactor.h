@@ -12,6 +12,7 @@
 #include "Connection.h"
 
 #ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #pragma comment(lib,"kernel32.lib")
 #include <mswsock.h>

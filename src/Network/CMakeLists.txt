@@ -11,4 +11,4 @@ ADD_DEFINITIONS(-DUNICODE -D_UNICODE)
 
 #SET(libs 
 #)
-#cxxTestLink(${libs})
+#BUILD_UNIT_TEST(${libs})

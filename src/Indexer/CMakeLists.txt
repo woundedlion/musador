@@ -22,4 +22,4 @@ SET(libs
 		tag
         UI
 )
-cxxTestLink(${libs})
+BUILD_UNIT_TEST(${libs})

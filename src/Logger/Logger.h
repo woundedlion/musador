@@ -11,7 +11,7 @@
 #include "Utilities/Property.h"
 #include "UI/Console.h"
 
-#define LOG(level) Logging::log(Logging::level,LOG_SENDER)
+#define LOG(level) Musador::Logging::log(Musador::Logging::level,LOG_SENDER)
 
 namespace Musador
 {
