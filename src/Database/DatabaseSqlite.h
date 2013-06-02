@@ -6,6 +6,7 @@
 #include <memory>
 #include <functional>
 #include <cassert>
+#include <type_traits>
 #include "boost/iterator/iterator_facade.hpp"
 #include "sqlite/sqlite3.h"
 #include "Archive.h"
@@ -30,6 +31,22 @@ namespace storm {
 			~Database();
 			operator sqlite3*() { return db; }
 			std::string path() { return dbName; }
+
+			template <typename T>
+			static std::wstring sqlType(typename std::enable_if<std::is_integral<T>::value>::type * = 0)
+			{ return L"INTEGER"; }
+
+			template <typename T>
+			static std::wstring sqlType(typename std::enable_if<std::is_floating_point<T>::value>::type * = 0)
+			{ return L"REAL"; }
+
+			template <typename T>
+			static std::wstring sqlType(typename std::enable_if<std::is_array<T>::value>::type * = 0)
+			{ return L"BLOB"; }
+
+			template <class T>
+			static std::wstring sqlType(typename std::enable_if<std::is_base_of<std::basic_string<typename T::value_type>, T>::value>::type * = 0)
+			{ return L"TEXT"; }
 
 		private:
 
@@ -143,7 +160,7 @@ namespace storm {
 			template <typename Entity>
 			Transaction& operator<<(Entity& entity)
 			{
-				OArchive<Database> oa(*this);
+				RowOutputArchive<Database> oa(*this);
 				oa & entity;
 				return *this;
 			}
@@ -151,10 +168,28 @@ namespace storm {
 			template <typename Entity>
 			Transaction& operator>>(Entity& entity)
 			{
-				IArchive<Database> ia(*this);
+				RowInputArchive<Database> ia(*this);
 				ia & entity;
 				return *this;
 			}
+
+			template <typename Entity>
+			Transaction& operator<<(const sql::create<Entity>&)
+			{
+				TableOutputArchive<Database> oa(*this);
+				oa & Entity();
+				return *this;
+			}
+
+			template <typename Entity>
+			Transaction& operator<<(const sql::drop<Entity>&)
+			{
+				sql::wstringstream sql;
+				sql << "DROP TABLE IF EXISTS " << Entity::table() << L";";
+				execute(sql.str());
+				return *this;
+			}
+
 
 		private:
 			

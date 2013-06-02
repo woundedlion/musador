@@ -175,7 +175,7 @@ public:
 		ar & BOOST_SERIALIZATION_NVP(m3);
 	}
 
-	const wchar_t *table() const { return L"test"; }
+	static const wchar_t *table() { return L"test"; }
 
 	int64_t id;
 	int m1;
@@ -183,7 +183,7 @@ public:
 	std::wstring m3;
 };
 
-TEST_FIXTURE(Fixture, testArchive)
+TEST(testArchive)
 {
 	TestEntity entity;
 	entity.id=123;
@@ -191,14 +191,22 @@ TEST_FIXTURE(Fixture, testArchive)
 	entity.m2 = "m2m2m2";
 	entity.m3 = L"m3m3m3";
 
+
+	sqlite::Database db((fs::temp_directory_path() /= "test.db").wstring());
+
 	{
-		// Update should fail since id does not exist
-		try {
-			sqlite::Transaction txn(db);
-			txn << entity;
-			txn.commit();
-		} catch(const std::exception e) {			
-		}
+		sqlite::Transaction txn(db);
+		txn << sql::drop<TestEntity>()
+			<< sql::create<TestEntity>();
+		txn.commit();
+	}
+
+	// Update should fail since id does not exist
+	try {
+		sqlite::Transaction txn(db);
+		txn << entity;
+		txn.commit();
+	} catch(const std::exception e) {			
 	}
 
 	{

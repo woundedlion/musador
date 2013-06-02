@@ -25,19 +25,75 @@ namespace storm
 	typedef std::vector<Attribute> Attributes;
 
 	template <typename Database>
-	class OArchive
+	class TableOutputArchive
 	{
 	public:
 
 		typedef boost::mpl::bool_<true> is_saving; 
 		typedef boost::mpl::bool_<false> is_loading;
 
-		OArchive(typename Database::Transaction& txn) :
+		TableOutputArchive(typename Database::Transaction& txn) :
 			txn(txn)
 		{}
 
 		template <typename Entity>
-		OArchive& operator &(Entity& entity)
+		TableOutputArchive& operator &(Entity& entity)
+		{
+			boost::serialization::serialize_adl(
+				*this, 
+				entity,
+				boost::serialization::version<Entity>::value);
+			create(Entity::table());
+			return *this;
+		}
+
+		template <typename T>
+		TableOutputArchive& operator *(const boost::serialization::nvp<T>& t)
+		{
+			pkey = Attribute(t.name(), typename Database::sqlType<T>());
+			return *this;
+		}
+
+		template <typename T>
+		TableOutputArchive& operator &(const boost::serialization::nvp<T>& t)
+		{
+			attrs.emplace_back(Attribute(t.name(), typename Database::sqlType<T>()));
+			return *this;
+		}
+
+	private:
+
+		void create(const std::wstring& table)
+		{
+			sql::wstringstream sql;
+			sql << L"CREATE TABLE IF NOT EXISTS " << table << "(";
+			sql << pkey.name << L" " << pkey.value << L" PRIMARY KEY";
+			for (auto attr : attrs) {
+				sql << L", " << attr.name << L" " << attr.value;
+			}
+			sql << ");";
+			txn.execute(sql.str());
+		}
+
+		typename Database::Transaction& txn;
+		Attribute pkey;
+		Attributes attrs;
+	};
+
+	template <typename Database>
+	class RowOutputArchive
+	{
+	public:
+
+		typedef boost::mpl::bool_<true> is_saving; 
+		typedef boost::mpl::bool_<false> is_loading;
+
+		RowOutputArchive(typename Database::Transaction& txn) :
+			txn(txn)
+		{}
+
+		template <typename Entity>
+		RowOutputArchive& operator &(Entity& entity)
 		{
 			boost::serialization::serialize_adl(
 				*this, 
@@ -45,16 +101,16 @@ namespace storm
 				boost::serialization::version<Entity>::value);
 
 			if (pkey.value != L"0") {
-				update(entity.table());
+				update(Entity::table());
 			} else {
-				insert(entity.table());
+				insert(Entity::table());
 			}
 
 			return *this;
 		}
 
 		template <typename T>
-		OArchive& operator *(const boost::serialization::nvp<T>& t)
+		RowOutputArchive& operator *(const boost::serialization::nvp<T>& t)
 		{
 			pkey = Attribute(t.name(), sql::quote(t.value()));
 			setPkey = [=] (typename Database::id_t id) { t.value() = id; };
@@ -62,7 +118,7 @@ namespace storm
 		}
 
 		template <typename T>
-		OArchive& operator &(const boost::serialization::nvp<T>& t)
+		RowOutputArchive& operator &(const boost::serialization::nvp<T>& t)
 		{
 			attrs.emplace_back(Attribute(t.name(), sql::quote(t.value())));
 			return *this;
@@ -72,19 +128,16 @@ namespace storm
 
 		void update(const std::wstring& table)
 		{
+			sql::wstringstream sql;
 			bool first = true;
-			sqlStream << L"UPDATE " << table << L" SET ";
+			sql << L"UPDATE " << table << L" SET ";
 			for (auto attr : attrs) {
-				if (!first) {
-					sqlStream << L", ";
-				} else {
-					first = false;
-				}
-				sqlStream << attr.name << L"=" << attr.value;
+				if (!first) sql << L", "; else first = false;
+				sql << attr.name << L"=" << attr.value;
 			}
-			sqlStream << L" WHERE " << pkey.name << L"=" << pkey.value << L";";
+			sql << L" WHERE " << pkey.name << L"=" << pkey.value << L";";
 
-			if (txn.update(sqlStream.str()) == 0) {
+			if (txn.update(sql.str()) == 0) {
 				throw std::runtime_error((boost::format(
 					"Update failed - primary key %1% not found") % 
 					Util::unicodeToUtf8(pkey.value)).str());
@@ -93,53 +146,45 @@ namespace storm
 
 		void insert(const std::wstring& table)
 		{
+			sql::wstringstream sql;
 			bool first = true;
-			sqlStream << L"INSERT INTO " << table << L" (";
-			for (auto attr : attrs) {				
-				if (!first) {
-					sqlStream << L", ";
-				} else {
-					first = false;
-				}
-				sqlStream << attr.name;
+			sql << L"INSERT INTO " << table << L" (";
+			for (auto attr : attrs) {
+				if (!first) sql << L", "; else first = false;
+				sql << attr.name;
 			}
-			sqlStream << L") VALUES(";
+			sql << L") VALUES(";
 			first = true;
 			for (auto attr : attrs) {				
-				if (!first) {
-					sqlStream << L", ";
-				} else {
-					first = false;
-				}
-				sqlStream << attr.value;
+				if (!first) sql << L", "; else first = false;
+				sql << attr.value;
 			}
-			sqlStream << L");";
+			sql << L");";
 
-			setPkey(txn.insert(sqlStream.str()));
+			setPkey(txn.insert(sql.str()));
 		}
 
 		typename Database::Transaction& txn;
-		sql::wstringstream sqlStream;
 		Attribute pkey;
 		Attributes attrs;
 		std::function<void (typename Database::id_t)> setPkey;
 	};
 
 	template <typename Database>
-	class IArchive
+	class RowInputArchive
 	{
 	public:
 
 		typedef boost::mpl::bool_<false> is_saving; 
 		typedef boost::mpl::bool_<true> is_loading;
 
-		IArchive(typename Database::Transaction& txn) :
+		RowInputArchive(typename Database::Transaction& txn) :
 			txn(txn),
 			rowIdx(0)
 		{}
 
 		template <typename Entity>
-		IArchive& operator &(Entity& entity)
+		RowInputArchive& operator &(Entity& entity)
 		{
 			rowIdx = 0;
 			boost::serialization::serialize_adl(
@@ -147,19 +192,19 @@ namespace storm
 				entity,
 				boost::serialization::version<Entity>::value);
 
-			load(entity.table());
+			select(Entity::table());
 			return *this;
 		}
 
 		template <typename T>
-		IArchive& operator *(const boost::serialization::nvp<T>& t)
+		RowInputArchive& operator *(const boost::serialization::nvp<T>& t)
 		{
 			pkey = Attribute(t.name(), sql::quote(t.value()));
 			return *this;
 		}
 
 		template <typename T>
-		IArchive& operator &(const boost::serialization::nvp<T>& t)
+		RowInputArchive& operator &(const boost::serialization::nvp<T>& t)
 		{
 			attrs.emplace_back(t.name());
 			loadFuncs.emplace_back([=]() { t.value() = row->get<T>(rowIdx++); });
@@ -168,17 +213,13 @@ namespace storm
 
 	private:
 
-		void load(const std::wstring& table)
+		void select(const std::wstring& table)
 		{
 			sql::wstringstream sql;
 			bool first = true;
 			sql << "SELECT ";
 			for (auto attr : attrs) {
-				if (!first) {
-					sql << ", ";
-				} else {
-					first = false;
-				}
+				if (!first) sql << L", "; else first = false;
 				sql << attr;
 			}
 			sql << " FROM " << table << " WHERE " 

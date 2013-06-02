@@ -8,6 +8,12 @@ namespace storm
 {
 	namespace sql
 	{
+		template <typename Entity>
+		struct create {};
+
+		template <typename Entity>
+		struct drop {};
+
 		template <typename T>
 		inline std::wstring 
 		quote(const T& t)
@@ -37,18 +43,6 @@ namespace storm
 
 		inline std::wstring
 		quote(const char *raw)
-		{
-			return (boost::wformat(L"'%1%'") % Util::utf8ToUnicode(raw)).str();
-		}
-
-		inline std::wstring
-		quote(wchar_t *raw)
-		{
-			return (boost::wformat(L"'%1%'") % raw).str();
-		}
-
-		inline std::wstring
-		quote(char *raw)
 		{
 			return (boost::wformat(L"'%1%'") % Util::utf8ToUnicode(raw)).str();
 		}
