@@ -8,7 +8,7 @@ namespace {
 		throw std::runtime_error(boost::lexical_cast<std::string>(code));
 	}
 
-	void onError(const char *msg) 
+	void onError(const std::string& msg) 
 	{
 		throw std::runtime_error(msg);
 	}
@@ -244,7 +244,7 @@ Transaction::execute(const std::wstring& sql)
 	int err = sqlite3_exec(db, sql8.c_str(), NULL, NULL, &errMsgPtr);
 	std::unique_ptr<char, std::function<void (void *)>> errMsg(errMsgPtr, &sqlite3_free);
 	if (err != SQLITE_OK) {
-		onError(errMsg.get());
+		onError(sql8 + " : " + errMsg.get());
 	}
 }
 

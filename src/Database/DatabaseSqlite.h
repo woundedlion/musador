@@ -10,6 +10,7 @@
 #include "boost/iterator/iterator_facade.hpp"
 #include "sqlite/sqlite3.h"
 #include "Archive.h"
+#include "Sql.h"
 
 namespace storm {
 	namespace sqlite {

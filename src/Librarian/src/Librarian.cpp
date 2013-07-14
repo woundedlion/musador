@@ -18,7 +18,6 @@ Librarian::Librarian() :
 UI::Daemon<Librarian>(L"Musador Librarian")
 {
     Network::instance();
-    Util::MIMEResolver::instance();
 
     // load config or generate defaults
     fs::wpath dataPath(Util::pathToDataDir() + L"\\Musador");
@@ -53,7 +52,6 @@ Librarian::~Librarian()
 
     Config::destroy();
     Network::destroy();
-    Util::MIMEResolver::destroy();
 }
 
 int 

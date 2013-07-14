@@ -379,7 +379,7 @@ HTTP::StateReqProcess::sendFile(HTTP::Env& env, const std::wstring& path)
         res.headers["Content-Length"] = boost::lexical_cast<std::string>(fs::file_size(path));
     }
 
-    res.headers["Content-Type"] = Util::unicodeToUtf8(Util::MIMEResolver::instance()->MIMEType(path));
+    res.headers["Content-Type"] = Util::MIMEResolver::mimeType(path)
     return true;
 }
 

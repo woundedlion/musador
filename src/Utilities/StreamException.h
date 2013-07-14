@@ -14,11 +14,8 @@ namespace Util
     public: 
 
         StreamException() : std::runtime_error(""), ss_(std::auto_ptr<std::stringstream> (new std::stringstream())) { }
-
         ~StreamException() throw() { }
-
         template <typename T> E& operator << (const T & t) { (*ss_) << t; return *static_cast<E*>(this); }
-
         virtual const char * what() const throw() { s_ = ss_->str(); return s_.c_str(); }
 
     private: 

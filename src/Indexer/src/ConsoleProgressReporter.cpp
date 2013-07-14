@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
-#include <boost/chrono/chrono.hpp>
+#include <thread>
+#include <chrono>
 
 #include "ConsoleProgressReporter.h"
 #include "Indexer.h"
@@ -21,7 +22,7 @@ void ConsoleProgressReporter::run()
     {
         // Get the progress
         IndexerProgress lastP = p;
-        p = indexer.progress();
+        p = indexer.getProgress();
 
         if (p.bytes > 0)
         {
@@ -60,7 +61,7 @@ void ConsoleProgressReporter::run()
             ++i %= 4;
         }
 
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(250));
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
     } while (!p.done);
 
     std::wcout << std::endl;

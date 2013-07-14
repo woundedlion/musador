@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include "boost/format.hpp"
+#include "boost/algorithm/string/replace.hpp"
 #include "Utilities/Util.h"
 
 namespace storm
@@ -25,27 +26,32 @@ namespace storm
 		inline std::wstring
 		quote(const std::string& raw)
 		{
-			return (boost::wformat(L"'%1%'") % Util::utf8ToUnicode(raw)).str();
+			auto esc = boost::replace_all_copy(raw, "'", "''");
+			return (boost::wformat(L"'%1%'") % Util::utf8ToUnicode(esc)).str();
 		}
 
 		template <>
 		inline std::wstring
 		quote(const std::wstring& raw)
 		{
-			return (boost::wformat(L"'%1%'") % raw).str();
-		}
-
-		inline std::wstring
-		quote(const wchar_t *raw)
-		{
-			return (boost::wformat(L"'%1%'") % raw).str();
+			auto esc = boost::replace_all_copy(raw, L"'", L"''");
+			return (boost::wformat(L"'%1%'") % esc).str();
 		}
 
 		inline std::wstring
 		quote(const char *raw)
 		{
-			return (boost::wformat(L"'%1%'") % Util::utf8ToUnicode(raw)).str();
+			auto esc = boost::replace_all_copy(std::string(raw), "'", "''");
+			return (boost::wformat(L"'%1%'") % Util::utf8ToUnicode(esc)).str();
 		}
+
+		inline std::wstring
+		quote(const wchar_t *raw)
+		{
+			auto esc = boost::replace_all_copy(std::wstring(raw), L"'", L"''");
+			return (boost::wformat(L"'%1%'") % esc).str();
+		}
+
 
 		class wstringstream
 		{

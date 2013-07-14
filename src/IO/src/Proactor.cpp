@@ -643,7 +643,7 @@ Proactor::makeJob()
 void
 Proactor::postJob(std::unique_ptr<Proactor::Job> job)
 {
-    if (::PostQueuedCompletionStatus(this->iocp, 0, reinterpret_cast<ULONG_PTR>(job.get()), job.release())) {
+    if (::PostQueuedCompletionStatus(this->iocp, 0, reinterpret_cast<ULONG_PTR>(job.get()), job.get())) {
 		job.release();
 	} else {
 		LOG(Error) << "PostQueuedCompletionStatus() failed with " << ::GetLastError();
