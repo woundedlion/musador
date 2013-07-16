@@ -47,13 +47,13 @@ namespace Musador
 		void run();
 		void initDB();
 		void indexTargets();
-		void indexTarget(const boost::filesystem::path& path,
+		void indexTarget(const fs::path& path,
 			storm::sqlite::Transaction& txn);
-		storm::sqlite::id_t indexDirectory(const boost::filesystem::directory_entry& dir,
-			storm::sqlite::Transaction& txn);
-		storm::sqlite::id_t indexFile(const boost::filesystem::directory_entry& file,
+		storm::sqlite::id_t indexDirectory(const fs::directory_entry& dir, storm::sqlite::Transaction& txn);
+		storm::sqlite::id_t indexFile(const fs::directory_entry& file,
 			storm::sqlite::id_t dir,
 			storm::sqlite::Transaction& txn);
+		bool parseable(const fs::path& path);
 		void parseTags(File& f);
 		void setProgress(const IndexerProgress& p);
 

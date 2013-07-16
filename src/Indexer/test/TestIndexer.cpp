@@ -12,7 +12,7 @@ using namespace Musador;
 TEST(testIndexer)
 {
 	Indexer indexer(L"test.db");
-	indexer.addTarget(L"D:\\Music\\library\\Blues");
+	indexer.addTarget(L"D:\\Music");
 	indexer.reindex();
 
     ConsoleProgressReporter reporter(indexer);

@@ -20,10 +20,7 @@ void ConsoleProgressReporter::run()
     IndexerProgress p;
     do 
     {
-        // Get the progress
-        IndexerProgress lastP = p;
         p = indexer.getProgress();
-
         if (p.bytes > 0)
         {
             // erase previous line
@@ -47,11 +44,10 @@ void ConsoleProgressReporter::run()
             std::wcout << L" " << p.numFiles << L" files and " << p.numDirs << L" directories (" << Util::bytesToString(p.bytes) << L") indexed";
 
             // Print speed
-            double duration = static_cast<double>(p.curTime - lastP.curTime) / CLOCKS_PER_SEC;
-            unsigned int bytes = static_cast<int>(p.bytes - lastP.bytes);
+            double duration = static_cast<double>(p.curTime - p.startTime) / CLOCKS_PER_SEC;
             if (duration > 0 && !p.done)
             {
-                std::wcout << L" (" << std::fixed << std::setprecision(2) << Util::bytesToString(static_cast<int>(bytes / duration)) << L"/sec" << L")";
+				std::wcout << L" (" << std::fixed << std::setprecision(2) << p.numFiles / duration << L" files/sec" << L")";
             }
 
             // erase rest of line with padding

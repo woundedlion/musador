@@ -2,6 +2,7 @@
 #include <time.h>
 #include <sstream>
 #include <vector>
+#include "boost/assign.hpp"
 
 #include "boost/bind.hpp"
 
@@ -9,7 +10,6 @@
 #include "taglib/FileRef.h"
 #include "taglib/Tag.h"
 
-#include "Utilities/MIMEResolver.h"
 #include "Logger/Logger.h"
 #include "IO/Proactor.h"
 #include "Indexer.h"
@@ -115,7 +115,7 @@ void Indexer::indexTargets()
 	progress.done = true;
 }
 
-void Indexer::indexTarget(const boost::filesystem::path& path,
+void Indexer::indexTarget(const fs::path& path,
 						  sqlite::Transaction& txn)
 {
 	LOG(Info) << "Indexing Target: " << path.string();
@@ -130,14 +130,12 @@ void Indexer::indexTarget(const boost::filesystem::path& path,
 			currentDir = indexDirectory(*iter, txn);
 		}
 		else if (fs::is_regular(*iter)) {
-			if (Util::MIMEResolver::valid(iter->path().leaf().wstring())) {
-				(void) indexFile(*iter, currentDir, txn);
-			}
+			(void) indexFile(*iter, currentDir, txn);
 		}
 	}
 }
 
-storm::sqlite::id_t Indexer::indexDirectory(const boost::filesystem::directory_entry& dir,
+storm::sqlite::id_t Indexer::indexDirectory(const fs::directory_entry& dir,
 							 sqlite::Transaction& txn)
 {
 	Directory d;
@@ -152,7 +150,7 @@ storm::sqlite::id_t Indexer::indexDirectory(const boost::filesystem::directory_e
 	return d.id;
 }
 
-storm::sqlite::id_t Indexer::indexFile(const boost::filesystem::directory_entry& file,
+storm::sqlite::id_t Indexer::indexFile(const fs::directory_entry& file,
 						sqlite::id_t dir,
 						sqlite::Transaction& txn)
 {
@@ -163,17 +161,33 @@ storm::sqlite::id_t Indexer::indexFile(const boost::filesystem::directory_entry&
     f.dir_id = dir;
 
 	try {
-		parseTags(f);
+		if (parseable(file.path())) {
+			parseTags(f);
+		}
 		txn << f;
 	} catch (const std::exception& e) {
-		LOG(Warning) << "Tag parsing failed: " << e.what();
+		LOG(Error) << "Tag parsing failed: " << e.what();
 	}
 
 	std::unique_lock<std::mutex> lock(progressMutex);
 	++progress.numFiles;
+	progress.bytes += f.size;
 	progress.lastPath = f.path;
 
 	return f.id;
+}
+
+bool Indexer::parseable(const fs::path& path)
+{
+	const std::vector<std::wstring> supportedFileTypes = boost::assign::list_of
+		(L".mp3")
+		(L".ogg")
+		;
+
+	return std::find(
+		supportedFileTypes.begin(), 
+		supportedFileTypes.end(), 
+		path.leaf().extension()) != supportedFileTypes.end();
 }
 
 void Indexer::parseTags(File& f)
@@ -194,7 +208,7 @@ void Indexer::parseTags(File& f)
 			f.bitrate = audio->bitrate();
 		}
 	} else {
-		LOG(Warning) << "Failed to open " << f.path;
+		LOG(Warning) << "Unsupported file type:" << f.path;
 	}
 }
 
