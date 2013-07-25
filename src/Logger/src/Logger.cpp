@@ -6,7 +6,6 @@
 #include <iostream>
 
 using namespace Musador;
-using namespace Musador::Logging;
 
 template LogWriter& LogWriter::operator<<<std::wstring>(const std::wstring&);
 
@@ -180,20 +179,20 @@ ConsoleLogListener::send(const LogStatement& stmt)
 //////////////////////////////////////////////////////////////////////////
 // Convenience free functions
 //////////////////////////////////////////////////////////////////////////
-LogWriter 
-Logging::log(LogLevel lvl)
+LogWriter
+Musador::log(LogLevel lvl)
 {
     return (*Logger::instance())(lvl);
 }
 
-LogWriter 
-Logging::log(LogLevel lvl, const std::string& sender)
+LogWriter
+Musador::log(LogLevel lvl, const std::string& sender)
 {
     return (*Logger::instance())(lvl,sender);
 }
 
-LogWriter 
-Logging::log(LogLevel lvl, const std::wstring& sender)
+LogWriter
+Musador::log(LogLevel lvl, const std::wstring& sender)
 {
     return (*Logger::instance())(lvl,sender);
 }

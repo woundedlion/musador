@@ -17,12 +17,12 @@ public:
 
     IndexerTest()
     {
-        Logging::Logger::instance();		
+        Logger::instance();		
     }
 
     ~IndexerTest()
     {
-        Logging::Logger::destroy();
+        Logger::destroy();
     }
 
     void setUp() 

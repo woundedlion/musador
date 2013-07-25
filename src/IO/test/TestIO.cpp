@@ -90,8 +90,8 @@ TEST(BufferChain)
 
 int main()
 {
-	Musador::Logging::Logger::instance()->setLevel(Musador::Logging::Info);
+	Musador::Logger::instance()->setLevel(Musador::Info);
 	auto err = UnitTest::RunAllTests();
-	Musador::Logging::Logger::instance()->destroy();
+	Musador::Logger::instance()->destroy();
 	return err;
 }

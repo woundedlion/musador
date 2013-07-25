@@ -43,7 +43,7 @@ namespace Musador
             boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
             if (msgRead->isError()) 
             {
-                Logging::log(Logging::Error, L"EchoConnection") << "Error reading from Echo connection: " << msgRead->getError();
+                log(Error, L"EchoConnection") << "Error reading from Echo connection: " << msgRead->getError();
             }
             else 
             {

@@ -31,9 +31,9 @@ void usage()
 int _tmain(int argc, wchar_t * argv[]) 
 { 
 #if _DEBUG
-    Logging::Logger::instance()->setLevel(Logging::Debug);
+    Logger::instance()->setLevel(Debug);
 #else
-    Logging::Logger::instance()->setLevel(Logging::Info);
+    Logger::instance()->setLevel(Info);
 #endif
 
     int r = 0;
@@ -101,7 +101,7 @@ int _tmain(int argc, wchar_t * argv[])
         r = -1;
     }
 
-    Logging::Logger::destroy();
+    Logger::destroy();
     return r;
 }
 

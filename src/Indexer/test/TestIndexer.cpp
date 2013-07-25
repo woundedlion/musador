@@ -27,11 +27,11 @@ TEST(testIndexer)
 
 int main()
 {
-	Logging::Logger::instance()->setLevel(Musador::Logging::Info);
+	Logger::instance()->setLevel(Musador::Info);
 	IO::Proactor::instance()->start();
 	auto err = UnitTest::RunAllTests();
 	IO::Proactor::instance()->stop();
 	IO::Proactor::instance()->destroy();
-	Logging::Logger::instance()->destroy();
+	Logger::instance()->destroy();
 	return err;
 }
