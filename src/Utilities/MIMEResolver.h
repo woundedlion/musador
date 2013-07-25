@@ -11,7 +11,7 @@ namespace Util
     public:
 
         /// @brief The mapping of file extensions to MIME types
-        typedef std::map<std::wstring,std::wstring> TypeMap;
+        typedef std::map<std::wstring,std::string> TypeMap;
 
         /// @brief Check if a path has a resolvable MIME type
         /// @param[in] path A URL or filesystem path
@@ -21,7 +21,7 @@ namespace Util
         /// @brief Get a MIME type from a path
         /// @param[in] path A URL or filesystem path
         /// @returns The MIME type for the object indicated by path
-        static std::wstring MIMEType(const std::wstring& path);
+        static std::string MIMEType(const std::wstring& path);
 
     private:
 

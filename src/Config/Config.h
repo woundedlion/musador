@@ -127,7 +127,7 @@ namespace Musador
     {
     public:
 
-        typedef std::map<int,LibraryConfig> LibraryCollection;
+        typedef std::map<int, LibraryConfig> LibraryCollection;
         static const int LOCAL_LIB_ID = 0;
 
         /// @brief Serialize this configuration.

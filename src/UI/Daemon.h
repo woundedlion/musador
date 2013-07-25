@@ -1,6 +1,10 @@
 #ifndef WINDOWSERVICE_07837928_36A9_4351_ABA1_2A355EE4825D
 #define WINDOWSERVICE_07837928_36A9_4351_ABA1_2A355EE4825D
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include <windows.h>
 #include <tchar.h>
 #include "Utilities/Singleton.h"
@@ -23,25 +27,15 @@ namespace Musador
         public:
 
             Daemon(const tstring& svcName);
-
             ~Daemon();
-
             void install();
-
             void uninstall();
-
             void serviceStart();
-
             void stop();
-
             void start();
-
             void terminate();
-
             void waitForStop();
-
             virtual int run(unsigned long argc, LPTSTR argv[]) = 0;
-
             virtual void ctrl(DWORD opCode) {} // Override this member function to hook user-defined control opcodes
 
         private:
@@ -69,15 +63,8 @@ namespace Musador
             void logEvent(WORD wType, const tstring& msg);
         };
 
-        class ServiceException : public Util::StreamException<ServiceException>
-        {
-        public:
-
-            ServiceException() {}
-
-            ~ServiceException() {}
-
-        };
+        struct ServiceException : public Util::StreamException<ServiceException>
+        {};
 
         struct ServiceAlreadyStartedException : public ServiceException
         {};
@@ -87,15 +74,15 @@ namespace Musador
         svcName(svcName),
             hSvc(NULL)
         {
-            this->evtStop = ::CreateEvent(NULL,TRUE,FALSE,NULL);
-            this->evtSrc = ::RegisterEventSource(NULL,this->svcName.c_str());
+            evtStop = ::CreateEvent(NULL,TRUE,FALSE,NULL);
+            evtSrc = ::RegisterEventSource(NULL,svcName.c_str());
         }
 
         template <class T>
         Daemon<T>::~Daemon()
         {
-            ::CloseHandle(this->evtStop);
-            ::DeregisterEventSource(this->evtSrc);
+            ::CloseHandle(evtStop);
+            ::DeregisterEventSource(evtSrc);
         }
 
         template <class T>
@@ -104,8 +91,7 @@ namespace Musador
             SC_HANDLE schSCManager;
             TCHAR szPath[MAX_PATH];
 
-            if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
-            {
+            if (!GetModuleFileName( NULL, szPath, MAX_PATH )){
                 throw ServiceException() << "Cannot install service: " << ::GetLastError();
             }
 
@@ -115,16 +101,15 @@ namespace Musador
                 NULL,                    // ServicesActive database 
                 SC_MANAGER_ALL_ACCESS);  // full access rights 
 
-            if (NULL == schSCManager) 
-            {
+            if (NULL == schSCManager) {
                 throw ServiceException() << "OpenSCManager failed: " << ::GetLastError();
             }
 
             // Create the service
-            this->hSvc = ::CreateService( 
+            hSvc = ::CreateService( 
                 schSCManager,              // SCM database 
-                this->svcName.c_str(),     // name of service 
-                this->svcName.c_str(),		// service name to display 
+                svcName.c_str(),     // name of service 
+                svcName.c_str(),		// service name to display 
                 SERVICE_ALL_ACCESS,        // desired access 
                 SERVICE_WIN32_OWN_PROCESS, // service type 
                 SERVICE_AUTO_START,      // start type 
@@ -137,24 +122,19 @@ namespace Musador
                 NULL);                     // no password 
 
 
-            if (this->hSvc == NULL) 
-            {
+            if (hSvc == NULL) {
                 ::CloseServiceHandle(schSCManager);
                 throw ServiceException() << "CreateService failed: " << ::GetLastError();
             }
 
-            // Start the service
-            try
-            {
-                this->start();
+            try {
+                start();
             }
-            catch (const ServiceException& e)
-            {
-                this->logEvent(EVENTLOG_INFORMATION_TYPE,Util::utf8ToUnicode(e.what()));
+            catch (const ServiceException& e) {
+                logEvent(EVENTLOG_INFORMATION_TYPE,Util::utf8ToUnicode(e.what()));
             }
 
-
-            ::CloseServiceHandle(this->hSvc); 
+            ::CloseServiceHandle(hSvc); 
             ::CloseServiceHandle(schSCManager);
         }
 
@@ -164,8 +144,7 @@ namespace Musador
             SC_HANDLE schSCManager;
             TCHAR szPath[MAX_PATH];
 
-            if( !GetModuleFileName( NULL, szPath, MAX_PATH ) )
-            {
+            if(!GetModuleFileName( NULL, szPath, MAX_PATH )) {
                 throw ServiceException() << "Cannot uninstall service: " << ::GetLastError();
             }
 
@@ -181,34 +160,31 @@ namespace Musador
             }
 
             // Delete the service
-            this->hSvc = ::OpenService( 
+            hSvc = ::OpenService( 
                 schSCManager,           // SCM database 
-                this->svcName.c_str(),  // name of service 
+                svcName.c_str(),  // name of service 
                 DELETE | SERVICE_STOP );				// access
 
-            if (this->hSvc == NULL) 
+            if (hSvc == NULL) 
             {
                 ::CloseServiceHandle(schSCManager);
                 throw ServiceException() << "The specified service is not installed. (" << ::GetLastError() << ")";
             }
 
             // Stop the service
-            try
-            {
-                this->terminate();
+            try {
+                terminate();
             }
-            catch (const ServiceException& e)
-            {
-                this->logEvent(EVENTLOG_INFORMATION_TYPE,Util::utf8ToUnicode(e.what()));
+            catch (const ServiceException& e) {
+                logEvent(EVENTLOG_INFORMATION_TYPE,Util::utf8ToUnicode(e.what()));
             }
 
-            BOOL r = ::DeleteService(this->hSvc);
+            BOOL r = ::DeleteService(hSvc);
 
-            ::CloseServiceHandle(this->hSvc); 
+            ::CloseServiceHandle(hSvc); 
             ::CloseServiceHandle(schSCManager);
 
-            if (!r)
-            {
+            if (!r) {
                 throw ServiceException() << "The specified service could not be deleted. (" << ::GetLastError() << ")";
             }
 
@@ -220,7 +196,7 @@ namespace Musador
         {
             SERVICE_TABLE_ENTRY dispatchTable[] = 
             { 
-                { const_cast<wchar_t *>(this->svcName.c_str()),&Daemon::runThunk}, 
+                { const_cast<wchar_t *>(svcName.c_str()),&Daemon::runThunk}, 
                 { NULL, NULL } 
             }; 
 
@@ -234,14 +210,13 @@ namespace Musador
         template <class T>
         void Daemon<T>::stop()
         {
-            ::SetEvent(this->evtStop);
+            ::SetEvent(evtStop);
         }
 
         template <class T>
         void Daemon<T>::start()
         {
-            if (NULL == this->hSvc)
-            {
+            if (NULL == hSvc) {
                 SC_HANDLE schSCManager;
                 TCHAR szPath[MAX_PATH];
 
@@ -256,19 +231,17 @@ namespace Musador
                     NULL,                    // ServicesActive database 
                     SC_MANAGER_ALL_ACCESS);  // full access rights 
 
-                if (NULL == schSCManager) 
-                {
+                if (NULL == schSCManager)  {
                     throw ServiceException() << "OpenSCManager failed: " << ::GetLastError();
                 }
 
                 // Open the service
-                this->hSvc = ::OpenService( 
+                hSvc = ::OpenService( 
                     schSCManager,           // SCM database 
-                    this->svcName.c_str(),  // name of service 
+                    svcName.c_str(),  // name of service 
                     SERVICE_START );	// access
 
-                if (this->hSvc == NULL) 
-                {
+                if (hSvc == NULL) {
                     ::CloseServiceHandle(schSCManager);
                     throw ServiceException() << "The specified service is not installed. (" << ::GetLastError() << ")";
                 }
@@ -276,14 +249,10 @@ namespace Musador
             }
 
             // Start the Service through the SCM
-            if (0 == ::StartService(this->hSvc, 0, NULL))
-            {
-                if (::GetLastError() == ERROR_SERVICE_ALREADY_RUNNING)
-                {
+            if (0 == ::StartService(hSvc, 0, NULL)) {
+                if (::GetLastError() == ERROR_SERVICE_ALREADY_RUNNING) {
                     throw ServiceAlreadyStartedException();
-                }
-                else
-                {
+                } else {
                     throw ServiceException() << "The service could not be started. (" << ::GetLastError() << ")";
                 }
             }
@@ -294,8 +263,7 @@ namespace Musador
         {
             // Stop the Service through the SCM
             SERVICE_STATUS st;
-            if (0 == ::ControlService(this->hSvc, SERVICE_CONTROL_STOP, &st))
-            {
+            if (0 == ::ControlService(hSvc, SERVICE_CONTROL_STOP, &st)) {
                 throw ServiceException() << "The service could not be stopped. (" << ::GetLastError() << ")";
             }
         }
@@ -303,29 +271,28 @@ namespace Musador
         template <class T>
         void Daemon<T>::waitForStop()
         {
-            ::WaitForSingleObject(this->evtStop,INFINITE);
+            ::WaitForSingleObject(evtStop,INFINITE);
         }
 
         template <class T>
         void Daemon<T>::_run(DWORD argc, LPTSTR argv[])
         {
-            this->hStatus = ::RegisterServiceCtrlHandler(this->svcName.c_str(),&Daemon::ctrlThunk);
-            if (!this->hStatus)
-            {
+            hStatus = ::RegisterServiceCtrlHandler(svcName.c_str(),&Daemon::ctrlThunk);
+            if (!hStatus) {
                 throw ServiceException() << "RegisterServiceCtrlHandler() failed: " << ::GetLastError();
             }
-            this->status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-            this->status.dwServiceSpecificExitCode = 0;
-            this->setStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
+            status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+            status.dwServiceSpecificExitCode = 0;
+            setStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
 
-            ::ResetEvent(this->evtStop);
+            ::ResetEvent(evtStop);
 
-            this->setStatus(SERVICE_RUNNING, NO_ERROR, 0);
-            unsigned long err = this->run(argc, argv);
+            setStatus(SERVICE_RUNNING, NO_ERROR, 0);
+            unsigned long err = run(argc, argv);
             if (0 == err)
-                this->setStatus(SERVICE_STOPPED, NO_ERROR, 0);
+                setStatus(SERVICE_STOPPED, NO_ERROR, 0);
             else
-                this->setStatus(SERVICE_STOPPED, ERROR_SERVICE_SPECIFIC_ERROR, 0);
+                setStatus(SERVICE_STOPPED, ERROR_SERVICE_SPECIFIC_ERROR, 0);
         }
 
         template <class T>
@@ -334,17 +301,17 @@ namespace Musador
             switch(opCode) 
             {
             case SERVICE_CONTROL_STOP:
-                this->setStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
-                this->stop();
-                this->ctrl(opCode);
+                setStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
+                stop();
+                ctrl(opCode);
                 return;
             case SERVICE_CONTROL_INTERROGATE: 
             default:
-                this->ctrl(opCode);
+                ctrl(opCode);
                 break;
             } 
 
-            this->setStatus(this->status.dwCurrentState, NO_ERROR, 0);
+            setStatus(status.dwCurrentState, NO_ERROR, 0);
         }
 
         template <class T>
@@ -352,27 +319,27 @@ namespace Musador
         {
             static DWORD dwCheckPoint = 1;
 
-            this->status.dwCurrentState = dwCurrentState;
-            this->status.dwWin32ExitCode = dwWin32ExitCode;
-            this->status.dwWaitHint = dwWaitHint;
+            status.dwCurrentState = dwCurrentState;
+            status.dwWin32ExitCode = dwWin32ExitCode;
+            status.dwWaitHint = dwWaitHint;
 
             if (dwCurrentState == SERVICE_START_PENDING)
-                this->status.dwControlsAccepted = 0;
-            else this->status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+                status.dwControlsAccepted = 0;
+            else status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
 
             if ( (dwCurrentState == SERVICE_RUNNING) ||
                 (dwCurrentState == SERVICE_STOPPED) )
-                this->status.dwCheckPoint = 0;
-            else this->status.dwCheckPoint = dwCheckPoint++;
+                status.dwCheckPoint = 0;
+            else status.dwCheckPoint = dwCheckPoint++;
 
-            ::SetServiceStatus( this->hStatus, &this->status );
+            ::SetServiceStatus( hStatus, &status );
         }
 
         template <class T>
         void Daemon<T>::logEvent(WORD wType, const tstring& msg)
         {
             const TCHAR * message = msg.c_str();
-            ::ReportEvent(	this->evtSrc,
+            ::ReportEvent(	evtSrc,
                 wType,	// Type
                 0,		// Category
                 NULL,	// event ID

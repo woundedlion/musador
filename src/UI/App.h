@@ -1,6 +1,9 @@
 #ifndef WINAPP_H_986987979879879
 #define WINAPP_H_986987979879879
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 #include <string>
 #include "boost/thread.hpp"
@@ -20,13 +23,9 @@ namespace Musador
         public:
 
             App(const std::wstring& appName);
-
-            virtual ~App();
-
+			virtual ~App();
             void run();
-
             virtual void onRunning() {}
-
             operator HWND() { return this->hWndMain; }
 
         protected:
@@ -37,8 +36,6 @@ namespace Musador
 
             static LRESULT CALLBACK _wndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
             virtual LRESULT wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
-
-
         };
     }
 }

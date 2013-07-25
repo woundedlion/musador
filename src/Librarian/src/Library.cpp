@@ -1,12 +1,13 @@
 #include "Library.h"
 #include "StatsBlock.h"
-#include "Database/Database.h"
+#include "Utilities/Util.h"
 
 using namespace Musador;
+using namespace storm::sqlite;
 
 Library::Library(LibraryConfig& cfg) :
 cfg(cfg),
-db(new Database::DatabaseSqlite(cfg.dataFile))
+db(cfg.dataFile)
 {
 
 }
@@ -20,16 +21,13 @@ StatsBlock
 Library::getCountsByGenre()
 {
     StatsBlock b;
-    b.id = this->cfg.id;
-    b.displayName = this->cfg.nickname;
+    b.id = cfg.id;
+    b.displayName = cfg.nickname;
     std::wstring q(L"SELECT f.genre, count(f.id) FROM files AS f GROUP BY f.genre");
-    boost::shared_ptr<Database::ResultSet> r = this->db->execute(q);
-    if (NULL != r)
-    {
-        do
-        {
-            b.data[Util::utf8ToUnicode(r->getText(0))] = r->getInt(1);          
-        } while (r->next());
+    Transaction txn(db);
+	auto counts = txn.select(q);
+	for (auto count : counts) {
+		b.data[Util::utf8ToUnicode(count.get<std::string>(0))] = count.get<int>(1);          
     }
     return b;
 }

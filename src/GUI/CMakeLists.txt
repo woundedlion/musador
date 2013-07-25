@@ -9,6 +9,7 @@ SET(libs
         BoostDateTime
 		BoostSerialization
         BoostThread
+		BoostSystem
 		Utilities
 		Logger
 		LibrarianProtocol

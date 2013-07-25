@@ -1,6 +1,10 @@
 #ifndef WINMENU_H_986987979879879
 #define WINMENU_H_986987979879879
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include <windows.h>
 #include <string>
 

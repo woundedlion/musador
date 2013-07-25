@@ -1,6 +1,10 @@
 #ifndef CONSOLE_H_A5EBFB7D_37CE_43ef_BCDC_8F9058B6FA65
 #define CONSOLE_H_A5EBFB7D_37CE_43ef_BCDC_8F9058B6FA65
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include "windows.h"
 #include "boost/function.hpp"
 
