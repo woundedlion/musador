@@ -6,15 +6,14 @@ using namespace Musador;
 void 
 Controller::addHandler(const std::string& requestURI, Handler handler)
 {
-    this->handlers[requestURI] = handler;
+    handlers[requestURI] = handler;
 }
 
 bool
 Controller::exec(HTTP::Env& env)
 {
-    if (this->handlers.find(env.req->requestURI) != this->handlers.end())
-    {
-        return this->handlers[env.req->requestURI](env);
+    if (handlers.find(env.req->requestURI) != handlers.end()) {
+        return handlers[env.req->requestURI](env);
     }
     return false;
 }

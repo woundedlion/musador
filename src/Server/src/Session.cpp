@@ -17,12 +17,12 @@ Session::~Session()
 void 
 Session::clear() 
 {
-    Guard(this->lock);
-    this->store.clear();
+    Guard(lock);
+    store.clear();
 }
 
 std::string
 Session::getKey() const
 {
-    return this->key;
+    return key;
 }

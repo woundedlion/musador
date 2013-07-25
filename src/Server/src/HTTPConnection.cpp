@@ -22,23 +22,23 @@ HTTPConnection::HTTPConnection() :
 fsm(*this)
 #pragma warning(pop)
 {
-    this->fsm.initiate();
+    fsm.initiate();
 }
 
 HTTPConnection::~HTTPConnection()
 {
-    this->fsm.terminate();
+    fsm.terminate();
 }
 
 void 
 HTTPConnection::onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /*= NULL*/)
 {
-    this->env = boost::any_cast<HTTP::Env>(tag);
-    this->env.req = &this->fsm.req;
-    this->env.res = &this->fsm.res;
+    env = boost::any_cast<HTTP::Env>(tag);
+    env.req = &fsm.req;
+    env.res = &fsm.res;
 
-    Guard lock(this->fsmMutex);
-    this->fsm.process_event(HTTP::EvtOpen());
+    Guard lock(fsmMutex);
+    fsm.process_event(HTTP::EvtOpen());
 }
 
 void 
@@ -48,12 +48,12 @@ HTTPConnection::onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /*
     boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
     if (msgRead->isError())
     {
-        this->env.server->onError(msgRead->conn, msgRead->getError());
+        env.server->onError(msgRead->conn, msgRead->getError());
     }
     else
     {
-        Guard lock(this->fsmMutex);
-        this->fsm.process_event(HTTP::EvtReadComplete(msgRead));
+        Guard lock(fsmMutex);
+        fsm.process_event(HTTP::EvtReadComplete(msgRead));
     }
 }
 
@@ -64,12 +64,12 @@ HTTPConnection::onWriteComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /
     boost::shared_ptr<IO::MsgWriteComplete> & msgWrite = boost::shared_static_cast<IO::MsgWriteComplete>(msg);
     if (msgWrite->isError())
     {
-        this->env.server->onError(msgWrite->conn, msgWrite->getError());
+        env.server->onError(msgWrite->conn, msgWrite->getError());
     }
     else
     {
-        Guard lock(this->fsmMutex);
-        this->fsm.process_event(HTTP::EvtWriteComplete(msgWrite));
+        Guard lock(fsmMutex);
+        fsm.process_event(HTTP::EvtWriteComplete(msgWrite));
     }
 }
 
@@ -77,10 +77,10 @@ void
 HTTPConnection::close()
 {
     SocketConnection::close();
-    if (NULL != this->env.server)
+    if (NULL != env.server)
     {
         boost::shared_ptr<IO::Connection> conn = shared_from_this();
-        this->env.server->onError(conn, 0);
+        env.server->onError(conn, 0);
     }
 }
 
@@ -88,7 +88,7 @@ inline
 HTTP::Env&
 HTTPConnection::getEnv()
 {
-    return this->env;
+    return env;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -276,7 +276,7 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
             if (fs::exists(fname / L"index.html"))
             {
                 fname /= L"index.html";
-                if (!this->sendFile(env, fname.wstring()))
+                if (!sendFile(env, fname.wstring()))
                 {
                     res.status = 403;
                     res.reason = "Forbidden";
@@ -286,7 +286,7 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
             }
             else
             {
-                if (!this->dirIndex(env, fname.wstring()))
+                if (!dirIndex(env, fname.wstring()))
                 {
                     res.status = 403;
                     res.reason = "Forbidden";
@@ -297,7 +297,7 @@ HTTP::StateReqProcess::StateReqProcess(my_context ctx) : my_base(ctx)
         }
         else if(fs::is_regular(fname))
         {
-            if (!this->sendFile(env,fname.wstring()))
+            if (!sendFile(env,fname.wstring()))
             {
                 res.status = 403;
                 res.reason = "Forbidden";

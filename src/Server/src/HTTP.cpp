@@ -197,10 +197,9 @@ HTTP::auth(const Env& env)
         std::vector<std::string> authTokens;
         Util::tokenize(authString.substr(7),authTokens,", ");
         std::map<std::string,std::string> authInfo;
-        for (std::vector<std::string>::iterator iter = authTokens.begin(); iter != authTokens.end(); iter++) 
-        {
+        for (auto tok : authTokens) {
             std::pair<std::string, std::string> nameValuePair;
-            if (Util::parseNameValuePair(*iter,'=', nameValuePair)) {
+            if (Util::parseNameValuePair(tok,'=', nameValuePair)) {
                 if (nameValuePair.second.at(0) == '"')
                     nameValuePair.second.erase(0,1);
                 if (nameValuePair.second.at(nameValuePair.second.size()-1) == '"')
@@ -210,14 +209,12 @@ HTTP::auth(const Env& env)
         }
 
         // check opaque
-        if (authInfo["opaque"] != env.session->get<std::string>("opaque") )
-        {
+        if (authInfo["opaque"] != env.session->get<std::string>("opaque")) {
             return false;
         }
 
         // check uri
-        if (authInfo["uri"].substr(0,authInfo["uri"].find("?")) != env.req->requestURI.substr(0,env.req->requestURI.find("?")))
-        {
+        if (authInfo["uri"].substr(0,authInfo["uri"].find("?")) != env.req->requestURI.substr(0,env.req->requestURI.find("?"))) {
             return false;
         }
 
@@ -227,8 +224,7 @@ HTTP::auth(const Env& env)
         char * timeStampStrEnd;
         time_t timestamp = ::_strtoi64(timestampStr.c_str(),&timeStampStrEnd,16);
         std::string challenge = HTTP::genDigestNonce(timestamp);
-        if (nonce != challenge)
-        {
+        if (nonce != challenge) {
             return false;
         }
 
@@ -326,14 +322,14 @@ HTTP::Request::~Request() {
 void 
 HTTP::Request::clear()
 {
-    this->requestURI.clear();
-    this->queryString.clear();
-    this->protocol.clear();
-    this->method.clear();
-    this->params.clear();
-    this->headers.clear();
-    this->cookies.clear();
-    this->data.reset();
+    requestURI.clear();
+    queryString.clear();
+    protocol.clear();
+    method.clear();
+    params.clear();
+    headers.clear();
+    cookies.clear();
+    data.reset();
 }
 
 void 
@@ -348,22 +344,22 @@ HTTP::Request::dump(std::ostream &info) {
         ;
     // headers
     info << "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Headers:</b></td><td valign=\"top\"><table border=\"0\">";
-    for (std::map<std::string,std::string>::iterator iter = headers.begin(); iter != headers.end(); iter++) {
-        info << "<tr><td valign=\"top\"><i>" << iter->first << ":</i></td><td valign=\"top\">" << iter->second << "</td>";
+    for (auto hdr : headers) {
+        info << "<tr><td valign=\"top\"><i>" << hdr.first << ":</i></td><td valign=\"top\">" << hdr.second << "</td>";
     }
     info << "</table></td></tr>"; 
 
     // params
     info << "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Params:</b></td><td valign=\"top\"><table border=\"0\">";
-    for (std::map<std::string,std::string>::iterator iter = params.begin(); iter != params.end(); iter++) {
-        info << "<tr><td valign=\"top\"><i>" << iter->first << ":</i></td><td valign=\"top\">" << iter->second << "</td>";
+    for (auto param : params) {
+        info << "<tr><td valign=\"top\"><i>" << param.first << ":</i></td><td valign=\"top\">" << param.second << "</td>";
     }
     info << "</table></td></tr>"; 
 
     // cookies
     info << "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Cookies:</b></td><td valign=\"top\"><table border=\"0\">";
-    for (std::map<std::string,std::string>::iterator iter = cookies.begin(); iter != cookies.end(); iter++) {
-        info << "<tr><td valign=\"top\"><i>" << iter->first << ":</i></td><td valign=\"top\">" << iter->second << "</td>";
+    for (auto cookie : cookies) {
+        info << "<tr><td valign=\"top\"><i>" << cookie.first << ":</i></td><td valign=\"top\">" << cookie.second << "</td>";
     }
     info << "</table></td></tr>"; 
 
@@ -386,7 +382,7 @@ HTTP::Request::sendHeaders(IO::Connection& conn) {
 
 void 
 HTTP::Request::sendBody(IO::Connection& conn) {
-    conn.beginWrite(*(this->data));
+    conn.beginWrite(*(data));
 }
 
 
@@ -405,11 +401,11 @@ HTTP::Response::~Response() {
 void 
 HTTP::Response::clear()
 {
-    this->protocol.clear();
+    protocol.clear();
     int status = 0;
-    this->reason.clear();
-    this->headers.clear();
-    this->data.reset();
+    reason.clear();
+    headers.clear();
+    data.reset();
 }
 
 void 
@@ -428,7 +424,7 @@ HTTP::Response::sendHeaders(IO::Connection& conn)
 
 void 
 HTTP::Response::sendBody(IO::Connection& conn) {
-    conn.beginWrite(*this->data);
+    conn.beginWrite(*data);
 }
 
 
@@ -466,19 +462,19 @@ username(username)
 std::string
 HTTP::User::getUsername() const
 {
-    return this->username;
+    return username;
 }
 
 void
 HTTP::User::setUsername(std::string& username)
 {
-    this->username = username;
+    username = username;
 }
 
 std::string
 HTTP::User::getPassword() const
 {
-    return this->password;
+    return password;
 }
 
 void

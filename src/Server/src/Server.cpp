@@ -33,7 +33,7 @@ cfg(cfg)
 
 Server::~Server() 
 {
-    this->net = NULL;
+    net = NULL;
 }
 
 void 
@@ -42,7 +42,7 @@ Server::start()
     LOG(Info) << "Server starting...";
 
     // Start listeners
-    ServerConfig::HTTPSiteCollection sites = this->cfg.sites;
+    ServerConfig::HTTPSiteCollection sites = cfg.sites;
     for (ServerConfig::HTTPSiteCollection::const_iterator iter = sites.begin(); 
         iter != sites.end(); ++iter)
     {
@@ -58,19 +58,19 @@ Server::start()
 
         HTTP::Env env;
         env.cfg.reset(new HTTPConfig(*iter));
-        env.controller = this->cfg.controller;
-        env.server = this->shared_from_this();
+        env.controller = cfg.controller;
+        env.server = shared_from_this();
 
         boost::shared_ptr<IO::Listener> listener(new HTTPListener(ep));
-        this->acceptConnections(listener, env);
+        acceptConnections(listener, env);
     }
 
     // We're officially started now
     LOG(Info) << "Server started...";
     {
-        Guard guard(this->runningMutex);
-        this->running = true;
-        this->runningCV.notify_all();
+        Guard guard(runningMutex);
+        running = true;
+        runningCV.notify_all();
     }
 
 }
@@ -78,10 +78,10 @@ Server::start()
 void 
 Server::waitForStart()
 {
-    Guard guard(this->runningMutex);
-    while(!this->running)
+    Guard guard(runningMutex);
+    while(!running)
     {
-        this->runningCV.wait(guard);
+        runningCV.wait(guard);
     }
 }
 
@@ -91,9 +91,9 @@ Server::stop()
     LOG(Info) << "Server shutting down...";
 
     // Shutting down...
-    this->killConnections();
+    killConnections();
 
-    for (ListenerCollection::iterator iter = this->listeners.begin(); iter != this->listeners.end(); ++iter)
+    for (ListenerCollection::iterator iter = listeners.begin(); iter != listeners.end(); ++iter)
     {
         try
         {	
@@ -106,9 +106,9 @@ Server::stop()
     }
 
     {
-        Guard guard(this->runningMutex);
-        this->running = false;
-        this->runningCV.notify_all();
+        Guard guard(runningMutex);
+        running = false;
+        runningCV.notify_all();
     }
 
     LOG(Info) << "Server stopped...";
@@ -117,17 +117,17 @@ Server::stop()
 void 
 Server::waitForStop()
 {
-    Guard guard(this->runningMutex);
-    while(this->running)
+    Guard guard(runningMutex);
+    while(running)
     {
-        this->runningCV.wait(guard);
+        runningCV.wait(guard);
     }
 }
 
 void 
 Server::restart() 
 {
-    this->doRecycle = true;
+    doRecycle = true;
 }
 
 void 
@@ -135,7 +135,7 @@ Server::acceptConnections(boost::shared_ptr<IO::Listener> listener,
                           boost::any tag /* = NULL */)
 {
 
-    this->listeners.push_back(listener);
+    listeners.push_back(listener);
 
     // Do the async accept
     listener->beginAccept(boost::bind(&Server::onAcceptComplete,this,_1,_2), tag);
@@ -158,7 +158,7 @@ Server::onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag)
         msgAccept->listener->beginAccept(boost::bind(&Server::onAcceptComplete,this,_1,_2),tag);
 
         // Set up the new connection
-        this->addConnection(msgAccept->conn);
+        addConnection(msgAccept->conn);
     }
 }
 
@@ -166,36 +166,36 @@ void
 Server::onError(boost::shared_ptr<IO::Connection> conn, const IO::Msg::ErrorCode& err)
 {
     LOG(Info) << "Error detected on " << conn->toString() << ": " << err;
-    this->killConnection(conn);
+    killConnection(conn);
 }
 
 
 Session & 
 Server::getSession(const std::string& key)
 {
-    Guard lock(this->sessionsMutex);
-    if (NULL == this->sessions[key])
+    Guard lock(sessionsMutex);
+    if (NULL == sessions[key])
     {
-        this->sessions[key].reset(new Session(key));
+        sessions[key].reset(new Session(key));
     }
-    return *this->sessions[key];
+    return *sessions[key];
 }
 
 void 
 Server::addConnection(boost::shared_ptr<IO::Connection> conn)
 {
     LOG(Info) << "Connected: " << conn->toString();
-    Guard lock(this->connsMutex);
-    this->conns.push_back(conn);
+    Guard lock(connsMutex);
+    conns.push_back(conn);
 }
 
 void 
 Server::removeConnection(boost::shared_ptr<IO::Connection> conn)
 {
-    Guard lock(this->connsMutex);
-    for (ConnCollection::iterator iter = this->conns.begin(); iter!= this->conns.end(); ++iter)
+    Guard lock(connsMutex);
+    for (ConnCollection::iterator iter = conns.begin(); iter!= conns.end(); ++iter)
     {
-        this->conns.erase(iter);
+        conns.erase(iter);
         break;
     }
     LOG(Info) << "Disconnected: " << conn->toString();
@@ -204,15 +204,15 @@ Server::removeConnection(boost::shared_ptr<IO::Connection> conn)
 void 
 Server::killConnection(boost::shared_ptr<IO::Connection> conn)
 {
-    this->removeConnection(conn);
+    removeConnection(conn);
 }
 
 void 
 Server::killConnections()
 {
-    Guard lock(this->connsMutex);
+    Guard lock(connsMutex);
     ConnCollection::iterator iter;
-    this->conns.clear();
+    conns.clear();
 }
 
 
@@ -245,7 +245,7 @@ if (ipOctets.size() != 4) // bad ip
 return false; //deny
 
 // Check against Allow
-for (iter = this->IPAllow.begin(); iter < this->IPAllow.end() && !allowed; iter++) {
+for (iter = IPAllow.begin(); iter < IPAllow.end() && !allowed; iter++) {
 iterOctets.clear();
 Util::tokenize(*iter,iterOctets,".");
 if (iterOctets.size() < 4) // bad ip 
@@ -262,7 +262,7 @@ allowed = !denied;
 
 // Check Against Deny
 denied = false;
-for (iter = this->IPDeny.begin(); iter < this->IPDeny.end() && !denied; iter++) {
+for (iter = IPDeny.begin(); iter < IPDeny.end() && !denied; iter++) {
 iterOctets.clear();
 Util::tokenize(*iter,iterOctets,".");
 if (iterOctets.size() < 4) // bad ip 
@@ -285,10 +285,10 @@ return allowed && !denied;
 /*
 
 int RequestThread::run() {
-this->request = new Request();
+request = new Request();
 do {
-request->receiveFrom(this->clientSocket);
-this->setLastRequestURI(request->requestURI);
+request->receiveFrom(clientSocket);
+setLastRequestURI(request->requestURI);
 
 if (request->status == -1)
 break;
@@ -297,11 +297,11 @@ Response * response = new Response();
 // Add p3p header
 response->headers["P3P"] = "CP=\"NON NID TAIa OUR NOR NAV INT STA\"";
 
-response->remoteSocket = this->clientSocket;
+response->remoteSocket = clientSocket;
 
 // TODO: Cleanup/expire sessions
 // Create or retrieve session
-string realm = this->server->getAuthRealm(request->requestURI);
+string realm = server->getAuthRealm(request->requestURI);
 CookieStore cookies(request->headers["Cookie"]);
 string sessionKey = cookies[realm.c_str()];
 if (sessionKey.empty()) {
@@ -315,12 +315,12 @@ response->headers["Set-Cookie"] = realm + "=" + sessionKey + ";";
 }
 }
 }
-this->session = this->server->getSession(sessionKey);
-this->sessionName = realm.c_str();
+session = server->getSession(sessionKey);
+sessionName = realm.c_str();
 
 // Send 401 if necessary
-if (this->server->getRequireAuth() && request->status != 500) {
-if (!this->server->authorize(request,this->session)) {	
+if (server->getRequireAuth() && request->status != 500) {
+if (!server->authorize(request,session)) {	
 //				response->headers["WWW-Authenticate"] = "Basic realm=\"AjaxAMP\"";
 HTTP::Util::genDigestNonce((*session)["nonce"]);
 if ((*session)["opaque"].empty())
@@ -347,7 +347,7 @@ response->sendResponse();
 handleRequest(response);
 }	
 delete response;
-this->server->notifyConnectionListeners();
+server->notifyConnectionListeners();
 } while (request->headers["Connection"] != "close" && request->status == 0);
 delete request;
 return 0;

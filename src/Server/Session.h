@@ -36,9 +36,9 @@ namespace Musador
         template <typename T>
         T get(const std::string& key) const
         {
-            Guard lock(this->lock);
-            StoreType::const_iterator iter = this->store.find(key);
-            if (iter != this->store.end())
+            Guard lock(lock);
+            StoreType::const_iterator iter = store.find(key);
+            if (iter != store.end())
             {
                 return boost::any_cast<T>(iter->second);
             }
@@ -54,8 +54,8 @@ namespace Musador
         template <typename T>
         void set(const std::string& key, T value)
         {
-            Guard lock(this->lock);
-            this->store[key] = value;
+            Guard lock(lock);
+            store[key] = value;
         }
 
         /// @brief Clear the Session

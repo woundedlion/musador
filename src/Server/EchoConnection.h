@@ -20,7 +20,7 @@ namespace Musador
         /// @param[in] tag User-defined data which was originally passed into Listener::beginAccept.
         void onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL) 
         { 
-            this->beginRead(); 
+            beginRead(); 
         }
 
         /// @brief Completion routine invoked by the IO engine when a connection is first connected.
@@ -47,7 +47,7 @@ namespace Musador
             }
             else 
             {
-                this->beginWrite(msgRead->buf);
+                beginWrite(msgRead->buf);
             }
         }
 
@@ -58,7 +58,7 @@ namespace Musador
         /// @param[in] tag User-defined data which was originally passed into beginWrite.
         void onWriteComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag = NULL) 
         {
-            this->beginRead();
+            beginRead();
         }
     };
 
