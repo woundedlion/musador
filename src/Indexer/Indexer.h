@@ -4,6 +4,7 @@
 #include <thread>
 #include <mutex>
 #include <boost/filesystem.hpp>
+#include <boost/serialization/nvp.hpp>
 #include "Database/DatabaseSqlite.h"
 #include "Entities.h"
 
@@ -26,6 +27,19 @@ namespace Musador
         std::wstring lastPath;
         bool done;
         bool canceled;
+
+		template <typename Archive>
+		void serialize(Archive& ar, unsigned int)
+		{
+			ar & BOOST_SERIALIZATION_NVP(numFiles);
+			ar & BOOST_SERIALIZATION_NVP(numDirs);
+			ar & BOOST_SERIALIZATION_NVP(bytes);
+			ar & BOOST_SERIALIZATION_NVP(startTime);
+			ar & BOOST_SERIALIZATION_NVP(curTime);
+			ar & BOOST_SERIALIZATION_NVP(lastPath);
+			ar & BOOST_SERIALIZATION_NVP(done);
+			ar & BOOST_SERIALIZATION_NVP(canceled);
+		}
     };
 
     class Indexer

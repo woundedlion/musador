@@ -6,7 +6,9 @@
 
 #include "boost/bind.hpp"
 
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include "taglib/FileRef.h"
 #include "taglib/Tag.h"
 

@@ -14,7 +14,7 @@ MIMEResolver::TypeMap MIMEResolver::types = boost::assign::map_list_of
     (L"jpg", "image/jpeg")
     (L"gif", "image/gif")
     (L"ico", "image/x-icon")
-    (L"png","image/png")
+    (L"png", "image/png")
     // audio
     (L"mp3", "audio/mpeg")
     (L"mp2", "audio/mpeg")

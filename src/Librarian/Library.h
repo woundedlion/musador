@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include "Config/Config.h"
-#include "Database/Database.h"
+#include "Database/DatabaseSqlite.h"
 
 namespace Musador
 {
@@ -16,16 +16,13 @@ namespace Musador
     public:
         
         Library(LibraryConfig& cfg);
-        
         ~Library();
-
         StatsBlock getCountsByGenre();
 
     private:
 
         LibraryConfig& cfg;
-        boost::shared_ptr<Database::IDatabase> db;
-
+		storm::sqlite::Database db;
     };
 }
 

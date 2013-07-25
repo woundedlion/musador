@@ -17,36 +17,24 @@ namespace Musador
 {
     class GUIMsg;
 
-
-    /// @class LibrarianService
-    /// @brief A stub service used to control the Librarian service.
     class LibrarianService : public UI::Daemon<LibrarianService>
     {
         friend class UI::Daemon<LibrarianService>;
 
     public:
 
-        /// @brief Constructor.
         LibrarianService() : Daemon(L"Musador Librarian") {}
 
         /// @brief Stub method satisfy the Daemon interface. NOT USED.
         int run(unsigned long argc, LPTSTR argv[]) { return 0; }
     };
 
-    /// @class LibrarianGUI
-    /// @brief The LibrarianGUI application
     class LibrarianGUI : public UI::App
     {
     public:
-
-        /// @brief Constructor.
         LibrarianGUI();
-
-        /// @brief Destructor.
         ~LibrarianGUI();
-
-        /// @brief Main Window Procedure for the LibrarianGUI application
-        HRESULT wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+        LRESULT wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     private:
 
@@ -75,8 +63,6 @@ namespace Musador
 
     };
 
-    /// @brief Send a message asynchronously to the Librarian Service over a named pipe.
-    /// @param T The type of GUIMessage to send.
     template <typename T>
     void LibrarianGUI::notifyService()
     {
