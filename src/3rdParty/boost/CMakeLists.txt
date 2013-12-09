@@ -7,9 +7,6 @@ FILE (GLOB fs_srcs boost/filesystem/*.hpp libs/filesystem/src/*.cpp)
 ADD_LIBRARY(BoostFilesystem ${fs_srcs})
 ADD_DEPENDENCIES(BoostFilesystem Boost.System)
 
-FILE (GLOB signals_srcs boost/signals/*.hpp libs/signals/src/*.cpp)
-ADD_LIBRARY(BoostSignals ${signals_srcs})
-
 FILE (GLOB thread_srcs boost/thread/*.hpp libs/thread/src/*.cpp libs/thread/src/win32/*.cpp)
 ADD_LIBRARY(BoostThread ${thread_srcs})
 

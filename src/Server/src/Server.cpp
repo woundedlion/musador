@@ -146,7 +146,7 @@ void
 Server::onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag)
 {
     assert(msg->getType() == IO::MSG_SOCKET_ACCEPT_COMPLETE);
-    boost::shared_ptr<IO::MsgSocketAcceptComplete> msgAccept(boost::shared_static_cast<IO::MsgSocketAcceptComplete>(msg));
+    boost::shared_ptr<IO::MsgSocketAcceptComplete> msgAccept(boost::static_pointer_cast<IO::MsgSocketAcceptComplete>(msg));
     if (msgAccept->isError())
     {
         LOG(Error) << "Accept failed on : " << msgAccept->listener->toString() << " : " << msgAccept->getError();

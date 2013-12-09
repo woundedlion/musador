@@ -346,15 +346,10 @@ namespace Musador
         public:
             
             BufferStream();
-
             ~BufferStream();
-
             BufferStream& operator<<(const T * data);
-
             BufferStream& operator>>(T& data);
-
             bool eof() const;
-
             bool fail() const;
 
         private:
@@ -379,7 +374,7 @@ namespace Musador
 
         template<typename T>
         Buffer<T>::Buffer() : 
-        buf(NULL),
+        buf(static_cast<T *>(nullptr)),
             capacity(0),
             endOffset(0),
             beginOffset(0)

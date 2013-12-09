@@ -20,7 +20,7 @@ void
 GUIConnection::onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /* = NULL */)
 {
     assert(msg->getType() == IO::MSG_READ_COMPLETE);
-    boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
+    boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::static_pointer_cast<IO::MsgReadComplete>(msg);
     if (msgRead->isError()) 
     {
         if (NULL != this->handler)
@@ -34,7 +34,7 @@ GUIConnection::onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /* 
     {
         if (NULL != this->handler)
         {
-            boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
+            boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::static_pointer_cast<IO::MsgReadComplete>(msg);
             // parse the messsage(s)
             std::stringbuf msgData;
             msgData.pubsetbuf(0,0);
@@ -64,7 +64,7 @@ void
 GUIConnection::onConnectComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /* = NULL */)
 {
     assert (msg->getType() == IO::MSG_PIPE_CONNECT_COMPLETE);
-    boost::shared_ptr<IO::MsgPipeConnectComplete>& msgConnect = boost::shared_static_cast<IO::MsgPipeConnectComplete>(msg);
+    boost::shared_ptr<IO::MsgPipeConnectComplete>& msgConnect = boost::static_pointer_cast<IO::MsgPipeConnectComplete>(msg);
     if (msgConnect->isError()) 
     {
         LOG(Debug) << "GUI could not connect to service: " << msgConnect->getError();

@@ -9,7 +9,6 @@ SET(libs
         BoostDateTime
         BoostFilesystem
         BoostRegex
-        BoostSignals
         BoostSystem
         BoostSerialization
         BoostThread

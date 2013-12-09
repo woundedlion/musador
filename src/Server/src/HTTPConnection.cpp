@@ -45,7 +45,7 @@ void
 HTTPConnection::onReadComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /*= NULL*/)
 {
     assert(msg->getType() == IO::MSG_READ_COMPLETE);
-    boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::shared_static_cast<IO::MsgReadComplete>(msg);
+    boost::shared_ptr<IO::MsgReadComplete> & msgRead = boost::static_pointer_cast<IO::MsgReadComplete>(msg);
     if (msgRead->isError())
     {
         env.server->onError(msgRead->conn, msgRead->getError());
@@ -61,7 +61,7 @@ void
 HTTPConnection::onWriteComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag /*= NULL*/)
 {
     assert(msg->getType() == IO::MSG_WRITE_COMPLETE);
-    boost::shared_ptr<IO::MsgWriteComplete> & msgWrite = boost::shared_static_cast<IO::MsgWriteComplete>(msg);
+    boost::shared_ptr<IO::MsgWriteComplete> & msgWrite = boost::static_pointer_cast<IO::MsgWriteComplete>(msg);
     if (msgWrite->isError())
     {
         env.server->onError(msgWrite->conn, msgWrite->getError());

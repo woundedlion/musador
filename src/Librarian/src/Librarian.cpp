@@ -126,14 +126,14 @@ void
 Librarian::onGUIAccept(boost::shared_ptr<IO::Msg> msg, boost::any /*tag = NULL*/)
 {
     assert(msg->getType() == IO::MSG_PIPE_ACCEPT_COMPLETE);
-    boost::shared_ptr<IO::MsgPipeAcceptComplete>& msgAccept = boost::shared_static_cast<IO::MsgPipeAcceptComplete>(msg);
+    boost::shared_ptr<IO::MsgPipeAcceptComplete>& msgAccept = boost::static_pointer_cast<IO::MsgPipeAcceptComplete>(msg);
     if (msgAccept->isError()) {
         LOG(Error) << "Error accepting GUI Connection: " << msgAccept->getError();
     }
     else 
     {
         // Notify the GUI of the new connection
-        gui = boost::shared_static_cast<GUIConnection>(msgAccept->conn);
+        gui = boost::static_pointer_cast<GUIConnection>(msgAccept->conn);
         gui->setHandler(boost::bind(&Librarian::onGUIMsg,this,_1));
         notifyGUI<GUIMsgEnabledNotify>();        
 

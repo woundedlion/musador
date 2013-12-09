@@ -212,7 +212,7 @@ Proactor::beginAccept(boost::shared_ptr<PipeListener> listener,
 {
     auto msgAccept = boost::make_shared<MsgPipeAcceptComplete>();
     msgAccept->listener = listener;
-    boost::shared_ptr<PipeConnection> conn(boost::shared_static_cast<PipeConnection>(listener->createConnection()));
+    boost::shared_ptr<PipeConnection> conn(boost::static_pointer_cast<PipeConnection>(listener->createConnection()));
     msgAccept->conn = conn;
 
     auto job = makeJob();
@@ -271,7 +271,7 @@ Proactor::completeSocketAccept(std::unique_ptr<Job> job, unsigned long nBytes)
     sockaddr_in * remoteAddr;
     int localAddrSize = 0;
     int remoteAddrSize = 0;
-    auto msgAccept(boost::shared_static_cast<MsgSocketAcceptComplete>(job->msg));
+    auto msgAccept(boost::static_pointer_cast<MsgSocketAcceptComplete>(job->msg));
     this->fnGetAcceptExSockaddrs(msgAccept->buf.begin(), 
         0,
         sizeof(sockaddr_in) + 16,
@@ -305,7 +305,7 @@ Proactor::completeSocketAccept(std::unique_ptr<Job> job, unsigned long nBytes)
 void 
 Proactor::completePipeAccept(std::unique_ptr<Job> job)
 {
-    auto msgAccept(boost::shared_static_cast<MsgPipeAcceptComplete>(job->msg));
+    auto msgAccept(boost::static_pointer_cast<MsgPipeAcceptComplete>(job->msg));
     LOG(Debug) << "Accept completed: " << msgAccept->conn->toString();
 
     // notify the handler
@@ -357,7 +357,7 @@ Proactor::beginConnect(boost::shared_ptr<PipeConnection> conn,
 void
 Proactor::completePipeConnect(std::unique_ptr<Job> job)
 {
-    boost::shared_ptr<MsgPipeConnectComplete> msgConnect(boost::shared_static_cast<MsgPipeConnectComplete>(job->msg));
+    boost::shared_ptr<MsgPipeConnectComplete> msgConnect(boost::static_pointer_cast<MsgPipeConnectComplete>(job->msg));
     PipeConnection& conn = static_cast<PipeConnection&>(*msgConnect->conn);
     LOG(Debug) << "Connect completed: " << conn.toString();
 
@@ -462,7 +462,7 @@ Proactor::beginRead(boost::shared_ptr<PipeConnection> conn,
 void 
 Proactor::completeRead(std::unique_ptr<Job> job, unsigned long nBytes)
 {
-    boost::shared_ptr<MsgReadComplete> msgRead(boost::shared_static_cast<MsgReadComplete>(job->msg));
+    boost::shared_ptr<MsgReadComplete> msgRead(boost::static_pointer_cast<MsgReadComplete>(job->msg));
     msgRead->buf.advanceEnd(nBytes);
 
     if (0 == nBytes)
@@ -567,7 +567,7 @@ Proactor::beginWrite(boost::shared_ptr<PipeConnection> conn,
 void 
 Proactor::completeWrite(std::unique_ptr<Job> job, unsigned long nBytes)
 {
-    boost::shared_ptr<MsgWriteComplete> msgWrite(boost::shared_static_cast<MsgWriteComplete>(job->msg));
+    boost::shared_ptr<MsgWriteComplete> msgWrite(boost::static_pointer_cast<MsgWriteComplete>(job->msg));
     msgWrite->buf.advanceBegin(nBytes);
 
     LOG(Debug)	<< "Write completed: " << nBytes << " bytes from " << msgWrite->conn->toString();

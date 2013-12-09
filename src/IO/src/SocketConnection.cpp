@@ -57,7 +57,7 @@ SocketConnection::beginWrite(std::istream& dataStream, boost::any tag /* = NULL 
 void 
 SocketConnection::beginWrite(const std::string& str, boost::any tag /* = NULL */)
 {
-    unsigned int len = str.size();
+    size_t len = str.size();
     boost::shared_array<char> data(new char[len]);
     str.copy(data.get(), len);
     Proactor::instance()->beginWrite(this->shared_from_this(), boost::bind(&Connection::onWriteComplete,this,_1,_2), Buffer<char>(data, len, len), tag);

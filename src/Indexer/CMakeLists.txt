@@ -11,7 +11,6 @@ ADD_DEFINITIONS(-DUNICODE -D_UNICODE -DTAGLIB_STATIC)
 
 SET(libs 
         BoostDateTime
-		BoostSignals
 		BoostThread
 		BoostFilesystem
         BoostSystem
