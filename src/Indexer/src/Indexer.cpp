@@ -60,7 +60,7 @@ void Indexer::reindex()
 
 	running = true;
 	canceled = false;
-    setProgress(IndexerProgress());
+    clearProgress();
 	IO::Proactor::instance()->beginInvoke(boost::bind(&Indexer::run, this));
 }
 
@@ -88,8 +88,6 @@ void Indexer::run()
 	} catch (const std::exception& e) {
 		LOG(Error) << "Index failed: " << e.what();
 		running = false;
-		std::unique_lock<std::mutex> lock(progressMutex);
-		progress.done = true;
 	}
 }
 
@@ -113,8 +111,7 @@ void Indexer::indexTargets()
 		txn.commit();
 	}
 
-	std::unique_lock<std::mutex> lock(progressMutex);
-	progress.done = true;
+	updateProgressDone();
 }
 
 void Indexer::indexTarget(const fs::path& path,
@@ -145,9 +142,7 @@ storm::sqlite::id_t Indexer::indexDirectory(const fs::directory_entry& dir,
     d.mtime = fs::last_write_time(dir);
 	txn << d;
 
-	std::unique_lock<std::mutex> lock(progressMutex);
-	++progress.numDirs;
-	progress.lastPath = d.path;
+	updateProgress(d);
 
 	return d.id;
 }
@@ -171,10 +166,7 @@ storm::sqlite::id_t Indexer::indexFile(const fs::directory_entry& file,
 		LOG(Error) << "Tag parsing failed: " << e.what();
 	}
 
-	std::unique_lock<std::mutex> lock(progressMutex);
-	++progress.numFiles;
-	progress.bytes += f.size;
-	progress.lastPath = f.path;
+	updateProgress(f);
 
 	return f.id;
 }
@@ -214,11 +206,30 @@ void Indexer::parseTags(File& f)
 	}
 }
 
-
-void Indexer::setProgress(const IndexerProgress& p)
+void Indexer::clearProgress()
 {
 	std::unique_lock<std::mutex> lock(progressMutex);
-	progress = p;
+	progress = IndexerProgress();
+}
+void Indexer::updateProgress(const Directory& d)
+{
+	std::unique_lock<std::mutex> lock(progressMutex);
+	++progress.numDirs;
+	progress.lastPath = d.path;
+}
+
+void Indexer::updateProgress(const File& f)
+{
+	std::unique_lock<std::mutex> lock(progressMutex);
+	++progress.numFiles;
+	progress.bytes += f.size;
+	progress.lastPath = f.path;
+}
+
+void Indexer::updateProgressDone()
+{
+	std::unique_lock<std::mutex> lock(progressMutex);
+	progress.done = true;
 }
 
 ///////////////////////////////////////////////////////////////////////

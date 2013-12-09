@@ -69,7 +69,11 @@ namespace Musador
 			storm::sqlite::Transaction& txn);
 		bool parseable(const fs::path& path);
 		void parseTags(File& f);
-		void setProgress(const IndexerProgress& p);
+
+		void clearProgress();
+		void updateProgress(const Directory& d);
+		void updateProgress(const File& f);
+		void updateProgressDone();
 
 		bool canceled;
 		bool running;
