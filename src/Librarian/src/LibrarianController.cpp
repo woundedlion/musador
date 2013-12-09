@@ -40,17 +40,17 @@ LibrarianController::Success::operator<<(const std::string& s)
     return *this;
 }
 
-#define BIND_HANDLER(uri,handler) addHandler(uri,boost::bind(&LibrarianController::handler,this,_1))
+#define BIND_HANDLER(method, uri, handler) addHandler(method, uri, boost::bind(&LibrarianController::handler,this,_1))
 
 LibrarianController::LibrarianController()
 {
-	BIND_HANDLER("/debug/info/xml", info);
-	BIND_HANDLER("/index/start", reindex);
-    BIND_HANDLER("/index/cancel", cancelIndex);
-    BIND_HANDLER("/config/xml", getConfigXML);
-    BIND_HANDLER("/index/progress/xml", getIndexProgressXML);
-    BIND_HANDLER("/library/list/xml", getLibraryXML);
-    BIND_HANDLER("/library/stats/xml", getLibraryStatsXML);
+	BIND_HANDLER("GET", "/debug/info/xml", info);
+	BIND_HANDLER("GET", "/index/start", reindex);
+	BIND_HANDLER("GET", "/index/cancel", cancelIndex);
+	BIND_HANDLER("GET", "/config/xml", getConfigXML);
+	BIND_HANDLER("GET", "/index/progress/xml", getIndexProgressXML);
+	BIND_HANDLER("GET", "/library/list/xml", getLibraryXML);
+	BIND_HANDLER("GET", "/library/stats/xml", getLibraryStatsXML);
 
     LibrarianConfig::LibraryCollection libraries = Config::instance()->librarian.libraries;
     LibrarianConfig::LibraryCollection::iterator iter = libraries.find(LibrarianConfig::LOCAL_LIB_ID);

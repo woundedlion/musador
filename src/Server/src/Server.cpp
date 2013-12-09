@@ -65,9 +65,9 @@ Server::start()
         acceptConnections(listener, env);
     }
 
-    // We're officially started now
-    LOG(Info) << "Server started...";
-    {
+	LOG(Info) << "Server started...";
+    
+	{
         Guard guard(runningMutex);
         running = true;
         runningCV.notify_all();
@@ -90,9 +90,7 @@ Server::stop()
 {
     LOG(Info) << "Server shutting down...";
 
-    // Shutting down...
     killConnections();
-
     for (ListenerCollection::iterator iter = listeners.begin(); iter != listeners.end(); ++iter)
     {
         try
@@ -136,8 +134,6 @@ Server::acceptConnections(boost::shared_ptr<IO::Listener> listener,
 {
 
     listeners.push_back(listener);
-
-    // Do the async accept
     listener->beginAccept(boost::bind(&Server::onAcceptComplete,this,_1,_2), tag);
 }
 
@@ -154,10 +150,7 @@ Server::onAcceptComplete(boost::shared_ptr<IO::Msg> msg, boost::any tag)
     }
     else
     {
-        // Do another async accept
         msgAccept->listener->beginAccept(boost::bind(&Server::onAcceptComplete,this,_1,_2),tag);
-
-        // Set up the new connection
         addConnection(msgAccept->conn);
     }
 }

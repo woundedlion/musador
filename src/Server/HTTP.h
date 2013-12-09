@@ -33,7 +33,6 @@ namespace Musador
 
     namespace HTTP
     {
-
         /// @class User
         /// @brief Object representing a web user
         class User

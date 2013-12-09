@@ -1,19 +1,22 @@
 #include "Controller.h"
-#include "HTTP.h"
 
 using namespace Musador;
 
 void 
-Controller::addHandler(const std::string& requestURI, Handler handler)
+Controller::addHandler(const std::string& method, const std::string& requestURI, Handler handler)
 {
-    handlers[requestURI] = handler;
+    handlers[method][requestURI] = handler;
 }
 
 bool
 Controller::exec(HTTP::Env& env)
 {
-    if (handlers.find(env.req->requestURI) != handlers.end()) {
-        return handlers[env.req->requestURI](env);
-    }
+	MethodMap::const_iterator method = handlers.find(env.req->method);
+	if (method != handlers.end()) {
+		HandlerMap::const_iterator handler = method->second.find(env.req->requestURI);
+		if (handler != method->second.end()) {
+			return (handler->second)(env);
+		}
+	}
     return false;
 }

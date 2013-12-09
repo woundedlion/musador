@@ -3,16 +3,10 @@
 
 #include <unordered_map>
 #include "boost/function.hpp"
+#include "HTTP.h"
 
 namespace Musador
 {
-    namespace HTTP
-    {
-        /// @class Env
-        /// @brief Represents the environment for a particular HTTP connection
-        class Env;
-    }
-
     /// @class Controller
     /// @brief As in MVC, implements logic for processing and responding to HTTP Requests
     class Controller
@@ -31,15 +25,17 @@ namespace Musador
         virtual bool exec(HTTP::Env& env);	
 
         /// @brief Register a handler for the given Request URI
-        /// @param[in] requestURI The URI to map to the given Handler
+		/// @param[in] method HTTP Request Method e.g. GET, POST, etc
+		/// @param[in] requestURI The URI to map to the given Handler
         /// @param[in] handler A function object for handling the given Request URI
-        void addHandler(const std::string& requestURI, Handler handler);
+		void addHandler(const std::string& method, const std::string& requestURI, Handler handler);
 
     private:
 
-        typedef std::unordered_map<std::string, Handler> HandlerMap;
-
-        HandlerMap handlers;
+		typedef std::unordered_map<std::string, Handler> HandlerMap;
+		typedef std::unordered_map<std::string, HandlerMap> MethodMap;
+			
+        MethodMap handlers;
 
     };
 
