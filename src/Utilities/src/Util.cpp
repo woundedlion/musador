@@ -1,4 +1,5 @@
 #include <locale>
+#include <codecvt>
 #include <sstream>
 #include <cstdlib>
 
@@ -10,27 +11,19 @@
 #endif
 
 #include <boost/thread/tss.hpp>
-#define BOOST_UTF8_BEGIN_NAMESPACE namespace boost {
-#define BOOST_UTF8_DECL
-#define BOOST_UTF8_END_NAMESPACE }
-#include <boost/detail/utf8_codecvt_facet.hpp>
-#include <boost/detail/utf8_codecvt_facet.ipp>
-#undef BOOST_UTF8_END_NAMESPACE
-#undef BOOST_UTF8_DECL
-#undef BOOST_UTF8_BEGIN_NAMESPACE
 
 #include "Utilities/Util.h"
 
-typedef boost::utf8_codecvt_facet codecvt_t;
+namespace {
 
-namespace Util
-{
-    boost::thread_specific_ptr<std::locale> loc(&Util::cleanupUtf8Locale);
-}
+	typedef std::wstring_convert<std::codecvt_utf8<wchar_t>> Converter;
 
-void Util::cleanupUtf8Locale(std::locale * /* loc */)
-{
-    delete Util::loc.get();	
+	void CleanupConverter(Converter *c)
+	{
+		delete c;
+	}
+
+	boost::thread_specific_ptr<Converter> converter(&CleanupConverter);
 }
 
 std::string Util::unicodeToUtf8(const std::wstring& in)
@@ -40,18 +33,11 @@ std::string Util::unicodeToUtf8(const std::wstring& in)
 
 std::string Util::unicodeToUtf8(const wchar_t * in)
 {
-    if (NULL == Util::loc.get()){
-        Util::loc.reset(new std::locale(std::locale(),new codecvt_t));
+	if (!converter.get()){
+		converter.reset(new Converter());
     }
 
-    std::mbstate_t state;
-    const wchar_t * i_next = in;
-    char * out = new char[(::wcslen(in) * 4) + 1];
-    char * o_next = out;
-    std::use_facet<codecvt_t>(*Util::loc).out(state, in, &in[::wcslen(in)], i_next, out, &out[(::wcslen(in) * 4) + 1], o_next);
-    std::string result(out,static_cast<size_t>(o_next - out));
-    delete [] out;
-    return result;
+	return converter->to_bytes(in);
 }
 
 std::string Util::unicodeToUtf8(wchar_t in)
@@ -69,17 +55,11 @@ std::wstring Util::utf8ToUnicode(const std::string& in)
 
 std::wstring Util::utf8ToUnicode(const char * in)
 {
-    if (NULL == Util::loc.get()){
-        Util::loc.reset(new std::locale(std::locale(),new codecvt_t));
-    }
-    std::mbstate_t state;
-    const char * i_next;
-    wchar_t * out = new wchar_t[::strlen(in) + 1];
-    wchar_t * o_next;
-    std::use_facet<codecvt_t>(*Util::loc).in(state, in, &in[::strlen(in)], i_next, out, &out[::strlen(in) + 1], o_next);
-    std::wstring result(out,static_cast<size_t>(o_next - out));
-    delete [] out;
-    return result;
+	if (!converter.get()){
+		converter.reset(new Converter());
+	}
+
+	return converter->from_bytes(in);
 }
 
 std::wstring Util::utf8ToUnicode(char in)

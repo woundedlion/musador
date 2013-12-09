@@ -21,9 +21,9 @@ trayIcon(NULL)
     IO::Proactor::instance()->start();
     Util::TimerQueue::instance()->start();
 
-    this->trayMenu.insertItem(0,ENABLE,L"Enable");
-    this->trayMenu.insertSep(1,EXIT_SEP);
-    this->trayMenu.insertItem(2,EXIT,L"Exit");
+    trayMenu.insertItem(0,ENABLE,L"Enable");
+    trayMenu.insertSep(1,EXIT_SEP);
+    trayMenu.insertItem(2,EXIT,L"Exit");
 }
 
 LibrarianGUI::~LibrarianGUI()
@@ -46,13 +46,13 @@ LRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         break;
 
     case WM_APP_TRAYICON:
-        if (wParam == this->trayIcon->getID())
+        if (wParam == trayIcon->getID())
         {
             switch (lParam)
             {
             case WM_LBUTTONUP:
             case WM_RBUTTONUP:
-                this->onTrayMenu();
+                onTrayMenu();
                 break;
             }
         }
@@ -62,12 +62,12 @@ LRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         switch (LOWORD(wParam))
         {
         case DISABLE:
-            this->trayMenu.updateItem(DISABLE,DISABLE,L"Disable",false);
-            this->notifyService<GUIMsgDisableReq>();
+            trayMenu.updateItem(DISABLE,DISABLE,L"Disable",false);
+            notifyService<GUIMsgDisableReq>();
             break;
         case ENABLE:
             {
-                this->trayMenu.updateItem(ENABLE,ENABLE,L"Enable",false);
+                trayMenu.updateItem(ENABLE,ENABLE,L"Enable",false);
                 LibrarianService l;
                 try
                 {
@@ -98,20 +98,20 @@ LRESULT LibrarianGUI::wndProcMain(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 void 
 LibrarianGUI::onRunning()
 {
-    this->trayIcon.reset(new UI::TrayIcon(this->hWndMain,WM_APP_TRAYICON));
-    this->trayIcon->setToolTip(L"Musador Librarian : Disabled");
-    this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
-    this->trayIcon->show();
+    trayIcon.reset(new UI::TrayIcon(hWndMain,WM_APP_TRAYICON));
+    trayIcon->setToolTip(L"Musador Librarian : Disabled");
+    trayIcon->setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
+    trayIcon->show();
 
-    this->service.reset(new GUIConnection());
-    this->service->setHandler(boost::bind(&LibrarianGUI::onServiceMsg,this,_1));
-    this->service->beginConnect();
+    service.reset(new GUIConnection());
+    service->setHandler(boost::bind(&LibrarianGUI::onServiceMsg,this,_1));
+    service->beginConnect();
 }
 
 void
 LibrarianGUI::onTrayMenu()
 {
-    this->trayMenu.popupAtCursor(this->hWndMain);
+    trayMenu.popupAtCursor(hWndMain);
 }
 
 void
@@ -120,17 +120,17 @@ LibrarianGUI::onServiceMsg(boost::shared_ptr<GUIMsg> msg)
     switch (msg->getType())
     {
     case GUI_MSG_ENABLED_NOTIFY:
-        this->trayIcon->setToolTip(L"Musador Librarian : Running");
-        this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_ACTIVE));
-        this->trayIcon->show();
-        this->trayMenu.updateItem(ENABLE,DISABLE,L"Disable");
+        trayIcon->setToolTip(L"Musador Librarian : Running");
+        trayIcon->setIcon(MAKEINTRESOURCE(IDI_ACTIVE));
+        trayIcon->show();
+        trayMenu.updateItem(ENABLE,DISABLE,L"Disable");
         break;
 
     case GUI_MSG_DISABLED_NOTIFY:
-        this->trayIcon->setToolTip(L"Musador Librarian : Disabled");
-        this->trayIcon->setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
-        this->trayIcon->show();
-        this->trayMenu.updateItem(DISABLE,ENABLE,L"Enable");
+        trayIcon->setToolTip(L"Musador Librarian : Disabled");
+        trayIcon->setIcon(MAKEINTRESOURCE(IDI_INACTIVE));
+        trayIcon->show();
+        trayMenu.updateItem(DISABLE,ENABLE,L"Enable");
         break;
     }
 }

@@ -14,8 +14,6 @@
 
 namespace Util
 {
-    void cleanupUtf8Locale(std::locale *);
-
     std::string unicodeToUtf8(const std::wstring& in);
     std::string unicodeToUtf8(const wchar_t * in);
     std::string unicodeToUtf8(wchar_t in);

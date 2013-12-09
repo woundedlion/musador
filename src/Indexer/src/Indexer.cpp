@@ -194,7 +194,7 @@ bool Indexer::parseable(const fs::path& path)
 
 void Indexer::parseTags(File& f)
 {
-	TagLib::FileRef fr(Util::unicodeToUtf8(f.path.c_str()).c_str());
+	TagLib::FileRef fr(f.path.c_str());
 
 	if (!fr.isNull()) {
 		TagLib::Tag *t = fr.tag();
