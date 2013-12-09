@@ -1,7 +1,7 @@
 #ifndef CONTROLLER_H_2B3977A0_7D74_4785_B61B_EECC28F9D290
 #define CONTROLLER_H_2B3977A0_7D74_4785_B61B_EECC28F9D290
 
-#include <map>
+#include <unordered_map>
 #include "boost/function.hpp"
 
 namespace Musador
@@ -37,7 +37,7 @@ namespace Musador
 
     private:
 
-        typedef std::map<std::string,Handler> HandlerMap;
+        typedef std::unordered_map<std::string, Handler> HandlerMap;
 
         HandlerMap handlers;
 
