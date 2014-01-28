@@ -15,6 +15,20 @@ namespace storm
 		template <typename Entity>
 		struct drop {};
 
+		template <typename Entity>
+		struct explicit_insert
+		{
+			explicit_insert(Entity& e) : e(e) {}
+
+			Entity& e;
+		};
+
+		template <typename Entity>
+		explicit_insert<Entity> insert(Entity& e)
+		{
+			return explicit_insert<Entity>(e);
+		}
+
 		template <typename T>
 		inline std::wstring 
 		quote(const T& t)

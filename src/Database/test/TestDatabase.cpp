@@ -183,6 +183,36 @@ public:
 	std::wstring m3;
 };
 
+class TestEntityCompositeKey
+{
+public:
+
+	TestEntityCompositeKey() :
+		id2(0),
+		m1(0)
+	{}
+
+	template <class Archive>
+	void serialize(Archive& ar, unsigned int)
+	{
+		using namespace boost::serialization;
+		ar + BOOST_SERIALIZATION_NVP(id1);
+		ar + BOOST_SERIALIZATION_NVP(id2);
+		ar & BOOST_SERIALIZATION_NVP(m1);
+		ar & BOOST_SERIALIZATION_NVP(m2);
+		ar & BOOST_SERIALIZATION_NVP(m3);
+	}
+
+	static const wchar_t *table() { return L"test_composite_key"; }
+
+	std::string id1;
+	int64_t id2;
+	int m1;
+	std::string m2;
+	std::wstring m3;
+};
+
+
 TEST(testArchive)
 {
 	TestEntity entity;
@@ -191,14 +221,32 @@ TEST(testArchive)
 	entity.m2 = "m2m2m2";
 	entity.m3 = L"m3m3m3";
 
+	TestEntityCompositeKey eck1;
+	eck1.id1 = "bar";
+	eck1.id2 = 123;
+	eck1.m1 = 100;
+	eck1.m2 = "m2m2m2";
+	eck1.m3 = L"m3m3m3";
+
+	TestEntityCompositeKey eck2;
+	eck2.id1 = "foo";
+	eck2.id2 = 123;
+	eck2.m1 = 123;
+	eck2.m2 = "m2m2m2";
+	eck2.m3 = L"m3m3m3";
 
 	sqlite::Database db((fs::temp_directory_path() /= "test.db").wstring());
 
-	{
+	try {
 		sqlite::Transaction txn(db);
 		txn << sql::drop<TestEntity>()
-			<< sql::create<TestEntity>();
+			<< sql::drop<TestEntityCompositeKey>()
+			<< sql::create<TestEntity>()
+			<< sql::create<TestEntityCompositeKey>();
 		txn.commit();
+	}
+	catch (const std::exception e) {
+		CHECK(false);
 	}
 
 	// Update should fail since id does not exist
@@ -206,9 +254,21 @@ TEST(testArchive)
 		sqlite::Transaction txn(db);
 		txn << entity;
 		txn.commit();
+		CHECK(false);
 	} catch(const std::exception e) {			
 	}
 
+	// Composite key fails to update since keys don't exist
+	try {
+		sqlite::Transaction txn(db);
+		txn << eck1 << eck2;
+		txn.commit();
+		CHECK(false);
+	}
+	catch (const std::exception e) {
+	}
+
+	// Check emptiness
 	{
 		sqlite::Transaction txn(db);
 		auto r = txn.select(L"SELECT * from test;");
@@ -216,11 +276,17 @@ TEST(testArchive)
 		CHECK(iter == r.end());
 	}
 
+	// Inserts
 	{
 		entity.id = 0;
-		// Insert should proceed
 		sqlite::Transaction txn(db);
 		txn << entity;
+		txn.commit();
+	}
+
+	{
+		sqlite::Transaction txn(db);
+		txn << sql::insert(eck1) << sql::insert(eck2);
 		txn.commit();
 	}
 
@@ -231,13 +297,35 @@ TEST(testArchive)
 		CHECK(iter != r.end());
 		if (iter != r.end()) {
 			CHECK(iter->get<int>(0) == entity.id);
-			CHECK(iter->get<int>(1) == 100);
-			CHECK(iter->get<std::string>(2) == "m2m2m2");
-			CHECK(iter->get<std::string>(3) == "m3m3m3");
+			CHECK(iter->get<int>(1) == entity.m1);
+			CHECK(iter->get<std::string>(2) == entity.m2);
+			CHECK(iter->get<std::wstring>(3) == entity.m3);
 			++iter;
 			CHECK(iter == r.end());
 		}
 	}
+
+	{
+		sqlite::Transaction txn(db);
+		auto r = txn.select(L"SELECT * from test_composite_key;");
+		auto iter = r.begin();
+		CHECK(iter != r.end());
+		CHECK(iter->get<std::string>(0) == eck1.id1);
+		CHECK(iter->get<int>(1) == eck1.id2);
+		CHECK(iter->get<int>(2) == eck1.m1);
+		CHECK(iter->get<std::string>(3) == eck1.m2);
+		CHECK(iter->get<std::wstring>(4) == eck1.m3);
+		++iter;
+		CHECK(iter != r.end());
+		CHECK(iter->get<std::string>(0) == eck2.id1);
+		CHECK(iter->get<int>(1) == eck2.id2);
+		CHECK(iter->get<int>(2) == eck2.m1);
+		CHECK(iter->get<std::string>(3) == eck2.m2);
+		CHECK(iter->get<std::wstring>(4) == eck2.m3);
+		++iter;
+		CHECK(iter == r.end());
+	}
+
 
 	{
 		TestEntity entity2;
@@ -249,6 +337,36 @@ TEST(testArchive)
 		CHECK(entity2.m2 == entity.m2);
 		CHECK(entity2.m3 == entity.m3);
 	}
+
+	{
+		TestEntityCompositeKey e;
+		e.id1 = eck1.id1;
+		e.id2 = eck1.id2;
+
+		sqlite::Transaction txn(db);
+		txn >> e;
+		CHECK(e.id1 == eck1.id1);
+		CHECK(e.id2 == eck1.id2);
+		CHECK(e.m1 == eck1.m1);
+		CHECK(e.m2 == eck1.m2);
+		CHECK(e.m3 == eck1.m3);
+	}
+
+	{
+		TestEntityCompositeKey e;
+		e.id1 = eck2.id1;
+		e.id2 = eck2.id2;
+
+		sqlite::Transaction txn(db);
+		txn >> e;
+		CHECK(e.id1 == eck2.id1);
+		CHECK(e.id2 == eck2.id2);
+		CHECK(e.m1 == eck2.m1);
+		CHECK(e.m2 == eck2.m2);
+		CHECK(e.m3 == eck2.m3);
+	}
+
+
 }
 
 int main()
