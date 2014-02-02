@@ -10,6 +10,18 @@
 
 namespace storm
 {
+	template <typename T>
+	struct AutoPKey : public boost::serialization::nvp<T>
+	{
+		AutoPKey(const boost::serialization::nvp<T>& name) : nvp(name) {}
+	};
+
+	template <typename T>
+	struct CompositePKey : public boost::serialization::nvp<T>
+	{
+		CompositePKey(const boost::serialization::nvp<T>& name) : nvp(name) {}
+	};
+
 	struct Attribute
 	{
 		Attribute() {}
@@ -66,6 +78,18 @@ namespace storm
 		{
 			attrs.emplace_back(Attribute(t.name(), typename Database::sqlType<T>()));
 			return *this;
+		}
+
+		template <typename T>
+		TableOutputArchive& operator &(const AutoPKey<T>& t)
+		{
+			return (*this) * t;
+		}
+
+		template <typename T>
+		TableOutputArchive& operator &(const CompositePKey<T>& t)
+		{
+			return (*this) + t;
 		}
 
 	private:
@@ -173,6 +197,18 @@ namespace storm
 		{
 			attrs.emplace_back(Attribute(t.name(), sql::quote(t.value())));
 			return *this;
+		}
+
+		template <typename T>
+		RowOutputArchive& operator &(const AutoPKey<T>& t)
+		{
+			return (*this) * t;
+		}
+
+		template <typename T>
+		RowOutputArchive& operator &(const CompositePKey<T>& t)
+		{
+			return (*this) + t;
 		}
 
 	private:
@@ -286,6 +322,18 @@ namespace storm
 			attrs.emplace_back(t.name());
 			loadFuncs.emplace_back([=]() { t.value() = row->get<T>(rowIdx++); });
 			return *this;
+		}
+
+		template <typename T>
+		RowInputArchive& operator &(const AutoPKey<T>& t)
+		{
+			return (*this) * t;
+		}
+
+		template <typename T>
+		RowInputArchive& operator &(const CompositePKey<T>& t)
+		{
+			return (*this) + t;
 		}
 
 	private:

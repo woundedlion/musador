@@ -1,10 +1,8 @@
 #include "UnitTest++/UnitTest++.h"
-#include "Database/Archive.h"
-#include "Database/DatabaseSqlite.h"
+#include "Database/Storm.h"
 #include "Logger/Logger.h"
 #include "Utilities/Util.h"
 #include "boost/filesystem.hpp"
-#include "sqlite/sqlite3.h"
 
 #define LOG_SENDER L"TestDatabase"
 
@@ -156,11 +154,11 @@ TEST_FIXTURE(Fixture, testSqlite)
 	}
 }
 
-class TestEntity
+class TestEntityAutoKey
 {
 public:
 
-	TestEntity() :
+	TestEntityAutoKey() :
 		id(0),
 		m1(0)
 	{}
@@ -169,13 +167,13 @@ public:
 	void serialize(Archive& ar, unsigned int)
 	{
 		using namespace boost::serialization;
-		ar * BOOST_SERIALIZATION_NVP(id);
-		ar & BOOST_SERIALIZATION_NVP(m1);
-		ar & BOOST_SERIALIZATION_NVP(m2);
-		ar & BOOST_SERIALIZATION_NVP(m3);
+		ar & STORM_AUTO_PKEY_NVP(id);
+		ar & STORM_NVP(m1);
+		ar & STORM_NVP(m2);
+		ar & STORM_NVP(m3);
 	}
 
-	static const wchar_t *table() { return L"test"; }
+	STORM_TABLE(test)
 
 	int64_t id;
 	int m1;
@@ -196,11 +194,11 @@ public:
 	void serialize(Archive& ar, unsigned int)
 	{
 		using namespace boost::serialization;
-		ar + BOOST_SERIALIZATION_NVP(id1);
-		ar + BOOST_SERIALIZATION_NVP(id2);
-		ar & BOOST_SERIALIZATION_NVP(m1);
-		ar & BOOST_SERIALIZATION_NVP(m2);
-		ar & BOOST_SERIALIZATION_NVP(m3);
+		ar & STORM_COMP_PKEY_NVP(id1);
+		ar & STORM_COMP_PKEY_NVP(id2);
+		ar & STORM_NVP(m1);
+		ar & STORM_NVP(m2);
+		ar & STORM_NVP(m3);
 	}
 
 	static const wchar_t *table() { return L"test_composite_key"; }
@@ -215,7 +213,7 @@ public:
 
 TEST(testArchive)
 {
-	TestEntity entity;
+	TestEntityAutoKey entity;
 	entity.id=123;
 	entity.m1 = 100;
 	entity.m2 = "m2m2m2";
@@ -239,9 +237,9 @@ TEST(testArchive)
 
 	try {
 		sqlite::Transaction txn(db);
-		txn << sql::drop<TestEntity>()
+		txn << sql::drop<TestEntityAutoKey>()
 			<< sql::drop<TestEntityCompositeKey>()
-			<< sql::create<TestEntity>()
+			<< sql::create<TestEntityAutoKey>()
 			<< sql::create<TestEntityCompositeKey>();
 		txn.commit();
 	}
@@ -328,7 +326,7 @@ TEST(testArchive)
 
 
 	{
-		TestEntity entity2;
+		TestEntityAutoKey entity2;
 		entity2.id = entity.id;
 		sqlite::Transaction txn(db);
 		txn >> entity2;
