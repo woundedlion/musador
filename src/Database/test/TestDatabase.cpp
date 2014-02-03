@@ -201,7 +201,7 @@ public:
 		ar & STORM_NVP(m3);
 	}
 
-	static const wchar_t *table() { return L"test_composite_key"; }
+	STORM_TABLE(test_composite_key)
 
 	std::string id1;
 	int64_t id2;
