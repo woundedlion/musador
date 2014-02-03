@@ -49,7 +49,6 @@ public:
 	template <class Archive>
 	void serialize(Archive& ar, unsigned int)
 	{
-		using namespace boost::serialization;
 		ar & STORM_AUTO_PKEY_NVP(id);
 		ar & STORM_NVP(m1);
 		ar & STORM_NVP(m2);
@@ -76,7 +75,6 @@ public:
 	template <class Archive>
 	void serialize(Archive& ar, unsigned int)
 	{
-		using namespace boost::serialization;
 		ar & STORM_COMP_PKEY_NVP(id1);
 		ar & STORM_COMP_PKEY_NVP(id2);
 		ar & STORM_NVP(m1);
@@ -86,11 +84,30 @@ public:
 
 	STORM_TABLE(test_composite_key)
 
-		std::string id1;
+	std::string id1;
 	int64_t id2;
 	int m1;
 	std::string m2;
 	std::wstring m3;
+};
+
+struct TestNested {
+	TestNested(TestEntityAutoKey& m1, TestEntityCompositeKey m2, TestEntityAutoKey *m3, TestEntityAutoKey *m4) :
+	m1(m1), m2(m2), m3(m3), m4(m4) {}
+
+	template <class Archive>
+	void serialize(Archive& ar, unsigned int)
+	{
+		ar & STORM_NVP(m1);
+		ar & STORM_NVP(m2);
+		ar & STORM_NVP(m3);
+		ar & STORM_NVP(m4);
+	}
+
+	TestEntityAutoKey& m1;
+	TestEntityCompositeKey m2;
+	TestEntityAutoKey *m3;
+	TestEntityAutoKey *m4;
 };
 
 TEST_FIXTURE(Fixture, test_sqlite)
@@ -380,9 +397,13 @@ TEST(test_json_archive)
 	eck1.m2 = "m2m2m2";
 	eck1.m3 = L"m3m3m3";
 
+
+	TestNested nested(entity, eck1, NULL, &entity);
+
 	std::stringstream json;
 	storm::json::OutputArchive ar(json);
-	ar << entity;
+	ar << entity << eck1;
+	ar << nested;
 
 	std::cout << json.str();
 }

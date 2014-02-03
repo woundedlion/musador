@@ -39,7 +39,8 @@ namespace storm {
 					boost::serialization::version<T>::value);
 				writer.EndObject();
 				// TODO: Remove copy by wrapping std::ostream instead of using rapidjson::StringBuffer
-				out << buf.GetString();
+				out << buf.GetString() << std::endl;
+				buf.Clear();
 				return *this;
 			}
 
@@ -53,15 +54,26 @@ namespace storm {
 
 		private:
 
-			template <typename T>
-			void write_value(const T& t, typename std::enable_if<
-					std::is_class<typename std::remove_reference<T>::type>::value>::type * = 0)
+			template <typename T> 
+			void write_value(T& t, 
+				typename std::enable_if<
+				std::is_class<typename std::remove_reference<T>::type>::value
+				&& !std::is_base_of<std::basic_string<char>, T>::value
+				&& !std::is_base_of<std::basic_string<wchar_t>, T>::value>::type * = 0)
 			{
 				(*this) & t;
 			}
 
+			template <class T>
+			void write_value(T& t, 
+				typename std::enable_if<
+				std::is_base_of<std::basic_string<typename T::value_type>, T>::value>::type * = 0)
+			{
+				write_value(t.c_str());
+			}
+
 			template <typename T>
-			void write_value(const T& t, typename std::enable_if<
+			void write_value(T& t, typename std::enable_if<
 				std::is_pointer<T>::value>::type * = 0)
 			{
 				if (t) {
@@ -73,8 +85,8 @@ namespace storm {
 			}
 			
 			void write_value(bool v) { writer.Bool(v); }
-			void write_value(const std::string& v) { writer.String(v.c_str()); }
-			void write_value(const std::wstring& v) { writer.String(Util::unicodeToUtf8(v).c_str()); }
+			void write_value(const char *v) { writer.String(v); }
+			void write_value(const wchar_t *v) { writer.String(Util::unicodeToUtf8(v).c_str()); }
 			void write_value(uint32_t v) { writer.Uint(v); }
 			void write_value(uint64_t v) { writer.Uint64(v); }
 			void write_value(int v) { writer.Int(v); }
