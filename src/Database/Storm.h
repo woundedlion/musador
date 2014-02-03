@@ -4,6 +4,7 @@
 #include <boost/serialization/nvp.hpp>
 
 #include "Archive.h"
+#include "Json.h"
 #include "Sql.h"
 #include "DatabaseSqlite.h"
 

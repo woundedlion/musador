@@ -37,7 +37,63 @@ public:
 	sqlite::Database db;
 };
 
-TEST_FIXTURE(Fixture, testSqlite)
+class TestEntityAutoKey
+{
+public:
+
+	TestEntityAutoKey() :
+		id(0),
+		m1(0)
+	{}
+
+	template <class Archive>
+	void serialize(Archive& ar, unsigned int)
+	{
+		using namespace boost::serialization;
+		ar & STORM_AUTO_PKEY_NVP(id);
+		ar & STORM_NVP(m1);
+		ar & STORM_NVP(m2);
+		ar & STORM_NVP(m3);
+	}
+
+	STORM_TABLE(test)
+
+	int64_t id;
+	int m1;
+	std::string m2;
+	std::wstring m3;
+};
+
+class TestEntityCompositeKey
+{
+public:
+
+	TestEntityCompositeKey() :
+		id2(0),
+		m1(0)
+	{}
+
+	template <class Archive>
+	void serialize(Archive& ar, unsigned int)
+	{
+		using namespace boost::serialization;
+		ar & STORM_COMP_PKEY_NVP(id1);
+		ar & STORM_COMP_PKEY_NVP(id2);
+		ar & STORM_NVP(m1);
+		ar & STORM_NVP(m2);
+		ar & STORM_NVP(m3);
+	}
+
+	STORM_TABLE(test_composite_key)
+
+		std::string id1;
+	int64_t id2;
+	int m1;
+	std::string m2;
+	std::wstring m3;
+};
+
+TEST_FIXTURE(Fixture, test_sqlite)
 {
 	try {
 		CHECK(static_cast<sqlite3 *>(db) != NULL);
@@ -154,64 +210,8 @@ TEST_FIXTURE(Fixture, testSqlite)
 	}
 }
 
-class TestEntityAutoKey
-{
-public:
 
-	TestEntityAutoKey() :
-		id(0),
-		m1(0)
-	{}
-
-	template <class Archive>
-	void serialize(Archive& ar, unsigned int)
-	{
-		using namespace boost::serialization;
-		ar & STORM_AUTO_PKEY_NVP(id);
-		ar & STORM_NVP(m1);
-		ar & STORM_NVP(m2);
-		ar & STORM_NVP(m3);
-	}
-
-	STORM_TABLE(test)
-
-	int64_t id;
-	int m1;
-	std::string m2;
-	std::wstring m3;
-};
-
-class TestEntityCompositeKey
-{
-public:
-
-	TestEntityCompositeKey() :
-		id2(0),
-		m1(0)
-	{}
-
-	template <class Archive>
-	void serialize(Archive& ar, unsigned int)
-	{
-		using namespace boost::serialization;
-		ar & STORM_COMP_PKEY_NVP(id1);
-		ar & STORM_COMP_PKEY_NVP(id2);
-		ar & STORM_NVP(m1);
-		ar & STORM_NVP(m2);
-		ar & STORM_NVP(m3);
-	}
-
-	STORM_TABLE(test_composite_key)
-
-	std::string id1;
-	int64_t id2;
-	int m1;
-	std::string m2;
-	std::wstring m3;
-};
-
-
-TEST(testArchive)
+TEST(test_sqlite_archive)
 {
 	TestEntityAutoKey entity;
 	entity.id=123;
@@ -363,8 +363,28 @@ TEST(testArchive)
 		CHECK(e.m2 == eck2.m2);
 		CHECK(e.m3 == eck2.m3);
 	}
+}
 
+TEST(test_json_archive)
+{
+	TestEntityAutoKey entity;
+	entity.id = 123;
+	entity.m1 = 100;
+	entity.m2 = "m2m2m2";
+	entity.m3 = L"m3m3m3";
 
+	TestEntityCompositeKey eck1;
+	eck1.id1 = "bar";
+	eck1.id2 = 123;
+	eck1.m1 = 100;
+	eck1.m2 = "m2m2m2";
+	eck1.m3 = L"m3m3m3";
+
+	std::stringstream json;
+	storm::json::OutputArchive ar(json);
+	ar << entity;
+
+	std::cout << json.str();
 }
 
 int main()

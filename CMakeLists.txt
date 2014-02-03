@@ -1,7 +1,8 @@
 PROJECT(Musador)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-INCLUDE_DIRECTORIES(	${CMAKE_SOURCE_DIR}/src 
+INCLUDE_DIRECTORIES(	
+            ${CMAKE_SOURCE_DIR}/src 
 			${CMAKE_SOURCE_DIR}/src/3rdParty
 			${CMAKE_SOURCE_DIR}/src/3rdParty/taglib
 			${CMAKE_BINARY_DIR}/src/3rdParty/taglib

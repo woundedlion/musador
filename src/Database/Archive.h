@@ -1,9 +1,10 @@
 #pragma once
 
-#include <unordered_map>
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/version.hpp>
+
+#include <unordered_map>
 #include "Database/Sql.h"
 
 #include <boost/lexical_cast.hpp>
