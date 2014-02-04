@@ -93,7 +93,11 @@ public:
 
 struct TestNested {
 	TestNested(TestEntityAutoKey& m1, TestEntityCompositeKey m2, TestEntityAutoKey *m3, TestEntityAutoKey *m4) :
-	m1(m1), m2(m2), m3(m3), m4(m4) {}
+	m1(m1), m2(m2), m3(m3), m4(m4), 
+	m5({ 2, 4, 6, 8, 10 }), 
+	m6({ { "one", "one" }, { "two", "two" } }), 
+	m7({ { "three", 3 }, { "four", 4 }, { "negative four", -4 } })
+	{}
 
 	template <class Archive>
 	void serialize(Archive& ar, unsigned int)
@@ -102,12 +106,18 @@ struct TestNested {
 		ar & STORM_NVP(m2);
 		ar & STORM_NVP(m3);
 		ar & STORM_NVP(m4);
+		ar & STORM_NVP(m5);
+		ar & STORM_NVP(m6);
+		ar & STORM_NVP(m7);
 	}
 
 	TestEntityAutoKey& m1;
 	TestEntityCompositeKey m2;
 	TestEntityAutoKey *m3;
 	TestEntityAutoKey *m4;
+	std::vector<int> m5;
+	std::map<std::string, std::string> m6;
+	std::map<std::string, int> m7;
 };
 
 TEST_FIXTURE(Fixture, test_sqlite)

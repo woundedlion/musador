@@ -12,63 +12,50 @@
 
 using namespace Musador;
 
-LibrarianController::Error&
-LibrarianController::Error::operator<<(const std::wstring& s)
+LibrarianController::LibrarianController()
 {
-    errStr << Util::unicodeToUtf8(s);
-    return *this;
+	loadConfig();
+	bindHandlers();
 }
 
-LibrarianController::Error&
-LibrarianController::Error::operator<<(const std::string& s)
+void
+LibrarianController::loadConfig()
 {
-    errStr << s;
-    return *this;
-}
-
-LibrarianController::Success&
-LibrarianController::Success::operator<<(const std::wstring& s)
-{
-    succStr << Util::unicodeToUtf8(s);
-    return *this;
-}
-
-LibrarianController::Success&
-LibrarianController::Success::operator<<(const std::string& s)
-{
-    succStr << s;
-    return *this;
+	LibrarianConfig::LibraryCollection libraries = Config::instance()->librarian.libraries;
+	LibrarianConfig::LibraryCollection::iterator iter = libraries.find(LibrarianConfig::LOCAL_LIB_ID);
+	if (iter != libraries.end()) {
+		indexer.reset(new Indexer(iter->second.dataFile));
+		std::vector<std::wstring> targets = iter->second.targets;
+		for (auto target : targets) {
+			indexer->addTarget(target);
+		}
+	}
+	else
+	{
+		LOG(Error) << "Local library missing!";
+	}
 }
 
 #define BIND_HANDLER(method, uri, handler) addHandler(method, uri, boost::bind(&LibrarianController::handler,this,_1))
 
-LibrarianController::LibrarianController()
+void
+LibrarianController::bindHandlers()
 {
-	BIND_HANDLER("GET", "/debug/info/xml", info);
-	BIND_HANDLER("GET", "/index/start", reindex);
+	BIND_HANDLER("GET", "/debug", dumpRequest);
+	BIND_HANDLER("GET", "/config", getCongig);
+
+#if 0	
+    BIND_HANDLER("GET", "/index/start", reindex);
 	BIND_HANDLER("GET", "/index/cancel", cancelIndex);
 	BIND_HANDLER("GET", "/config/xml", getConfigXML);
 	BIND_HANDLER("GET", "/index/progress/xml", getIndexProgressXML);
 	BIND_HANDLER("GET", "/library/list/xml", getLibraryXML);
 	BIND_HANDLER("GET", "/library/stats/xml", getLibraryStatsXML);
-
-    LibrarianConfig::LibraryCollection libraries = Config::instance()->librarian.libraries;
-    LibrarianConfig::LibraryCollection::iterator iter = libraries.find(LibrarianConfig::LOCAL_LIB_ID);
-    if (iter != libraries.end()) {   
-        indexer.reset(new Indexer(iter->second.dataFile));
-        std::vector<std::wstring> targets = iter->second.targets;
-        for (auto target : targets) {
-            indexer->addTarget(target);
-        }
-    }
-    else
-    {
-        LOG(Error) << "Local library missing!";
-    }
+#endif
 }
 
 bool 
-LibrarianController::info(HTTP::Env& env)
+LibrarianController::dumpRequest(HTTP::Env& env)
 {
 	env.res->data.reset(new std::stringstream);
 	env.req->dump(*env.res->data);

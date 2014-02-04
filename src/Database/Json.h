@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+#include <map>
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/version.hpp>
@@ -55,44 +57,54 @@ namespace storm {
 		private:
 
 			template <typename T> 
-			void write_value(T& t, 
-				typename std::enable_if<
-				std::is_class<typename std::remove_reference<T>::type>::value
-				&& !std::is_base_of<std::basic_string<char>, T>::value
-				&& !std::is_base_of<std::basic_string<wchar_t>, T>::value>::type * = 0)
+			void write_value(T& t)
 			{
 				(*this) & t;
 			}
 
-			template <class T>
-			void write_value(T& t, 
-				typename std::enable_if<
-				std::is_base_of<std::basic_string<typename T::value_type>, T>::value>::type * = 0)
-			{
-				write_value(t.c_str());
-			}
-
 			template <typename T>
-			void write_value(T& t, typename std::enable_if<
-				std::is_pointer<T>::value>::type * = 0)
+			void write_value(T *t)
 			{
 				if (t) {
-					(*this) & *t;
+					write_value(*t);
 				}
 				else {
 					writer.Null();
 				}
 			}
-			
-			void write_value(bool v) { writer.Bool(v); }
-			void write_value(const char *v) { writer.String(v); }
-			void write_value(const wchar_t *v) { writer.String(Util::unicodeToUtf8(v).c_str()); }
-			void write_value(uint32_t v) { writer.Uint(v); }
-			void write_value(uint64_t v) { writer.Uint64(v); }
-			void write_value(int v) { writer.Int(v); }
-			void write_value(int64_t v) { writer.Int64(v); }
-			void write_value(float v) { writer.Double(v); }
-			void write_value(double v) { writer.Double(v); }
+
+			template <typename T>
+			void write_value(std::vector<T>& v)
+			{
+				writer.StartArray();
+				for (auto i : v) {
+					write_value(i);
+				}
+				writer.EndArray();
+			}
+
+			template <typename T>
+			void write_value(std::map<std::string, T>& v)
+			{
+				writer.StartObject();
+				for (auto i : v) {
+					writer.String(i.first.c_str());
+					write_value(i.second);
+				}
+				writer.EndObject();
+			}
+
+			inline void write_value(std::string& v) { write_value(v.c_str()); }
+			inline void write_value(std::wstring& v) { write_value(v.c_str()); }
+			inline void write_value(bool v) { writer.Bool(v); }
+			inline void write_value(const char *v) { writer.String(v); }
+			inline void write_value(const wchar_t *v) { writer.String(Util::unicodeToUtf8(v).c_str()); }
+			inline void write_value(uint32_t v) { writer.Uint(v); }
+			inline void write_value(uint64_t v) { writer.Uint64(v); }
+			inline void write_value(int v) { writer.Int(v); }
+			inline void write_value(int64_t v) { writer.Int64(v); }
+			inline void write_value(float v) { writer.Double(v); }
+			inline void write_value(double v) { writer.Double(v); }
 
 			std::ostream& out;
 			rapidjson::StringBuffer buf;

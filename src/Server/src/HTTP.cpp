@@ -333,8 +333,8 @@ HTTP::Request::clear()
 }
 
 void 
-HTTP::Request::dump(std::ostream &info) {
-    info	<< "<table border=\"0\" cellspacing=\"2\">\r\n"
+HTTP::Request::dump(std::ostream &out) {
+	out << "<table border=\"0\" cellspacing=\"2\">\r\n"
         << "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Request URI:</b></td><td valign=\"top\"><pre>" 
         << requestURI 
         << "</pre></td></tr>"
@@ -343,28 +343,28 @@ HTTP::Request::dump(std::ostream &info) {
         << "</pre></td></tr>"
         ;
     // headers
-    info << "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Headers:</b></td><td valign=\"top\"><table border=\"0\">";
+	out << "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Headers:</b></td><td valign=\"top\"><table border=\"0\">";
     for (auto hdr : headers) {
-        info << "<tr><td valign=\"top\"><i>" << hdr.first << ":</i></td><td valign=\"top\">" << hdr.second << "</td>";
+		out << "<tr><td valign=\"top\"><i>" << hdr.first << ":</i></td><td valign=\"top\">" << hdr.second << "</td>";
     }
-    info << "</table></td></tr>"; 
+	out << "</table></td></tr>";
 
     // params
-    info << "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Params:</b></td><td valign=\"top\"><table border=\"0\">";
+	out << "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Params:</b></td><td valign=\"top\"><table border=\"0\">";
     for (auto param : params) {
-        info << "<tr><td valign=\"top\"><i>" << param.first << ":</i></td><td valign=\"top\">" << param.second << "</td>";
+		out << "<tr><td valign=\"top\"><i>" << param.first << ":</i></td><td valign=\"top\">" << param.second << "</td>";
     }
-    info << "</table></td></tr>"; 
+	out << "</table></td></tr>";
 
     // cookies
-    info << "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Cookies:</b></td><td valign=\"top\"><table border=\"0\">";
+	out << "<tr bgcolor=\"eeeeee\"><td valign=\"top\"><b>Cookies:</b></td><td valign=\"top\"><table border=\"0\">";
     for (auto cookie : cookies) {
-        info << "<tr><td valign=\"top\"><i>" << cookie.first << ":</i></td><td valign=\"top\">" << cookie.second << "</td>";
+		out << "<tr><td valign=\"top\"><i>" << cookie.first << ":</i></td><td valign=\"top\">" << cookie.second << "</td>";
     }
-    info << "</table></td></tr>"; 
+	out << "</table></td></tr>";
 
     // close table
-    info << "</table>";
+	out << "</table>";
 }
 
 void 
