@@ -100,19 +100,6 @@ struct TestNested {
 	m8({ { "abc", { 'a', 'b', 'c' } }, { "def", { 'd', 'e', 'f' } } })
 	{}
 
-	template <class Archive>
-	void serialize(Archive& ar, unsigned int)
-	{
-		ar & STORM_NVP(m1);
-		ar & STORM_NVP(m2);
-		ar & STORM_NVP(m3);
-		ar & STORM_NVP(m4);
-		ar & STORM_NVP(m5);
-		ar & STORM_NVP(m6);
-		ar & STORM_NVP(m7);
-		ar & STORM_NVP(m8);
-	}
-
 	TestEntityAutoKey& m1;
 	TestEntityCompositeKey m2;
 	TestEntityAutoKey *m3;
@@ -121,6 +108,8 @@ struct TestNested {
 	std::map<std::string, std::string> m6;
 	std::map<std::string, int> m7;
 	std::map<std::string, std::vector<char>> m8;
+
+	STORM_SERIALIZE(m1, m2, m3, m4, m5, m6, m7, m8)
 };
 
 TEST_FIXTURE(Fixture, test_sqlite)

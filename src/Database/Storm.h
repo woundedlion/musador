@@ -21,14 +21,14 @@
 #define STORM_COMP_PKEY_NVP(name) \
 	storm::make_composite_pkey(BOOST_SERIALIZATION_NVP(name))
 
-#define STORM_SERIALIZE_MEMBER(m) \
-	ar & STORM_NVP(m);
+#define STORM_SERIALIZE_MEMBER(macro, data, elem ) \
+	ar & STORM_NVP(elem);
 
-#define STORM_SERIALIZE(class, ...) \
+#define STORM_SERIALIZE(...) \
 	template <class Archive> \
 	void serialize(Archive& ar, unsigned int) \
 { \
-	BOOST_PP_SEQ_FOR_EACH(STORM_SERIALIZE_MEMBER, , BOOST_PP_VARIADIC_TO_SEQ(__VAR_ARGS__)) \
+	BOOST_PP_SEQ_FOR_EACH(STORM_SERIALIZE_MEMBER, , BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
 }
 
 namespace storm {
