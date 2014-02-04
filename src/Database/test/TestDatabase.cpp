@@ -95,8 +95,9 @@ struct TestNested {
 	TestNested(TestEntityAutoKey& m1, TestEntityCompositeKey m2, TestEntityAutoKey *m3, TestEntityAutoKey *m4) :
 	m1(m1), m2(m2), m3(m3), m4(m4), 
 	m5({ 2, 4, 6, 8, 10 }), 
-	m6({ { "one", "one" }, { "two", "two" } }), 
-	m7({ { "three", 3 }, { "four", 4 }, { "negative four", -4 } })
+	m6({ { "one", "one" }, { "two", "two" } }),
+	m7({ { "three", 3 }, { "four", 4 }, { "negative four", -4 } }),
+	m8({ { "abc", { 'a', 'b', 'c' } }, { "def", { 'd', 'e', 'f' } } })
 	{}
 
 	template <class Archive>
@@ -109,6 +110,7 @@ struct TestNested {
 		ar & STORM_NVP(m5);
 		ar & STORM_NVP(m6);
 		ar & STORM_NVP(m7);
+		ar & STORM_NVP(m8);
 	}
 
 	TestEntityAutoKey& m1;
@@ -118,6 +120,7 @@ struct TestNested {
 	std::vector<int> m5;
 	std::map<std::string, std::string> m6;
 	std::map<std::string, int> m7;
+	std::map<std::string, std::vector<char>> m8;
 };
 
 TEST_FIXTURE(Fixture, test_sqlite)

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <boost/preprocessor/wstringize.hpp>
+#include <boost/preprocessor/variadic/to_seq.hpp>
+#include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/serialization/nvp.hpp>
 
 #include "Archive.h"
@@ -18,6 +20,16 @@
 
 #define STORM_COMP_PKEY_NVP(name) \
 	storm::make_composite_pkey(BOOST_SERIALIZATION_NVP(name))
+
+#define STORM_SERIALIZE_MEMBER(m) \
+	ar & STORM_NVP(m);
+
+#define STORM_SERIALIZE(class, ...) \
+	template <class Archive> \
+	void serialize(Archive& ar, unsigned int) \
+{ \
+	BOOST_PP_SEQ_FOR_EACH(STORM_SERIALIZE_MEMBER, , BOOST_PP_VARIADIC_TO_SEQ(__VAR_ARGS__)) \
+}
 
 namespace storm {
 	

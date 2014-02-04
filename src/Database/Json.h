@@ -96,6 +96,9 @@ namespace storm {
 
 			inline void write_value(std::string& v) { write_value(v.c_str()); }
 			inline void write_value(std::wstring& v) { write_value(v.c_str()); }
+			inline void write_value(char v) { write_value(std::string(1, v)); }
+			inline void write_value(wchar_t v) { write_value(std::wstring(1, v)); }
+
 			inline void write_value(bool v) { writer.Bool(v); }
 			inline void write_value(const char *v) { writer.String(v); }
 			inline void write_value(const wchar_t *v) { writer.String(Util::unicodeToUtf8(v).c_str()); }
