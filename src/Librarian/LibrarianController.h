@@ -28,7 +28,7 @@ namespace Musador
         bool reindex(HTTP::Env& env);
         bool cancelIndex(HTTP::Env& env);
 
-        bool getConfigXML(HTTP::Env& env);
+        bool getConfig(HTTP::Env& env);
         bool getIndexProgressXML(HTTP::Env& env);
         bool getLibraryXML(HTTP::Env& env);
         bool getLibraryStatsXML(HTTP::Env& env);

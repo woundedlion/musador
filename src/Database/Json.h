@@ -2,16 +2,37 @@
 
 #include <vector>
 #include <map>
+#include <queue>
+#include <cstdint>
+
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/version.hpp>
+
 // TODO: remove Util dependency
 #include "Utilities/Util.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/prettywriter.h"
+#include "rapidjson/reader.h"
 
 namespace storm {
 	namespace json {
+
+		class InputStreamWrapper
+		{
+		public:
+
+			typedef char Ch;
+			InputStreamWrapper(std::istream& s) : s(s) {}
+			
+			char Peek() const { return s.peek(); }
+			char Take() const { return s.get(); }
+			size_t Tell() { return s.tellg(); }
+
+		private:
+
+			std::istream& s;
+		};
 
 		class OutputArchive
 		{
@@ -114,6 +135,31 @@ namespace storm {
 			rapidjson::PrettyWriter<decltype(buf)> writer;
 		};
 
+		class SAXHandler
+		{
+		public:
+
+			typedef char Ch;
+
+			SAXHandler(std::queue<uintptr_t>& out) : out(out) {}
+			void Null() { out.front}
+			void Bool(bool b);
+			void Int(int i);
+			void Uint(unsigned i);
+			void Int64(int64_t i);
+			void Uint64(uint64_t i);
+			void Double(double d);
+			void String(const Ch* str, SizeType length, bool copy);
+			void StartObject();
+			void EndObject(SizeType memberCount);
+			void StartArray();
+			void EndArray(SizeType elementCount);
+
+		private:
+
+			std::queue<uintptr_t>& out;
+		};
+
 		class InputArchive
 		{
 		public:
@@ -128,18 +174,33 @@ namespace storm {
 			template <typename T>
 			InputArchive& operator >>(T& t)
 			{
-
+				return (*this) & t;
 			}
 
 			template <typename T>
-			InputArchive& operator &(const boost::serialization::nvp<T>& t)
+			InputArchive& operator &(T& t)
 			{
+				boost::serialization::serialize_adl(
+					*this,
+					t,
+					boost::serialization::version<T>::value);
 
+				rapidjson::Reader reader;
+				r.Parse(s, handler)
+
+				return *this;
+			}
+
+			template <typename T>
+			InputArchive& operator &(boost::serialization::nvp<T>& t)
+			{
+				out.push(&t.value());
 			}
 
 		private:
 
-			std::istream& in;
+			InputStreamWrapper in;
+			std::queue<uintptr_t> out;
 		};
 
 	}

@@ -15,30 +15,15 @@ using namespace Musador;
 namespace fs = boost::filesystem;
 
 Librarian::Librarian() :
-UI::Daemon<Librarian>(L"Musador Librarian")
+UI::Daemon<Librarian>(L"Musador Librarian"),
+db(cfg_path())
 {
     Network::instance();
 
-    // load config or generate defaults
-    fs::wpath dataPath(Util::pathToDataDir() + L"\\Musador");
-    if (!fs::exists(dataPath)) {
-        fs::create_directories(dataPath);
-    }
-    auto cfgPath = (dataPath / L"Librarian.xml").wstring();
-    Config *cfg = Config::instance();
-    if (!fs::exists(cfgPath) || !cfg->load(cfgPath))
-    {
-        cfg->librarian.dataDir = dataPath.wstring();
-        configDefaults(*cfg);
-        if (!cfg->save(cfgPath)) {
-            LOG(Error) << "Could not save configuration to " << cfgPath;
-        }
-    }
-
-    controller.reset(new LibrarianController());
-    cfg->server.controller = controller.get();
-
-    server.reset(new Server(cfg->server));
+	load_config();
+    
+	controller.reset(new LibrarianController());
+	server.reset(new Server(cfg.server, controller));
 
     IO::Proactor::instance()->start();
 }
@@ -71,9 +56,20 @@ Librarian::run(unsigned long argc, wchar_t * argv[])
     return 0;
 }
 
-void 
-Librarian::configDefaults(Config& cfg)
+std::wstring
+Librarian::cfg_path()
 {
+	fs::wpath data_path(Util::pathToDataDir() + L"\\Musador";
+	if (!fs::exists(data_path)) {
+		fs::create_directories(data_path);
+	}
+	return (data_path / L"librarian.db").wstring();
+}
+
+void 
+Librarian::load_config()
+{
+
     HTTPConfig site;
     site.addr = "0.0.0.0";
     site.port = 5152;

@@ -8,6 +8,8 @@
 #include "boost/archive/xml_oarchive.hpp"
 #include "Config/Config.h"
 #include "Logger/Logger.h"
+#include "Database/Storm.h"
+
 #define LOG_SENDER "Controller"
 
 using namespace Musador;
@@ -42,7 +44,7 @@ void
 LibrarianController::bindHandlers()
 {
 	BIND_HANDLER("GET", "/debug", dumpRequest);
-	BIND_HANDLER("GET", "/config", getCongig);
+	BIND_HANDLER("GET", "/config", getConfig);
 
 #if 0	
     BIND_HANDLER("GET", "/index/start", reindex);
@@ -123,12 +125,11 @@ LibrarianController::cancelIndex(HTTP::Env& env)
 }
 
 bool 
-LibrarianController::getConfigXML(HTTP::Env& env)
+LibrarianController::getConfig(HTTP::Env& env)
 {
     env.res->data.reset(new std::stringstream);
     {
-        // TODO: implement HTTP::Response::getXMLArchive
-        boost::archive::xml_oarchive ar(*env.res->data);
+        storm::json::OutputArchive ar(*env.res->data);
         ar << boost::serialization::make_nvp("Librarian",*Config::instance());
     }
     env.res->headers["Content-Type"] = "text/xml";

@@ -8,10 +8,10 @@
 #include "UI/Daemon.h"
 #include "Indexer/Indexer.h"
 #include "Server/Server.h"
-#include "Config/Config.h"
 #include "LibrarianController.h"
 #include "Protocol/GUIListener.h"
 #include "Protocol/GUIConnection.h"
+#include "Database/Storm.h"
 
 using namespace Musador;
 namespace Musador
@@ -29,10 +29,7 @@ namespace Musador
 
     public:
 
-        /// @brief Constructor.
         Librarian();
-
-        /// @brief Destructor.
         ~Librarian();
 
         /// @brief Run the main thread of the Librarian.
@@ -43,17 +40,18 @@ namespace Musador
         /// @note This function behaves synchronously, returning when the indexing job is complete.
         void index(const std::wstring& outfile,const std::vector<std::wstring>& paths);
 
-        /// @brief Populate the provided Config class with default values
-        void configDefaults(Config& cfg);
-
     private:
 
         void onGUIAccept(boost::shared_ptr<IO::Msg> msg, boost::any tag);
         void onGUIMsg(boost::shared_ptr<GUIMsg> msg);
+		static std::wstring cfg_path();
+		void load_config();
 
         template <typename T>
         void notifyGUI();
 
+		storm::sqlite::Database db;
+		LibrarianConfig cfg;
         boost::shared_ptr<GUIListener> listener;
         boost::shared_ptr<GUIConnection> gui;
         boost::shared_ptr<Server> server;
