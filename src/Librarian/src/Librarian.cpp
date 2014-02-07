@@ -69,7 +69,6 @@ Librarian::cfg_path()
 void 
 Librarian::load_config()
 {
-
     HTTPConfig site;
     site.addr = "0.0.0.0";
     site.port = 5152;

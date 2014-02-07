@@ -24,15 +24,20 @@ namespace storm {
 		public:
 
 			typedef char Ch;
-			InputStreamWrapper(std::istream& s) : s(s) {}
-			
-			char Peek() const { return s.peek(); }
-			char Take() const { return s.get(); }
-			size_t Tell() { return s.tellg(); }
+			InputStreamWrapper(std::istream& s) : s(&s) {}
+
+			char Peek() const { return s->peek(); }
+			char Take() const { return s->get(); }
+			size_t Tell() { return s->tellg(); }
+
+			Ch* PutBegin() { return 0; }
+			void Put(Ch) { }
+			void Flush() {  }
+			size_t PutEnd(Ch*) { return 0;  }
 
 		private:
 
-			std::istream& s;
+			std::istream *s;
 		};
 
 		class OutputArchive
@@ -161,21 +166,32 @@ namespace storm {
 					t,
 					boost::serialization::version<T>::value);
 
-				rapidjson::Reader reader;
-				r.Parse(s, SAXHandler(inserters));
+				rapidjson::Reader parser;
+				parser.Parse<rapidjson::kParseValidateEncodingFlag>(in, SAXHandler(readers));
+				check_underrun();
 
 				return *this;
 			}
 
 			template <typename T>
-			InputArchive& operator &(boost::serialization::nvp<T>& t)
+			InputArchive& operator &(const boost::serialization::nvp<T>& t)
 			{
-				inserters.push(read_value(t));
+				readers.push(read_into(t.value()));
+				return *this;
 			}
 
 		private:
 
+			enum class Type
+			{
+				BOOL,
+				STRING, WSTRING, CHAR, WCHAR, CHAR_P, WCHAR_P, 
+				UINT32, UINT64, INT, INT64, FLOAT, DOUBLE
+			};
+			typedef std::vector<Type> TypeList;
 			typedef std::function<void (void *)> ReadFunc;
+			typedef std::pair<Type, ReadFunc> TypedReader;
+			typedef std::queue<TypedReader> ReaderQueue;
 
 			class SAXHandler
 			{
@@ -183,10 +199,10 @@ namespace storm {
 
 				typedef char Ch;
 
-				SAXHandler(std::queue<ReadFunc>& inserters) : inserters(inserters) {}
+				SAXHandler(ReaderQueue& readers) : readers(readers) {}
 
 				void Null() {}
-				void Bool(bool b) {}
+				void Bool(bool b) { copy({ Type::BOOL }, &b); }
 				void Int(int i) {}
 				void Uint(unsigned i) {}
 				void Int64(int64_t i) {}
@@ -201,48 +217,64 @@ namespace storm {
 
 			private:
 
-				std::queue<ReadFunc>& inserters;
+				void copy(const TypeList& valid_types, void *src)
+				{
+					check_overrun();
+					check_type(valid_types);
+					readers.front().second(src);
+					readers.pop();
+				}
+
+				inline void check_overrun()
+				{
+					if (readers.empty()) {
+						throw std::runtime_error("Parse error: source data too large");
+					}
+				}
+
+				void check_type(const TypeList& valid_types)
+				{
+					if (std::find(valid_types.begin(), valid_types.end(),
+						readers.front().first) == valid_types.end())
+					{
+						throw std::runtime_error("Parse Error: type mismatch");
+					}
+				}
+
+				ReaderQueue& readers;
 			};
 
-			template <typename T> struct type_traits;
-			template <> struct type_traits<std::string> { static constexpr int type_id = 1; };
-			template <> struct type_traits<std::wstring> { static constexpr int type_id = 2; };
-			template <> struct type_traits<char> { static constexpr int type_id = 3; };
-			template <> struct type_traits<wchar_t> { static constexpr int type_id = 4; };
-			template <> struct type_traits<bool> { static constexpr int type_id = 5; };
-			template <> struct type_traits<const char *> { static constexpr int type_id = 6; };
-			template <> struct type_traits<const wchar_t *> { static constexpr int type_id = 7; };
-			template <> struct type_traits<uint32_t> { static constexpr int type_id = 8; };
-			template <> struct type_traits<uint64_t> { static constexpr int type_id = 9; };
-			template <> struct type_traits<int> { static constexpr int type_id = 10; };
-			template <> struct type_traits<int64_t> { static constexpr int type_id = 11; };
-			template <> struct type_traits<float> { static constexpr int type_id = 12; };
-			template <> struct type_traits<double> { static constexpr int type_id = 13; };
-
-			struct ValueRef
+			inline void check_underrun()
 			{
-				ValueRef(void *value, int type) : value(value), type(type) {}
-				void *value;
-				int type;
-			};
+				if (!readers.empty()) {
+					throw std::runtime_error("Parse error: source data incomplete");
+				}
+			}
 
-			inline ReadFunc read_value(std::string& v) { read_value(v.c_str()); }
-			inline ReadFunc read_value(std::wstring& v) { read_value(v.c_str()); }
-			inline ReadFunc read_value(char v) { read_value(std::string(1, v)); }
-			inline ReadFunc read_value(wchar_t v) { read_value(std::wstring(1, v)); }
+			inline TypedReader read_into(std::string& v) { }
+			inline TypedReader read_into(std::wstring& v) { }
+			inline TypedReader read_into(char& v) {  }
+			inline TypedReader read_into(wchar_t& v) { }
 
-			inline ReadFunc read_value(bool v) { }
-			inline ReadFunc read_value(const char *v) { }
-			inline ReadFunc read_value(const wchar_t *v) { }
-			inline ReadFunc read_value(uint32_t v) { }
-			inline ReadFunc read_value(uint64_t v) { }
-			inline ReadFunc read_value(int v) { }
-			inline ReadFunc read_value(int64_t v) { }
-			inline ReadFunc read_value(float v) { }
-			inline ReadFunc read_value(double v) { }
+			inline TypedReader read_into(bool& dst)
+			{
+				return std::make_pair(Type::BOOL, [&](void *src)
+				{
+					dst = *reinterpret_cast<bool *>(src);
+				});
+			}
+
+			inline TypedReader read_into(char *& v) { }
+			inline TypedReader read_into(wchar_t *& v) { }
+			inline TypedReader read_into(uint32_t& v) { }
+			inline TypedReader read_into(uint64_t& v) { }
+			inline TypedReader read_into(int& v) { }
+			inline TypedReader read_into(int64_t& v) { }
+			inline TypedReader read_into(float& v) { }
+			inline TypedReader read_into(double& v) { }
 
 			InputStreamWrapper in;
-			std::queue<ReadFunc> inserters;
+			ReaderQueue readers;
 		};
 
 	}

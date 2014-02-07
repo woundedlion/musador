@@ -91,6 +91,16 @@ public:
 	std::wstring m3;
 };
 
+struct TestReadWrite
+{
+	TestReadWrite() : m1(true), m2(false) {}
+
+	bool m1;
+	bool m2;
+
+	STORM_SERIALIZE(m1, m2);
+};
+
 struct TestNested {
 	TestNested(TestEntityAutoKey& m1, TestEntityCompositeKey m2, TestEntityAutoKey *m3, TestEntityAutoKey *m4) :
 	m1(m1), m2(m2), m3(m3), m4(m4), 
@@ -399,15 +409,33 @@ TEST(test_json_archive)
 	eck1.m2 = "m2m2m2";
 	eck1.m3 = L"m3m3m3";
 
-
 	TestNested nested(entity, eck1, NULL, &entity);
 
-	std::stringstream json;
-	storm::json::OutputArchive ar(json);
-	ar << entity << eck1;
-	ar << nested;
+	{
+		std::stringstream json;
+		storm::json::OutputArchive ar(json);
+		ar << entity << eck1;
+		ar << nested;
+		std::cout << json.str();
+	}
 
-	std::cout << json.str();
+	{
+		TestReadWrite rw;
+		rw.m1 = false;
+		rw.m2 = true;
+
+		std::stringstream json;
+		storm::json::OutputArchive out(json);
+		out << rw;
+		std::cout << json.str();
+
+		rw.m1 = true;
+		rw.m2 = false;
+		storm::json::InputArchive in(json);
+		in >> rw;
+		CHECK(rw.m1 == false);
+		CHECK(rw.m2 == true);
+	}
 }
 
 int main()
