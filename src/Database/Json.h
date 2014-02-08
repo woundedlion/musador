@@ -191,12 +191,14 @@ namespace storm {
 
 			template <typename T> struct Traits;
 			template <> struct Traits<bool> { static const Type type_id = Type::BOOL; };
+
 			template <> struct Traits<std::string> { static const Type type_id = Type::STRING; };
 			template <> struct Traits<std::wstring> { static const Type type_id = Type::WSTRING; };
 			template <> struct Traits<char> { static const Type type_id = Type::CHAR; };
 			template <> struct Traits<wchar_t> { static const Type type_id = Type::WCHAR; };
 			template <> struct Traits<char *> { static const Type type_id = Type::CHAR_P; };
 			template <> struct Traits<wchar_t *> { static const Type type_id = Type::WCHAR_P; };
+			
 			template <> struct Traits<uint32_t> { static const Type type_id = Type::UINT32; };
 			template <> struct Traits<uint64_t> { static const Type type_id = Type::UINT64; };
 			template <> struct Traits<int> { static const Type type_id = Type::INT; };

@@ -1,6 +1,6 @@
 #include <cstdint>
 
-#include "UnitTest++.h"
+#include "UnitTest++/UnitTest++.h"
 #include "Database/Storm.h"
 #include "Logger/Logger.h"
 #include "Utilities/Util.h"
