@@ -8,7 +8,7 @@ INCLUDE_DIRECTORIES(
 			${CMAKE_BINARY_DIR}/src/3rdParty/taglib
 			${CMAKE_SOURCE_DIR}/src/3rdParty/taglib/taglib/toolkit
 			${CMAKE_SOURCE_DIR}/src/3rdParty/boost
-			${CMAKE_SOURCE_DIR}/src/3rdParty/UnitTest++
+			${CMAKE_SOURCE_DIR}/src/3rdParty/UnitTest++/src
 )
 	
 SOURCE_GROUP("Header Files" REGULAR_EXPRESSION ".*\\.h")

@@ -1,4 +1,6 @@
-#include "UnitTest++/UnitTest++.h"
+#include <cstdint>
+
+#include "UnitTest++.h"
 #include "Database/Storm.h"
 #include "Logger/Logger.h"
 #include "Utilities/Util.h"
@@ -93,12 +95,29 @@ public:
 
 struct TestReadWrite
 {
-	TestReadWrite() : m1(true), m2(false) {}
+	TestReadWrite() : m1(false), m2(0), m3(0), m4(0), m5(0), m6(0), m7(0)
+	{}
+
+	bool operator==(const TestReadWrite& r)
+	{
+		return r.m1 == m1
+			&& r.m2 == m2
+			&& r.m3 == m3
+			&& r.m4 == m4
+			&& r.m5 == m5
+			&& r.m6 == m6
+			&& r.m7 == m7;
+	}
 
 	bool m1;
-	bool m2;
+	int m2;
+	int64_t m3;
+	uint32_t m4;
+	uint64_t m5;
+	float m6;
+	double m7;
 
-	STORM_SERIALIZE(m1, m2);
+	STORM_SERIALIZE(m1, m2, m3, m4, m5, m6, m7);
 };
 
 struct TestNested {
@@ -238,7 +257,6 @@ TEST_FIXTURE(Fixture, test_sqlite)
 		LOG(Error) << e.what();
 	}
 }
-
 
 TEST(test_sqlite_archive)
 {
@@ -423,18 +441,17 @@ TEST(test_json_archive)
 		TestReadWrite rw;
 		rw.m1 = false;
 		rw.m2 = true;
+		rw.m3 = 12345;
 
 		std::stringstream json;
 		storm::json::OutputArchive out(json);
 		out << rw;
 		std::cout << json.str();
 
-		rw.m1 = true;
-		rw.m2 = false;
+		TestReadWrite rw2;
 		storm::json::InputArchive in(json);
-		in >> rw;
-		CHECK(rw.m1 == false);
-		CHECK(rw.m2 == true);
+		in >> rw2;
+		CHECK(rw == rw2);
 	}
 }
 

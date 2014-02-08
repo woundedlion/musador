@@ -188,6 +188,22 @@ namespace storm {
 				STRING, WSTRING, CHAR, WCHAR, CHAR_P, WCHAR_P, 
 				UINT32, UINT64, INT, INT64, FLOAT, DOUBLE
 			};
+
+			template <typename T> struct Traits;
+			template <> struct Traits<bool> { static const Type type_id = Type::BOOL; };
+			template <> struct Traits<std::string> { static const Type type_id = Type::STRING; };
+			template <> struct Traits<std::wstring> { static const Type type_id = Type::WSTRING; };
+			template <> struct Traits<char> { static const Type type_id = Type::CHAR; };
+			template <> struct Traits<wchar_t> { static const Type type_id = Type::WCHAR; };
+			template <> struct Traits<char *> { static const Type type_id = Type::CHAR_P; };
+			template <> struct Traits<wchar_t *> { static const Type type_id = Type::WCHAR_P; };
+			template <> struct Traits<uint32_t> { static const Type type_id = Type::UINT32; };
+			template <> struct Traits<uint64_t> { static const Type type_id = Type::UINT64; };
+			template <> struct Traits<int> { static const Type type_id = Type::INT; };
+			template <> struct Traits<int64_t> { static const Type type_id = Type::INT64; };
+			template <> struct Traits<float> { static const Type type_id = Type::FLOAT; };
+			template <> struct Traits<double> { static const Type type_id = Type::DOUBLE; };
+
 			typedef std::vector<Type> TypeList;
 			typedef std::function<void (void *)> ReadFunc;
 			typedef std::pair<Type, ReadFunc> TypedReader;
@@ -202,12 +218,12 @@ namespace storm {
 				SAXHandler(ReaderQueue& readers) : readers(readers) {}
 
 				void Null() {}
-				void Bool(bool b) { copy({ Type::BOOL }, &b); }
-				void Int(int i) {}
-				void Uint(unsigned i) {}
-				void Int64(int64_t i) {}
-				void Uint64(uint64_t i) {}
-				void Double(double d) {}
+				void Bool(bool v) { copy({ Type::BOOL }, &v); }
+				void Int(int v) { copy({ Type::INT, Type::INT64 }, &v); }
+				void Uint(unsigned v) { copy({ Type::UINT32, Type::UINT64, Type::INT, Type::INT64, Type::FLOAT, Type::DOUBLE }, &v); }
+				void Int64(int64_t v) { copy({ Type::INT64 }, &v); }
+				void Uint64(uint64_t v) { copy({ Type::UINT64 }, &v); }
+				void Double(double v) { copy({ Type::FLOAT, Type::DOUBLE}, &v); }
 				void String(const char* str, size_t length, bool copy) {}
 
 				void StartObject() {}
@@ -251,31 +267,24 @@ namespace storm {
 				}
 			}
 
+			template <typename T>
+			inline TypedReader read_into(T& dst)
+			{
+				return std::make_pair(Traits<T>::type_id, [&](void *src)
+				{
+					dst = *reinterpret_cast<std::remove_reference<decltype(dst)>::type *>(src);
+				});
+			}
+
 			inline TypedReader read_into(std::string& v) { }
 			inline TypedReader read_into(std::wstring& v) { }
 			inline TypedReader read_into(char& v) {  }
 			inline TypedReader read_into(wchar_t& v) { }
-
-			inline TypedReader read_into(bool& dst)
-			{
-				return std::make_pair(Type::BOOL, [&](void *src)
-				{
-					dst = *reinterpret_cast<bool *>(src);
-				});
-			}
-
 			inline TypedReader read_into(char *& v) { }
 			inline TypedReader read_into(wchar_t *& v) { }
-			inline TypedReader read_into(uint32_t& v) { }
-			inline TypedReader read_into(uint64_t& v) { }
-			inline TypedReader read_into(int& v) { }
-			inline TypedReader read_into(int64_t& v) { }
-			inline TypedReader read_into(float& v) { }
-			inline TypedReader read_into(double& v) { }
 
 			InputStreamWrapper in;
 			ReaderQueue readers;
 		};
-
 	}
 }
