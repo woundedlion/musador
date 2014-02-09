@@ -109,6 +109,8 @@ struct TestReadWrite
 			&& r.m7 == m7
 			&& r.m8 == m8
 			&& r.m9 == m9
+			&& r.m10 == m10
+			&& r.m11 == m11
 			;
 	}
 
@@ -121,8 +123,10 @@ struct TestReadWrite
 	double m7 = 0;
 	std::string m8;
 	std::wstring m9;
+	char m10 = 'a';
+	char m11 = 'b';
 
-	STORM_SERIALIZE(m1, m2, m3, m4, m5, m6, m7, m8, m9);
+	STORM_SERIALIZE(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11);
 };
 
 struct TestNested {

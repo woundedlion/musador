@@ -50,6 +50,7 @@ namespace storm {
 			case Type::BOOL:
 				assign(*reinterpret_cast<bool *>(dst.value), src);
 				break;
+
 			case Type::UINT32:
 				assign(*reinterpret_cast<uint32_t *>(dst.value), src);
 				break;
@@ -68,6 +69,7 @@ namespace storm {
 			case Type::DOUBLE:
 				assign(*reinterpret_cast<double *>(dst.value), src);
 				break;
+
 			case Type::STRING:
 				assign(*reinterpret_cast<std::string *>(dst.value), src);
 				break;
