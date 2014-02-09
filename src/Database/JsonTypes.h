@@ -2,6 +2,7 @@
 
 #include <string>
 #include <cstdint>
+#include <type_traits>
 
 namespace storm {
 	namespace json {
@@ -70,30 +71,28 @@ namespace storm {
 		}
 
 		template <typename Dst, typename Src>
-		void assign(Dst& dst, const Src& src)
+		void assign(Dst& dst, const Src& src, typename std::enable_if<std::is_same<Dst, Src>::value >::type* = 0)
 		{
-			throw std::runtime_error("Parse Error: Type mismatch!");
+			dst = src;
 		}
 
-		void assign(bool& dst, bool src) { dst = src; }
+		template <typename Dst, typename Src>
+		void assign(Dst& dst, const Src& src, typename std::enable_if<!std::is_same<Dst, Src>::value >::type* = 0)
+		{
+				throw std::runtime_error("Parse Error: Type mismatch!");
+		}
 
-		void assign(uint32_t& dst, uint32_t src) { dst = src; }
-
-		void assign(uint64_t& dst, uint64_t src) { dst = src; }
-		void assign(uint64_t& dst, uint32_t src) { dst = src; }
-
-		void assign(int& dst, int src) { dst = src; }
 		void assign(int& dst, uint32_t src) { dst = static_cast<int>(src); }
 
-		void assign(int64_t& dst, int64_t src) { dst = src; }
-		void assign(int64_t& dst, int src) { dst = src; }
-		void assign(int64_t& dst, uint32_t src) { dst = src; }
+		void assign(int64_t& dst, uint32_t src) { dst = static_cast<int>(src); }
+		void assign(int64_t& dst, int src) { dst = static_cast<int>(src); }
+
+		void assign(uint64_t& dst, uint32_t src) { dst = src; }
 
 		void assign(float& dst, double src) { dst = static_cast<float>(src); }
 		void assign(float& dst, int src) { dst = static_cast<float>(src); }
 		void assign(float& dst, uint32_t src) { dst = static_cast<float>(src); }
 
-		void assign(double& dst, double src) { dst = src; }
 		void assign(double& dst, int src) { dst = static_cast<double>(src); }
 		void assign(double& dst, int64_t src) { dst = static_cast<double>(src); }
 		void assign(double& dst, uint32_t src) { dst = static_cast<double>(src); }

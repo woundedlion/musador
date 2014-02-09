@@ -439,9 +439,13 @@ TEST(test_json_archive)
 
 	{
 		TestReadWrite rw;
-		rw.m1 = false;
-		rw.m2 = true;
-		rw.m3 = 12345;
+		rw.m1 = true;
+		rw.m2 = 123;
+		rw.m3 = -456;
+		rw.m4 = 789;
+		rw.m5 = 123;
+		rw.m6 = 456;
+		rw.m7 = 0;
 
 		std::stringstream json;
 		storm::json::OutputArchive out(json);
