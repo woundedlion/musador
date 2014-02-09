@@ -76,6 +76,13 @@ namespace storm {
 			case Type::WSTRING:
 				assign(*reinterpret_cast<std::wstring *>(dst.value), src);
 				break;
+			case Type::CHAR:
+				assign(*reinterpret_cast<char *>(dst.value), src);
+				break;
+			case Type::WCHAR:
+				assign(*reinterpret_cast<wchar_t *>(dst.value), src);
+				break;
+
 			default:
 				throw std::runtime_error("Parse Error: Unsupported type");
 			}
@@ -110,5 +117,7 @@ namespace storm {
 		void assign(double& dst, uint64_t src) { dst = static_cast<double>(src); }
 
 		void assign(std::wstring& dst, const std::string& src) { dst = Util::utf8ToUnicode(src);  }
+		void assign(char& dst, const std::string& src) { dst = src.empty() ? '\0' : src[0]; }
+		void assign(wchar_t& dst, const std::string& src) { dst = (src.empty() ? L'\0' : Util::utf8ToUnicode(src[0])[0]); }
 	}
 }
