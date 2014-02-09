@@ -4,19 +4,29 @@
 #include <cstdint>
 #include <type_traits>
 
+#include "Utilities/Util.h"
+
 namespace storm {
 	namespace json {
 
 		enum class Type
 		{
 			BOOL,
-			STRING, WSTRING, CHAR, WCHAR, CHAR_P, WCHAR_P,
 			UINT32, UINT64, INT, INT64, FLOAT, DOUBLE,
+			STRING, WSTRING, CHAR, WCHAR, CHAR_P, WCHAR_P,
 			NUM_TYPES
 		};
 
 		template <typename T> struct Traits;
+
 		template <> struct Traits<bool> { static const Type type_id = Type::BOOL; };
+		
+		template <> struct Traits<uint32_t> { static const Type type_id = Type::UINT32; };
+		template <> struct Traits<uint64_t> { static const Type type_id = Type::UINT64; };
+		template <> struct Traits<int> { static const Type type_id = Type::INT; };
+		template <> struct Traits<int64_t> { static const Type type_id = Type::INT64; };
+		template <> struct Traits<float> { static const Type type_id = Type::FLOAT; };
+		template <> struct Traits<double> { static const Type type_id = Type::DOUBLE; };
 
 		template <> struct Traits<std::string> { static const Type type_id = Type::STRING; };
 		template <> struct Traits<std::wstring> { static const Type type_id = Type::WSTRING; };
@@ -24,13 +34,6 @@ namespace storm {
 		template <> struct Traits<wchar_t> { static const Type type_id = Type::WCHAR; };
 		template <> struct Traits<char *> { static const Type type_id = Type::CHAR_P; };
 		template <> struct Traits<wchar_t *> { static const Type type_id = Type::WCHAR_P; };
-
-		template <> struct Traits<uint32_t> { static const Type type_id = Type::UINT32; };
-		template <> struct Traits<uint64_t> { static const Type type_id = Type::UINT64; };
-		template <> struct Traits<int> { static const Type type_id = Type::INT; };
-		template <> struct Traits<int64_t> { static const Type type_id = Type::INT64; };
-		template <> struct Traits<float> { static const Type type_id = Type::FLOAT; };
-		template <> struct Traits<double> { static const Type type_id = Type::DOUBLE; };
 
 		struct TypeValue
 		{
@@ -65,6 +68,12 @@ namespace storm {
 			case Type::DOUBLE:
 				assign(*reinterpret_cast<double *>(dst.value), src);
 				break;
+			case Type::STRING:
+				assign(*reinterpret_cast<std::string *>(dst.value), src);
+				break;
+			case Type::WSTRING:
+				assign(*reinterpret_cast<std::wstring *>(dst.value), src);
+				break;
 			default:
 				throw std::runtime_error("Parse Error: Unsupported type");
 			}
@@ -85,7 +94,7 @@ namespace storm {
 		void assign(int& dst, uint32_t src) { dst = static_cast<int>(src); }
 
 		void assign(int64_t& dst, uint32_t src) { dst = static_cast<int>(src); }
-		void assign(int64_t& dst, int src) { dst = static_cast<int>(src); }
+		void assign(int64_t& dst, int src) { dst = src; }
 
 		void assign(uint64_t& dst, uint32_t src) { dst = src; }
 
@@ -97,5 +106,7 @@ namespace storm {
 		void assign(double& dst, int64_t src) { dst = static_cast<double>(src); }
 		void assign(double& dst, uint32_t src) { dst = static_cast<double>(src); }
 		void assign(double& dst, uint64_t src) { dst = static_cast<double>(src); }
+
+		void assign(std::wstring& dst, const std::string& src) { dst = Util::utf8ToUnicode(src);  }
 	}
 }

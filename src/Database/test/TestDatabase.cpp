@@ -95,7 +95,7 @@ public:
 
 struct TestReadWrite
 {
-	TestReadWrite() : m1(false), m2(0), m3(0), m4(0), m5(0), m6(0), m7(0)
+	TestReadWrite()
 	{}
 
 	bool operator==(const TestReadWrite& r)
@@ -106,18 +106,23 @@ struct TestReadWrite
 			&& r.m4 == m4
 			&& r.m5 == m5
 			&& r.m6 == m6
-			&& r.m7 == m7;
+			&& r.m7 == m7
+			&& r.m8 == m8
+			&& r.m9 == m9
+			;
 	}
 
-	bool m1;
-	int m2;
-	int64_t m3;
-	uint32_t m4;
-	uint64_t m5;
-	float m6;
-	double m7;
+	bool m1 = false;
+	int m2 = 0;
+	int64_t m3 = 0;
+	uint32_t m4 = 0;
+	uint64_t m5 = 0;
+	float m6 = 0;
+	double m7 = 0;
+	std::string m8;
+	std::wstring m9;
 
-	STORM_SERIALIZE(m1, m2, m3, m4, m5, m6, m7);
+	STORM_SERIALIZE(m1, m2, m3, m4, m5, m6, m7, m8, m9);
 };
 
 struct TestNested {
@@ -446,15 +451,23 @@ TEST(test_json_archive)
 		rw.m5 = 123;
 		rw.m6 = 456;
 		rw.m7 = 0;
+		rw.m8 = "foo";
+		rw.m9 = L"bar";
 
 		std::stringstream json;
 		storm::json::OutputArchive out(json);
 		out << rw;
 		std::cout << json.str();
-
+	
 		TestReadWrite rw2;
 		storm::json::InputArchive in(json);
 		in >> rw2;
+
+		json.str("");
+		json.clear();
+		out << rw2;
+		std::cout << json.str();
+
 		CHECK(rw == rw2);
 	}
 }
