@@ -12,6 +12,9 @@
 
 // TODO: remove Util dependency
 #include "Utilities/Util.h"
+
+#include "JsonTypes.h"
+
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/reader.h"
@@ -167,7 +170,7 @@ namespace storm {
 					boost::serialization::version<T>::value);
 
 				rapidjson::Reader parser;
-				parser.Parse<rapidjson::kParseValidateEncodingFlag>(in, SAXHandler(readers));
+				parser.Parse<rapidjson::kParseValidateEncodingFlag>(in, SAXHandler(out));
 				check_underrun();
 
 				return *this;
@@ -176,40 +179,13 @@ namespace storm {
 			template <typename T>
 			InputArchive& operator &(const boost::serialization::nvp<T>& t)
 			{
-				readers.push(read_into(t.value()));
+				out.push(make_tv(t.value()));
 				return *this;
 			}
 
 		private:
 
-			enum class Type
-			{
-				BOOL,
-				STRING, WSTRING, CHAR, WCHAR, CHAR_P, WCHAR_P, 
-				UINT32, UINT64, INT, INT64, FLOAT, DOUBLE
-			};
-
-			template <typename T> struct Traits;
-			template <> struct Traits<bool> { static const Type type_id = Type::BOOL; };
-
-			template <> struct Traits<std::string> { static const Type type_id = Type::STRING; };
-			template <> struct Traits<std::wstring> { static const Type type_id = Type::WSTRING; };
-			template <> struct Traits<char> { static const Type type_id = Type::CHAR; };
-			template <> struct Traits<wchar_t> { static const Type type_id = Type::WCHAR; };
-			template <> struct Traits<char *> { static const Type type_id = Type::CHAR_P; };
-			template <> struct Traits<wchar_t *> { static const Type type_id = Type::WCHAR_P; };
-			
-			template <> struct Traits<uint32_t> { static const Type type_id = Type::UINT32; };
-			template <> struct Traits<uint64_t> { static const Type type_id = Type::UINT64; };
-			template <> struct Traits<int> { static const Type type_id = Type::INT; };
-			template <> struct Traits<int64_t> { static const Type type_id = Type::INT64; };
-			template <> struct Traits<float> { static const Type type_id = Type::FLOAT; };
-			template <> struct Traits<double> { static const Type type_id = Type::DOUBLE; };
-
-			typedef std::vector<Type> TypeList;
-			typedef std::function<void (void *)> ReadFunc;
-			typedef std::pair<Type, ReadFunc> TypedReader;
-			typedef std::queue<TypedReader> ReaderQueue;
+			typedef std::queue<TypeValue> TypeValueQueue;
 
 			class SAXHandler
 			{
@@ -217,16 +193,18 @@ namespace storm {
 
 				typedef char Ch;
 
-				SAXHandler(ReaderQueue& readers) : readers(readers) {}
+				SAXHandler(TypeValueQueue& out) : out(out) {}
 
 				void Null() {}
-				void Bool(bool v) { copy({ Type::BOOL }, &v); }
-				void Int(int v) { copy({ Type::INT, Type::INT64 }, &v); }
-				void Uint(unsigned v) { copy({ Type::UINT32, Type::UINT64, Type::INT, Type::INT64, Type::FLOAT, Type::DOUBLE }, &v); }
-				void Int64(int64_t v) { copy({ Type::INT64 }, &v); }
-				void Uint64(uint64_t v) { copy({ Type::UINT64 }, &v); }
-				void Double(double v) { copy({ Type::FLOAT, Type::DOUBLE}, &v); }
-				void String(const char* str, size_t length, bool copy) {}
+				void Bool(bool v) { assign_from(v); }
+				void Int(int v) { assign_from(v); }
+				void Uint(unsigned v) { assign_from(v); }
+				void Int64(int64_t v) { assign_from(v); }
+				void Uint64(uint64_t v) { assign_from(v); }
+				void Double(double v) { assign_from(v); }
+				void String(const char* str, size_t length, bool copy) { 
+					assign_from(std::string(str, str + length));
+				}
 
 				void StartObject() {}
 				void EndObject(size_t memberCount) {}
@@ -235,58 +213,42 @@ namespace storm {
 
 			private:
 
-				void copy(const TypeList& valid_types, void *src)
+				template <typename T>
+				void assign_from(const T& src)
 				{
-					check_overrun();
-					check_type(valid_types);
-					readers.front().second(src);
-					readers.pop();
+					if (++value_count % 2 == 0) {
+						check_overrun();
+						assign_to(out.front(), src);
+						out.pop();
+					}
 				}
 
 				inline void check_overrun()
 				{
-					if (readers.empty()) {
+					if (out.empty()) {
 						throw std::runtime_error("Parse error: source data too large");
 					}
 				}
 
-				void check_type(const TypeList& valid_types)
-				{
-					if (std::find(valid_types.begin(), valid_types.end(),
-						readers.front().first) == valid_types.end())
-					{
-						throw std::runtime_error("Parse Error: type mismatch");
-					}
-				}
-
-				ReaderQueue& readers;
+				TypeValueQueue& out;
+				size_t value_count = 0;
 			};
+
+			template <typename T>
+			inline TypeValue make_tv(T& dst)
+			{
+				return TypeValue(Traits<T>::type_id, &dst);
+			}
 
 			inline void check_underrun()
 			{
-				if (!readers.empty()) {
+				if (!out.empty()) {
 					throw std::runtime_error("Parse error: source data incomplete");
 				}
 			}
 
-			template <typename T>
-			inline TypedReader read_into(T& dst)
-			{
-				return std::make_pair(Traits<T>::type_id, [&](void *src)
-				{
-					dst = *reinterpret_cast<std::remove_reference<decltype(dst)>::type *>(src);
-				});
-			}
-
-			inline TypedReader read_into(std::string& v) { }
-			inline TypedReader read_into(std::wstring& v) { }
-			inline TypedReader read_into(char& v) {  }
-			inline TypedReader read_into(wchar_t& v) { }
-			inline TypedReader read_into(char *& v) { }
-			inline TypedReader read_into(wchar_t *& v) { }
-
 			InputStreamWrapper in;
-			ReaderQueue readers;
+			TypeValueQueue out;
 		};
 	}
 }
