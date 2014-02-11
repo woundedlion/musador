@@ -82,6 +82,12 @@ namespace storm {
 			case Type::WCHAR:
 				assign(*reinterpret_cast<wchar_t *>(dst.value), src);
 				break;
+			case Type::CHAR_P:
+				assign(*reinterpret_cast<char **>(dst.value), src);
+				break;
+			case Type::WCHAR_P:
+				assign(*reinterpret_cast<wchar_t **>(dst.value), src);
+				break;
 
 			default:
 				throw std::runtime_error("Parse Error: Unsupported type");
@@ -101,23 +107,39 @@ namespace storm {
 		}
 
 		void assign(int& dst, uint32_t src) { dst = static_cast<int>(src); }
-
-		void assign(int64_t& dst, uint32_t src) { dst = static_cast<int>(src); }
+		void assign(int64_t& dst, uint32_t src) { dst = static_cast<int64_t>(src); }
+		void assign(int64_t& dst, uint64_t src) { dst = static_cast<int64_t>(src); }
 		void assign(int64_t& dst, int src) { dst = src; }
-
 		void assign(uint64_t& dst, uint32_t src) { dst = src; }
-
 		void assign(float& dst, double src) { dst = static_cast<float>(src); }
 		void assign(float& dst, int src) { dst = static_cast<float>(src); }
 		void assign(float& dst, uint32_t src) { dst = static_cast<float>(src); }
-
 		void assign(double& dst, int src) { dst = static_cast<double>(src); }
 		void assign(double& dst, int64_t src) { dst = static_cast<double>(src); }
 		void assign(double& dst, uint32_t src) { dst = static_cast<double>(src); }
 		void assign(double& dst, uint64_t src) { dst = static_cast<double>(src); }
-
 		void assign(std::wstring& dst, const std::string& src) { dst = Util::utf8ToUnicode(src);  }
 		void assign(char& dst, const std::string& src) { dst = src.empty() ? '\0' : src[0]; }
 		void assign(wchar_t& dst, const std::string& src) { dst = (src.empty() ? L'\0' : Util::utf8ToUnicode(src[0])[0]); }
+
+		void assign(char *& dst, const std::string& src) 
+		{ 
+			if (dst) {
+				throw std::runtime_error("Parse Error: cannot deserialize to a non-NULL pointer");
+			}
+			dst = new char[src.size() + 1];
+			memcpy(dst, src.c_str(), src.size());
+			dst[src.size()] = '\0';
+		}
+
+		void assign(wchar_t *& dst, const std::string& src)
+		{
+			if (dst) {
+				throw std::runtime_error("Parse Error: cannot deserialize to a non-NULL pointer");
+			}
+			dst = new wchar_t[src.size() + 1];
+			memcpy(dst, src.c_str(), src.size());
+			dst[src.size()] = L'\0';
+		}
 	}
 }

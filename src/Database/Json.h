@@ -136,8 +136,8 @@ namespace storm {
 			inline void write_value(uint64_t v) { writer.Uint64(v); }
 			inline void write_value(int v) { writer.Int(v); }
 			inline void write_value(int64_t v) { writer.Int64(v); }
-			inline void write_value(float v) { writer.Double(v); }
-			inline void write_value(double v) { writer.Double(v); }
+			inline void write_value(float v) { writer.Double(v, std::numeric_limits<float>::max_digits10); }
+			inline void write_value(double v) { writer.Double(v, std::numeric_limits<double>::max_digits10); }
 
 			std::ostream& out;
 			rapidjson::StringBuffer buf;

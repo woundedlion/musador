@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <limits>
 
 #include "UnitTest++/UnitTest++.h"
 #include "Database/Storm.h"
@@ -105,13 +106,19 @@ struct TestReadWrite
 			&& r.m3 == m3
 			&& r.m4 == m4
 			&& r.m5 == m5
-			&& r.m6 == m6
-			&& r.m7 == m7
+			&& equals(r.m6, m6)
+			&& equals(r.m7, m7)
 			&& r.m8 == m8
 			&& r.m9 == m9
 			&& r.m10 == m10
 			&& r.m11 == m11
 			;
+	}
+
+	template <typename T>
+	bool equals(T t1, T t2)
+	{
+		return fabs(t1 - t2) < std::numeric_limits<T>::epsilon();
 	}
 
 	bool m1 = false;
@@ -449,12 +456,12 @@ TEST(test_json_archive)
 	{
 		TestReadWrite rw;
 		rw.m1 = true;
-		rw.m2 = 123;
-		rw.m3 = -456;
-		rw.m4 = 789;
-		rw.m5 = 123;
-		rw.m6 = 456;
-		rw.m7 = 0;
+		rw.m2 = 1;
+		rw.m3 = -1;
+		rw.m4 = 1;
+		rw.m5 = 1;
+		rw.m6 = 1;
+		rw.m7 = 1;
 		rw.m8 = "foo";
 		rw.m9 = L"bar";
 
@@ -462,16 +469,84 @@ TEST(test_json_archive)
 		storm::json::OutputArchive out(json);
 		out << rw;
 		std::cout << json.str();
-	
 		TestReadWrite rw2;
 		storm::json::InputArchive in(json);
 		in >> rw2;
-
 		json.str("");
 		json.clear();
 		out << rw2;
 		std::cout << json.str();
+		CHECK(rw == rw2);
+	}
 
+	{
+		TestReadWrite rw;
+		rw.m1 = true;
+		rw.m2 = std::numeric_limits<decltype(rw.m2)>::max();
+		rw.m3 = std::numeric_limits<decltype(rw.m3)>::max();
+		rw.m4 = std::numeric_limits<decltype(rw.m4)>::max();
+		rw.m5 = std::numeric_limits<decltype(rw.m5)>::max();
+		rw.m6 = std::numeric_limits<decltype(rw.m6)>::max();
+		rw.m7 = std::numeric_limits<decltype(rw.m7)>::max();
+		rw.m8 = "foo";
+		rw.m9 = L"bar";
+
+		std::stringstream json;
+		storm::json::OutputArchive out(json);
+		out << rw;
+		std::cout << json.str();
+		TestReadWrite rw2;
+		storm::json::InputArchive in(json);
+		in >> rw2;
+		json.str("");
+		json.clear();
+		out << rw2;
+		std::cout << json.str();
+		CHECK(rw == rw2);
+	}
+
+	{
+		TestReadWrite rw;
+		rw.m1 = true;
+		rw.m2 = std::numeric_limits<decltype(rw.m2)>::lowest();
+		rw.m3 = std::numeric_limits<decltype(rw.m3)>::lowest();
+		rw.m4 = std::numeric_limits<decltype(rw.m4)>::lowest();
+		rw.m5 = std::numeric_limits<decltype(rw.m5)>::lowest();
+		rw.m6 = std::numeric_limits<decltype(rw.m6)>::lowest();
+		rw.m7 = std::numeric_limits<decltype(rw.m7)>::lowest();
+		rw.m8 = "foo";
+		rw.m9 = L"bar";
+
+		std::stringstream json;
+		storm::json::OutputArchive out(json);
+		out << rw;
+		std::cout << json.str();
+		TestReadWrite rw2;
+		storm::json::InputArchive in(json);
+		in >> rw2;
+		json.str("");
+		json.clear();
+		out << rw2;
+		std::cout << json.str();
+		CHECK(rw == rw2);
+	}
+
+	{
+		TestReadWrite rw;
+		rw.m6 = std::numeric_limits<decltype(rw.m6)>::epsilon();
+		rw.m7 = std::numeric_limits<decltype(rw.m7)>::epsilon();
+
+		std::stringstream json;
+		storm::json::OutputArchive out(json);
+		out << rw;
+		std::cout << json.str();
+		TestReadWrite rw2;
+		storm::json::InputArchive in(json);
+		in >> rw2;
+		json.str("");
+		json.clear();
+		out << rw2;
+		std::cout << json.str();
 		CHECK(rw == rw2);
 	}
 }
