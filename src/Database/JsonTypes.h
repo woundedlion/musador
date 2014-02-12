@@ -2,6 +2,8 @@
 
 #include <string>
 #include <cstdint>
+#include <cstddef>
+#include <stdexcept>
 #include <type_traits>
 
 #include "Utilities/Util.h"
@@ -13,7 +15,7 @@ namespace storm {
 		{
 			BOOL,
 			UINT32, UINT64, INT, INT64, FLOAT, DOUBLE,
-			STRING, WSTRING, CHAR, WCHAR, CHAR_P, WCHAR_P,
+			STRING, WSTRING, CHAR, WCHAR,
 			NUM_TYPES
 		};
 
@@ -32,8 +34,6 @@ namespace storm {
 		template <> struct Traits<std::wstring> { static const Type type_id = Type::WSTRING; };
 		template <> struct Traits<char> { static const Type type_id = Type::CHAR; };
 		template <> struct Traits<wchar_t> { static const Type type_id = Type::WCHAR; };
-		template <> struct Traits<char *> { static const Type type_id = Type::CHAR_P; };
-		template <> struct Traits<wchar_t *> { static const Type type_id = Type::WCHAR_P; };
 
 		struct TypeValue
 		{
@@ -82,12 +82,6 @@ namespace storm {
 			case Type::WCHAR:
 				assign(*reinterpret_cast<wchar_t *>(dst.value), src);
 				break;
-			case Type::CHAR_P:
-				assign(*reinterpret_cast<char **>(dst.value), src);
-				break;
-			case Type::WCHAR_P:
-				assign(*reinterpret_cast<wchar_t **>(dst.value), src);
-				break;
 
 			default:
 				throw std::runtime_error("Parse Error: Unsupported type");
@@ -121,25 +115,5 @@ namespace storm {
 		void assign(std::wstring& dst, const std::string& src) { dst = Util::utf8ToUnicode(src);  }
 		void assign(char& dst, const std::string& src) { dst = src.empty() ? '\0' : src[0]; }
 		void assign(wchar_t& dst, const std::string& src) { dst = (src.empty() ? L'\0' : Util::utf8ToUnicode(src[0])[0]); }
-
-		void assign(char *& dst, const std::string& src) 
-		{ 
-			if (dst) {
-				throw std::runtime_error("Parse Error: cannot deserialize to a non-NULL pointer");
-			}
-			dst = new char[src.size() + 1];
-			memcpy(dst, src.c_str(), src.size());
-			dst[src.size()] = '\0';
-		}
-
-		void assign(wchar_t *& dst, const std::string& src)
-		{
-			if (dst) {
-				throw std::runtime_error("Parse Error: cannot deserialize to a non-NULL pointer");
-			}
-			dst = new wchar_t[src.size() + 1];
-			memcpy(dst, src.c_str(), src.size());
-			dst[src.size()] = L'\0';
-		}
 	}
 }

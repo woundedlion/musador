@@ -171,8 +171,6 @@ namespace storm {
 
 				rapidjson::Reader parser;
 				parser.Parse<rapidjson::kParseValidateEncodingFlag>(in, SAXHandler(out));
-				check_underrun();
-
 				return *this;
 			}
 
@@ -194,8 +192,9 @@ namespace storm {
 				typedef char Ch;
 
 				SAXHandler(TypeValueQueue& out) : out(out) {}
+				~SAXHandler() { check_underrun(); }
 
-				void Null() {}
+				void Null() { assign_from(nullptr);  }
 				void Bool(bool v) { assign_from(v); }
 				void Int(int v) { assign_from(v); }
 				void Uint(unsigned v) { assign_from(v); }
@@ -206,8 +205,8 @@ namespace storm {
 					assign_from(std::string(str, str + length));
 				}
 
-				void StartObject() {}
-				void EndObject(size_t memberCount) {}
+				void StartObject() { ++indirection_lvl; }
+				void EndObject(size_t memberCount) { --indirection_lvl; }
 				void StartArray() {}
 				void EndArray(size_t elementCount) {}
 
@@ -230,21 +229,25 @@ namespace storm {
 					}
 				}
 
+				inline void check_underrun()
+				{
+					if (!out.empty()) {
+						throw std::runtime_error("Parse error: source data incomplete");
+					}
+					if (indirection_lvl) {
+						throw std::runtime_error("Parse error: Nesting too deep at eos");
+					}
+				}
+
 				TypeValueQueue& out;
 				size_t value_count = 0;
+				size_t indirection_lvl = 0;
 			};
 
 			template <typename T>
 			inline TypeValue make_tv(T& dst)
 			{
 				return TypeValue(Traits<T>::type_id, &dst);
-			}
-
-			inline void check_underrun()
-			{
-				if (!out.empty()) {
-					throw std::runtime_error("Parse error: source data incomplete");
-				}
 			}
 
 			InputStreamWrapper in;
