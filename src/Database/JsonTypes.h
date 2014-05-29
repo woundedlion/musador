@@ -5,88 +5,60 @@
 #include <cstddef>
 #include <stdexcept>
 #include <type_traits>
+#include <boost/variant.hpp>
 
 #include "Utilities/Util.h"
 
 namespace storm {
 	namespace json {
 
-		enum class Type
+		struct Object
 		{
-			BOOL,
-			UINT32, UINT64, INT, INT64, FLOAT, DOUBLE,
-			STRING, WSTRING, CHAR, WCHAR,
-			NUM_TYPES
+			size_t items = 0;
 		};
 
-		template <typename T> struct Traits;
-
-		template <> struct Traits<bool> { static const Type type_id = Type::BOOL; };
-		
-		template <> struct Traits<uint32_t> { static const Type type_id = Type::UINT32; };
-		template <> struct Traits<uint64_t> { static const Type type_id = Type::UINT64; };
-		template <> struct Traits<int> { static const Type type_id = Type::INT; };
-		template <> struct Traits<int64_t> { static const Type type_id = Type::INT64; };
-		template <> struct Traits<float> { static const Type type_id = Type::FLOAT; };
-		template <> struct Traits<double> { static const Type type_id = Type::DOUBLE; };
-
-		template <> struct Traits<std::string> { static const Type type_id = Type::STRING; };
-		template <> struct Traits<std::wstring> { static const Type type_id = Type::WSTRING; };
-		template <> struct Traits<char> { static const Type type_id = Type::CHAR; };
-		template <> struct Traits<wchar_t> { static const Type type_id = Type::WCHAR; };
-
-		struct TypeValue
+		struct Array
 		{
-			TypeValue(Type type, void *value) : type(type), value(value) {}
-
-			Type type;
-			void *value;
+			size_t items = 0;
 		};
 
-		template <typename T>
-		void assign_to(const TypeValue& dst, const T& src)
+		struct close_object : public boost::static_visitor<>
 		{
-			switch (dst.type) {
-			case Type::BOOL:
-				assign(*reinterpret_cast<bool *>(dst.value), src);
-				break;
+			close_object(size_t items) : items(items) {}
 
-			case Type::UINT32:
-				assign(*reinterpret_cast<uint32_t *>(dst.value), src);
-				break;
-			case Type::UINT64:
-				assign(*reinterpret_cast<uint64_t *>(dst.value), src);
-				break;
-			case Type::INT:
-				assign(*reinterpret_cast<int *>(dst.value), src);
-				break;
-			case Type::INT64:
-				assign(*reinterpret_cast<int64_t *>(dst.value), src);
-				break;
-			case Type::FLOAT:
-				assign(*reinterpret_cast<float *>(dst.value), src);
-				break;
-			case Type::DOUBLE:
-				assign(*reinterpret_cast<double *>(dst.value), src);
-				break;
-
-			case Type::STRING:
-				assign(*reinterpret_cast<std::string *>(dst.value), src);
-				break;
-			case Type::WSTRING:
-				assign(*reinterpret_cast<std::wstring *>(dst.value), src);
-				break;
-			case Type::CHAR:
-				assign(*reinterpret_cast<char *>(dst.value), src);
-				break;
-			case Type::WCHAR:
-				assign(*reinterpret_cast<wchar_t *>(dst.value), src);
-				break;
-
-			default:
-				throw std::runtime_error("Parse Error: Unsupported type");
+			void operator()(Object& obj) const
+			{
+				obj.items = items;
 			}
-		}
+
+			template <typename T>
+			void operator()(T& t) const
+			{
+				throw std::runtime_error("Parse Error: Unmatched object close");
+			}
+
+			const size_t items;
+		};
+
+		struct close_array : public boost::static_visitor<>
+		{
+			close_array(size_t items) : items(items) {}
+
+			void operator()(Array& arr) const
+			{
+				arr.items = items;
+			}
+			
+			template <typename T>
+			void operator()(T& t) const
+			{
+				throw std::runtime_error("Parse Error: Unmatched array close");
+			}
+
+			const size_t items;
+		};
+
+		typedef boost::variant<nullptr_t, bool, int, unsigned int, int64_t, uint64_t, double, std::string, Object, Array> Value;
 
 		template <typename Dst, typename Src>
 		void assign(Dst& dst, const Src& src, typename std::enable_if<std::is_same<Dst, Src>::value >::type* = 0)
@@ -97,7 +69,7 @@ namespace storm {
 		template <typename Dst, typename Src>
 		void assign(Dst& dst, const Src& src, typename std::enable_if<!std::is_same<Dst, Src>::value >::type* = 0)
 		{
-				throw std::runtime_error("Parse Error: Type mismatch!");
+			throw std::runtime_error("Parse Error: Type mismatch");
 		}
 
 		void assign(int& dst, uint32_t src) { dst = static_cast<int>(src); }

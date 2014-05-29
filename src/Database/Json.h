@@ -3,12 +3,12 @@
 #include <vector>
 #include <map>
 #include <queue>
+#include <stack>
 #include <cstdint>
 
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/version.hpp>
-#include <boost/spirit/home/support/detail/hold_any.hpp>
 
 // TODO: remove Util dependency
 #include "Utilities/Util.h"
@@ -128,7 +128,6 @@ namespace storm {
 			inline void write_value(std::wstring& v) { write_value(v.c_str()); }
 			inline void write_value(char v) { write_value(std::string(1, v)); }
 			inline void write_value(wchar_t v) { write_value(std::wstring(1, v)); }
-
 			inline void write_value(bool v) { writer.Bool(v); }
 			inline void write_value(const char *v) { writer.String(v); }
 			inline void write_value(const wchar_t *v) { writer.String(Util::unicodeToUtf8(v).c_str()); }
@@ -151,9 +150,12 @@ namespace storm {
 			typedef boost::mpl::bool_<false> is_saving;
 			typedef boost::mpl::bool_<true> is_loading;
 
-			InputArchive(std::istream& in) :
-				in(in)
-			{}
+			InputArchive(std::istream& is) :
+				in(is)
+			{
+				rapidjson::Reader parser;
+				parser.Parse<rapidjson::kParseValidateEncodingFlag>(in, SAXHandler(out));
+			}
 
 			template <typename T>
 			InputArchive& operator >>(T& t)
@@ -169,21 +171,25 @@ namespace storm {
 					t,
 					boost::serialization::version<T>::value);
 
-				rapidjson::Reader parser;
-				parser.Parse<rapidjson::kParseValidateEncodingFlag>(in, SAXHandler(out));
+				if (!out.empty()) {
+					throw std::runtime_error("Parse error: Source too long");
+				}
+
 				return *this;
 			}
 
 			template <typename T>
-			InputArchive& operator &(const boost::serialization::nvp<T>& t)
+			InputArchive& operator &(const boost::serialization::nvp<T>& dst)
 			{
-				out.push(make_tv(t.value()));
+				if (out.empty()) {
+					throw std::runtime_error("Parse error: Source too short");
+				}
+
+//				read_value(dst.value(), parsed.front());
 				return *this;
 			}
 
 		private:
-
-			typedef std::queue<TypeValue> TypeValueQueue;
 
 			class SAXHandler
 			{
@@ -191,67 +197,135 @@ namespace storm {
 
 				typedef char Ch;
 
-				SAXHandler(TypeValueQueue& out) : out(out) {}
-				~SAXHandler() { check_underrun(); }
+				SAXHandler(std::vector<Value>& out) :
+					state({ State::Initial }),
+				    out(out)
+				{}
+				~SAXHandler() {}
 
-				void Null() { assign_from(nullptr);  }
-				void Bool(bool v) { assign_from(v); }
-				void Int(int v) { assign_from(v); }
-				void Uint(unsigned v) { assign_from(v); }
-				void Int64(int64_t v) { assign_from(v); }
-				void Uint64(uint64_t v) { assign_from(v); }
-				void Double(double v) { assign_from(v); }
-				void String(const char* str, size_t length, bool copy) { 
-					assign_from(std::string(str, str + length));
+				void Null() { parse(nullptr); }
+				void Bool(bool v) { parse(v); }
+				void Int(int v) { parse(v); }
+				void Uint(unsigned v) { parse(v); }
+				void Int64(int64_t v) { parse(v); }
+				void Uint64(uint64_t v) { parse(v); }
+				void Double(double v) { parse(v); }
+				void String(const char* str, size_t length, bool copy) { parse(str, length); }
+
+				void StartObject()
+				{ 
+					switch (state.top()) {
+					case State::InObject:
+						throw std::runtime_error("Parse Error: Unnamed nested object");
+					case State::Initial:
+						assert(backrefs.empty());
+					case State::InArray:
+					case State::InValue:
+						out.emplace_back(Object());
+						backrefs.push(out.size() - 1);
+						break;
+					default:
+						assert(false);
+					}
+					state.push(State::InObject);
 				}
 
-				void StartObject() { ++indirection_lvl; }
-				void EndObject(size_t memberCount) { --indirection_lvl; }
-				void StartArray() {}
-				void EndArray(size_t elementCount) {}
+				void EndObject(size_t count) { 
+					boost::apply_visitor(close_object(count), out[backrefs.top()]);
+					backrefs.pop();
+					state.pop(); 
+				}
+
+				void StartArray() {
+					switch (state.top()) {
+					case State::Initial:
+						assert(backrefs.empty());
+					case State::InObject:
+					case State::InArray:
+					case State::InValue:
+						out.emplace_back(Array());
+						backrefs.push(out.size() - 1);
+						break;
+					default:
+						assert(false);
+					}
+					state.push(State::InArray);
+				}
+
+				void EndArray(size_t count) {
+					boost::apply_visitor(close_array(count), out[backrefs.top()]);
+					backrefs.pop();
+					state.pop();
+				}
 
 			private:
 
+				enum class State
+				{
+					Initial, InObject, InArray, InValue
+				};
+
+				typedef std::stack<State> States;
+				typedef std::stack<size_t> BackRefs;
+				typedef std::vector<Value> Values;
+
 				template <typename T>
-				void assign_from(const T& src)
+				void parse(const T& t)
 				{
-					if (++value_count % 2 == 0) {
-						check_overrun();
-						assign_to(out.front(), src);
-						out.pop();
+					switch (state.top()) {
+					case State::Initial:
+						throw std::runtime_error("Parse Error: Unnamed value at root");
+					case State::InObject:
+						throw std::runtime_error("Parse Error: Unnamed member");
+					case State::InValue:
+						parse_value(t);
+						state.pop();
+						break;
+					case State::InArray :
+						parse_value(t);
+						break;
+					default:
+						assert(false);
 					}
 				}
 
-				inline void check_overrun()
+				void parse(const char* str, size_t length)
 				{
-					if (out.empty()) {
-						throw std::runtime_error("Parse error: source data too large");
+					switch (state.top()) {
+					case State::Initial:
+					case State::InObject:
+						state.push(State::InValue);
+						break;
+					case State::InValue:
+						parse_value(str, length);
+						state.pop();
+						break;
+					case State::InArray:
+						parse_value(str, length);
+						break;
+					default:
+						assert(false);
 					}
 				}
-
-				inline void check_underrun()
+				
+				template <typename T>
+				void parse_value(const T& value)
 				{
-					if (!out.empty()) {
-						throw std::runtime_error("Parse error: source data incomplete");
-					}
-					if (indirection_lvl) {
-						throw std::runtime_error("Parse error: Nesting too deep at eos");
-					}
+					out.push_back(value);
 				}
 
-				TypeValueQueue& out;
-				size_t value_count = 0;
-				size_t indirection_lvl = 0;
+				void parse_value(const char* str, size_t length)
+				{
+					out.push_back(std::string(str, length));
+				}
+
+				Values& out;
+				States state;
+				BackRefs backrefs;
 			};
 
-			template <typename T>
-			inline TypeValue make_tv(T& dst)
-			{
-				return TypeValue(Traits<T>::type_id, &dst);
-			}
-
 			InputStreamWrapper in;
-			TypeValueQueue out;
+			std::vector<Value> out;
 		};
 	}
 }

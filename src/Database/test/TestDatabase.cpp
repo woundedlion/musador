@@ -361,7 +361,7 @@ TEST(test_json_archive)
 		std::cout << json.str();
 		CHECK(rw == rw2);
 	}
-
+#if 0
 	{
 		TestReadWrite rw;
 		rw.m1 = true;
@@ -432,7 +432,6 @@ TEST(test_json_archive)
 		std::cout << json.str();
 		CHECK(rw == rw2);
 	}
-#if 0
 	{
 		TestEntityAutoKey auto_key_ref;
 		TestEntityAutoKey auto_key_ptr;
@@ -441,8 +440,9 @@ TEST(test_json_archive)
 
 		std::stringstream json;
 		storm::json::OutputArchive out(json);
-		out << t;
+		out << nested;
 		std::cout << json.str();
+
 		TestNested t2;
 		storm::json::InputArchive in(json);
 		in >> t2;

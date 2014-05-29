@@ -24,7 +24,7 @@ public:
 
 	STORM_TABLE(test)
 
-		int64_t id;
+	int64_t id;
 	int m1;
 	std::string m2;
 	std::wstring m3;
@@ -58,7 +58,10 @@ public:
 
 struct TestReadWrite
 {
-	TestReadWrite()
+	TestReadWrite() :
+	m12({ { "foo", 999 }, { "qux", -999 } }),
+	m13({ "biz", "boz", "baz" }),
+	m14({ { "bar", { 1, 2, 3, 4 } }, { "baz", { 123, 456, 678 } } })
 	{}
 
 	bool operator==(const TestReadWrite& r)
@@ -74,11 +77,14 @@ struct TestReadWrite
 			&& r.m9 == m9
 			&& r.m10 == m10
 			&& r.m11 == m11
+			&& r.m12 == m12
+			&& r.m13 == m13
+			&& r.m14 == m14
 			;
 	}
 
 	template <typename T>
-	bool equals(T t1, T t2)
+	bool equals(const T& t1, const T& t2)
 	{
 		return fabs(t1 - t2) < std::numeric_limits<T>::epsilon();
 	}
@@ -94,8 +100,11 @@ struct TestReadWrite
 	std::wstring m9;
 	char m10 = 'a';
 	char m11 = 'b';
+	std::map<std::string, int> m12;
+	std::vector<std::string> m13;
+	std::map<std::string, std::vector<uint64_t>> m14;
 
-	STORM_SERIALIZE(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11);
+	STORM_SERIALIZE(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14);
 };
 
 struct TestNested {
@@ -118,5 +127,5 @@ struct TestNested {
 	std::map<std::string, std::vector<char>> m8;
 	std::map<std::string, std::vector<TestReadWrite>> m9;
 
-	STORM_SERIALIZE(m1, m2, m3, m4, m5, m6, m7, m9)
+	STORM_SERIALIZE(m1, m2, m3, m4, m5, m6, m7, m8, m9)
 };
