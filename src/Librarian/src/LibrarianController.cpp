@@ -132,7 +132,7 @@ LibrarianController::getConfig(HTTP::Env& env)
         storm::json::OutputArchive ar(*env.res->data);
         ar << boost::serialization::make_nvp("Librarian",*Config::instance());
     }
-    env.res->headers["Content-Type"] = "text/xml";
+    env.res->headers["Content-Type"] = "text/json";
     env.res->headers["Content-Length"] = boost::lexical_cast<std::string>(env.res->data->tellp());
     return true;
 }

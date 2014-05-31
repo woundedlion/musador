@@ -86,10 +86,16 @@ namespace storm {
 
 		private:
 
-			template <typename T> 
+			template <typename T, typename std::enable_if<std::is_class<T>::value>::type* = nullptr>
 			void write_value(T& t)
 			{
-				(*this) & t;
+				*this & t;
+			}
+
+			template <typename T, typename std::enable_if<std::is_reference<T>::value>::type* = nullptr>
+			void write_value(T& t)
+			{
+				write_value(*t);
 			}
 
 			template <typename T>
@@ -115,6 +121,7 @@ namespace storm {
 
 			inline void write_value(std::string& v) { write_value(v.c_str()); }
 			inline void write_value(std::wstring& v) { write_value(v.c_str()); }
+
 			inline void write_value(char v) { write_value(std::string(1, v)); }
 			inline void write_value(wchar_t v) { write_value(std::wstring(1, v)); }
 			inline void write_value(bool v) { writer.Bool(v); }
