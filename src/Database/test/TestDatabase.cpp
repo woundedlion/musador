@@ -326,7 +326,7 @@ TEST(test_json_archive)
 	eck1.m2 = "m2m2m2";
 	eck1.m3 = L"m3m3m3";
 
-	TestNested nested(entity, eck1, NULL, &entity);
+	TestNested nested(entity, eck1);
 
 	{
 		std::stringstream json;
@@ -361,7 +361,7 @@ TEST(test_json_archive)
 		std::cout << json.str();
 		CHECK(rw == rw2);
 	}
-#if 0
+
 	{
 		TestReadWrite rw;
 		rw.m1 = true;
@@ -432,25 +432,28 @@ TEST(test_json_archive)
 		std::cout << json.str();
 		CHECK(rw == rw2);
 	}
+#if 0
 	{
 		TestEntityAutoKey auto_key_ref;
-		TestEntityAutoKey auto_key_ptr;
 		TestEntityCompositeKey comp_key;
-		TestNested nested(auto_key_ref, comp_key, NULL, &auto_key_ptr);
+		TestNested nested(auto_key_ref, comp_key);
 
 		std::stringstream json;
 		storm::json::OutputArchive out(json);
 		out << nested;
 		std::cout << json.str();
 
-		TestNested t2;
+		TestEntityAutoKey auto_key_ref2;
+		TestEntityCompositeKey comp_key2;
+		TestNested nested2(auto_key_ref2, comp_key2);
+
 		storm::json::InputArchive in(json);
-		in >> t2;
+		in >> nested2;
 		json.str("");
 		json.clear();
-		out << t2;
+		out << nested2;
 		std::cout << json.str();
-		CHECK(t == t2);
+		CHECK(nested == nested2);
 	}
 #endif
 }

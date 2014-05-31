@@ -93,17 +93,6 @@ namespace storm {
 			}
 
 			template <typename T>
-			void write_value(T *t)
-			{
-				if (t) {
-					write_value(*t);
-				}
-				else {
-					writer.Null();
-				}
-			}
-
-			template <typename T>
 			void write_value(std::vector<T>& v)
 			{
 				writer.StartArray();
@@ -155,6 +144,7 @@ namespace storm {
 			{
 				rapidjson::Reader parser;
 				parser.Parse<rapidjson::kParseValidateEncodingFlag>(in, SAXHandler(out));
+				cur_val = out.cbegin();
 			}
 
 			template <typename T>
@@ -166,12 +156,17 @@ namespace storm {
 			template <typename T>
 			InputArchive& operator &(T& t)
 			{
+				if (cur_val == out.cend()) {
+					throw std::runtime_error("Parse error: Source too short");
+				}
+				++cur_val;
+
 				boost::serialization::serialize_adl(
 					*this,
 					t,
 					boost::serialization::version<T>::value);
 
-				if (!out.empty()) {
+				if (cur_val != out.cend()) {
 					throw std::runtime_error("Parse error: Source too long");
 				}
 
@@ -181,11 +176,12 @@ namespace storm {
 			template <typename T>
 			InputArchive& operator &(const boost::serialization::nvp<T>& dst)
 			{
-				if (out.empty()) {
+				if (cur_val == out.cend()) {
 					throw std::runtime_error("Parse error: Source too short");
 				}
 
-//				read_value(dst.value(), parsed.front());
+				boost::apply_visitor(check_name(dst.name()), *cur_val++);
+				read_value(dst.value());
 				return *this;
 			}
 
@@ -294,6 +290,7 @@ namespace storm {
 					switch (state.top()) {
 					case State::Initial:
 					case State::InObject:
+						parse_value(str, length);
 						state.push(State::InValue);
 						break;
 					case State::InValue:
@@ -316,16 +313,68 @@ namespace storm {
 
 				void parse_value(const char* str, size_t length)
 				{
-					out.push_back(std::string(str, length));
+					out.emplace_back(std::string(str, length));
 				}
 
 				Values& out;
 				States state;
 				BackRefs backrefs;
 			};
+			
+			template <typename T, typename std::enable_if<std::is_class<T>::value>::type* = nullptr>
+			void read_value(T& t)
+			{
+				*this & t;
+			}
+
+			template <typename T, typename std::enable_if<std::is_reference<T>::value>::type* = nullptr>
+			void read_value(T& t)
+			{
+				read_value(*t);
+			}
+
+			template <typename T, typename std::enable_if<std::is_scalar<T>::value>::type* = nullptr>
+			void read_value(T& t)
+			{
+				boost::apply_visitor(assign_to<T>(t), *cur_val++);
+			}
+
+			void read_value(std::string& s)
+			{
+				boost::apply_visitor(assign_to<decltype(s)>(s), *cur_val++);
+			}
+
+			void read_value(std::wstring& s)
+			{
+				boost::apply_visitor(assign_to<decltype(s)>(s), *cur_val++);
+			}
+
+			template <typename T>
+			void read_value(std::vector<T>& v)
+			{
+				const Array& a = boost::get<Array>(*cur_val++);
+				std::vector<T>(a.items).swap(v);
+				for (auto& i : v) {
+					read_value(i);
+				}
+			}
+
+			template <typename T>
+			void read_value(std::map<std::string, T>& map)
+			{
+				const Object& o = boost::get<Object>(*cur_val++);
+				map.clear();
+				for (size_t i = 0; i < o.items; ++i)
+				{
+					insert_item<T> inserter(map);
+					boost::apply_visitor(inserter, *cur_val++);
+					read_value(inserter.last_value());
+				}
+			}
 
 			InputStreamWrapper in;
 			std::vector<Value> out;
+			std::vector<Value>::const_iterator cur_val;
 		};
 	}
 }

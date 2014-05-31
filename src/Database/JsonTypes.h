@@ -12,15 +12,11 @@
 namespace storm {
 	namespace json {
 
-		struct Object
-		{
-			size_t items = 0;
-		};
+		struct Object { size_t items = 0; };
+		struct Array { size_t items = 0; };
+		typedef boost::variant<nullptr_t, bool, int, unsigned int, int64_t, uint64_t, double, std::string, Object, Array> Value;
 
-		struct Array
-		{
-			size_t items = 0;
-		};
+		// Visitors
 
 		struct close_object : public boost::static_visitor<>
 		{
@@ -58,7 +54,73 @@ namespace storm {
 			const size_t items;
 		};
 
-		typedef boost::variant<nullptr_t, bool, int, unsigned int, int64_t, uint64_t, double, std::string, Object, Array> Value;
+		struct check_name : public boost::static_visitor<>
+		{
+			check_name(const char *name) : name(name) {}
+
+			void operator()(const std::string& n) const
+			{
+				if (n != name) {
+					throw std::runtime_error("Parse Error: Member name mismatch");
+				}
+			}
+			
+			template <typename T>
+			void operator()(T& t) const
+			{
+				throw std::runtime_error("Parse Error: Expected member name");
+			}
+
+			const char *name;
+		};
+
+		template <typename Dst>
+		struct assign_to : public boost::static_visitor<>
+		{
+			assign_to(Dst& dst) : dst(dst) {}
+			
+			template <typename Src>
+			void operator()(const Src& src) const
+			{
+				assign(dst, src);
+			}
+
+			Dst& dst;
+		};
+
+		template <typename V>
+		class insert_item : public boost::static_visitor<>
+		{
+		public:
+			insert_item(std::map<std::string, V>& dst) : dst(dst), inserted({ dst.end(), false }) {}
+
+			template <typename N>
+			void operator()(const N&) const
+			{
+				throw std::runtime_error("Parse Error: Expected member name");
+			}
+
+			void operator()(const std::string& name) const
+			{
+				inserted = dst.emplace(std::make_pair(name, V()));
+				if (!inserted.second) {
+					throw std::runtime_error("Parse Error: Duplicate member name");
+				}
+			}
+
+			V& last_value()
+			{
+				assert(inserted.second);
+				return inserted.first->second;
+			}
+
+		private:
+
+			std::map<std::string, V>& dst;
+			mutable std::pair<typename std::map<std::string, V>::iterator, bool> inserted;
+		};
+
+		// Conversion helpers
 
 		template <typename Dst, typename Src>
 		void assign(Dst& dst, const Src& src, typename std::enable_if<std::is_same<Dst, Src>::value >::type* = 0)

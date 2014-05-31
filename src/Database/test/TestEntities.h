@@ -22,6 +22,14 @@ public:
 		ar & STORM_NVP(m3);
 	}
 
+	bool operator==(const TestEntityAutoKey& r) const
+	{
+		return r.id == id
+			&& r.m1 == m1
+			&& r.m2 == m2
+			&& r.m3 == m3;
+	}
+
 	STORM_TABLE(test)
 
 	int64_t id;
@@ -49,6 +57,15 @@ public:
 		ar & STORM_NVP(m3);
 	}
 
+	bool operator==(const TestEntityCompositeKey& r) const
+	{
+		return r.id1 == id1
+			&& r.id2 == id2
+			&& r.m1 == m1
+			&& r.m2 == m2
+			&& r.m3 == m3;
+	}
+
 	std::string id1;
 	int64_t id2 = 0;
 	int m1 = 0;
@@ -64,7 +81,7 @@ struct TestReadWrite
 	m14({ { "bar", { 1, 2, 3, 4 } }, { "baz", { 123, 456, 678 } } })
 	{}
 
-	bool operator==(const TestReadWrite& r)
+	bool operator==(const TestReadWrite& r) const
 	{
 		return r.m1 == m1
 			&& r.m2 == m2
@@ -84,7 +101,7 @@ struct TestReadWrite
 	}
 
 	template <typename T>
-	bool equals(const T& t1, const T& t2)
+	static bool equals(const T& t1, const T& t2)
 	{
 		return fabs(t1 - t2) < std::numeric_limits<T>::epsilon();
 	}
@@ -108,24 +125,34 @@ struct TestReadWrite
 };
 
 struct TestNested {
-	TestNested(TestEntityAutoKey& m1, TestEntityCompositeKey m2, TestEntityAutoKey *m3, TestEntityAutoKey *m4) :
-	m1(m1), m2(m2), m3(m3), m4(m4),
-	m5({ 2, 4, 6, 8, 10 }),
-	m6({ { "one", "one" }, { "two", "two" } }),
-	m7({ { "three", 3 }, { "four", 4 }, { "negative four", -4 } }),
-	m8({ { "abc", { 'a', 'b', 'c' } }, { "def", { 'd', 'e', 'f' } } }),
-	m9({ { "foo", { TestReadWrite(), TestReadWrite() } } })
+	TestNested(TestEntityAutoKey& m1, TestEntityCompositeKey m2) :
+	m1(m1), 
+	m2(m2),
+	m3({ 2, 4, 6, 8, 10 }),
+	m4({ { "one", "one" }, { "two", "two" } }),
+	m5({ { "three", 3 }, { "four", 4 }, { "negative four", -4 } }),
+	m6({ { "abc", { 'a', 'b', 'c' } }, { "def", { 'd', 'e', 'f' } } }),
+	m7({ { "foo", { TestReadWrite(), TestReadWrite() } } })
 	{}
+
+	bool operator==(const TestNested&)
+	{
+		return m1 == m1
+			&& m2 == m2
+			&& m3 == m3
+			&& m4 == m4
+			&& m5 == m5
+			&& m6 == m6
+			&& m7 == m7;
+	}
 
 	TestEntityAutoKey& m1;
 	TestEntityCompositeKey m2;
-	TestEntityAutoKey *m3;
-	TestEntityAutoKey *m4;
-	std::vector<int> m5;
-	std::map<std::string, std::string> m6;
-	std::map<std::string, int> m7;
-	std::map<std::string, std::vector<char>> m8;
-	std::map<std::string, std::vector<TestReadWrite>> m9;
+	std::vector<int> m3;
+	std::map<std::string, std::string> m4;
+	std::map<std::string, int> m5;
+	std::map<std::string, std::vector<char>> m6;
+	std::map<std::string, std::vector<TestReadWrite>> m7;
 
-	STORM_SERIALIZE(m1, m2, m3, m4, m5, m6, m7, m8, m9)
+	STORM_SERIALIZE(m1, m2, m3, m4, m5, m6, m7)
 };
