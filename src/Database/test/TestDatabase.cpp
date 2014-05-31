@@ -432,7 +432,7 @@ TEST(test_json_archive)
 		std::cout << json.str();
 		CHECK(rw == rw2);
 	}
-#if 0
+
 	{
 		TestEntityAutoKey auto_key_ref;
 		TestEntityCompositeKey comp_key;
@@ -455,7 +455,7 @@ TEST(test_json_archive)
 		std::cout << json.str();
 		CHECK(nested == nested2);
 	}
-#endif
+
 }
 
 int main()

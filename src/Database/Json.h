@@ -151,24 +151,23 @@ namespace storm {
 			InputArchive& operator >>(T& t)
 			{
 				return (*this) & t;
+
+				if (cur_val != out.cend()) {
+					throw std::runtime_error("Parse error: Source too long");
+				}
 			}
 
 			template <typename T>
 			InputArchive& operator &(T& t)
 			{
-				if (cur_val == out.cend()) {
+				if (cur_val++ == out.cend()) {
 					throw std::runtime_error("Parse error: Source too short");
 				}
-				++cur_val;
 
 				boost::serialization::serialize_adl(
 					*this,
 					t,
 					boost::serialization::version<T>::value);
-
-				if (cur_val != out.cend()) {
-					throw std::runtime_error("Parse error: Source too long");
-				}
 
 				return *this;
 			}
@@ -181,6 +180,11 @@ namespace storm {
 				}
 
 				boost::apply_visitor(check_name(dst.name()), *cur_val++);
+
+				if (cur_val == out.cend()) {
+					throw std::runtime_error("Parse error: Source too short");
+				}
+
 				read_value(dst.value());
 				return *this;
 			}
@@ -213,10 +217,10 @@ namespace storm {
 					switch (state.top()) {
 					case State::InObject:
 						throw std::runtime_error("Parse Error: Unnamed nested object");
-					case State::Initial:
-						assert(backrefs.empty());
-					case State::InArray:
 					case State::InValue:
+						state.pop();
+					case State::Initial:
+					case State::InArray:
 						out.emplace_back(Object());
 						backrefs.push(out.size() - 1);
 						break;
@@ -234,11 +238,12 @@ namespace storm {
 
 				void StartArray() {
 					switch (state.top()) {
-					case State::Initial:
-						assert(backrefs.empty());
 					case State::InObject:
-					case State::InArray:
+						throw std::runtime_error("Parse Error: Unnamed nested array");
 					case State::InValue:
+						state.pop();
+					case State::Initial:
+					case State::InArray:
 						out.emplace_back(Array());
 						backrefs.push(out.size() - 1);
 						break;
