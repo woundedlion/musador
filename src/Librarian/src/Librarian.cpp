@@ -16,15 +16,12 @@ namespace fs = boost::filesystem;
 
 Librarian::Librarian() :
 UI::Daemon<Librarian>(L"Musador Librarian"),
-db(cfg_path())
+db(db_path()),
+cfg(loadConfig()),
+controller(cfg),
+server(cfg.server)
 {
     Network::instance();
-
-	load_config();
-    
-	controller.reset(new LibrarianController());
-	server.reset(new Server(cfg.server, controller));
-
     IO::Proactor::instance()->start();
 }
 
@@ -32,70 +29,115 @@ Librarian::~Librarian()
 {
     IO::Proactor::instance()->stop();
     IO::Proactor::destroy();
-
-    Config::destroy();
-    Network::destroy();
+	Network::destroy();
 }
 
 int 
 Librarian::run(unsigned long argc, wchar_t * argv[])
 {	
-    server->start();
+    server.start();
 
-    // Start listening for incoming gui connections
-    listener.reset(new GUIListener());
+	boost::shared_ptr<IO::Listener> listener(new GUIListener());
     listener->beginAccept(boost::bind(&Librarian::onGUIAccept,this,_1,_2));
-
-    // Wait until SCM or ctrl-c shuts us down
     waitForStop(); 
 
-    server->stop();
-    server->waitForStop();
-    notifyGUI<GUIMsgDisabledNotify>();  
-
+	server.stop();
+    server.waitForStop();
+    
+	notifyGUI<GUIMsgDisabledNotify>();  
     return 0;
 }
 
-std::wstring
-Librarian::cfg_path()
+const std::wstring
+Librarian::data_path()
 {
-	fs::wpath data_path(Util::pathToDataDir() + L"\\Musador";
-	if (!fs::exists(data_path)) {
-		fs::create_directories(data_path);
-	}
-	return (data_path / L"librarian.db").wstring();
+	static auto r = (fs::wpath(Util::pathToDataDir()) / L"\\Musador").wstring();
+	return r;
 }
 
-void 
-Librarian::load_config()
+const std::wstring
+Librarian::cfg_path()
 {
-    HTTPConfig site;
-    site.addr = "0.0.0.0";
-    site.port = 5152;
-    site.documentRoot = (fs::wpath(cfg.librarian.dataDir.get()) / L"html").wstring();
-    site.requireAuth = false;
-    site.realm = L"Musador";
+	static auto r = (fs::wpath(data_path()) / L"librarian.cfg").wstring();
+	return r;
+}
 
-    HTTP::User u("admin");
-    u.setPassword("password");
-    HTTP::UserCollection users;
-    users[u.getUsername()] = u;
-    site.users = users;
+const std::wstring
+Librarian::db_path()
+{
+	static auto r = (fs::wpath(data_path()) / L"librarian.db").wstring();
+	return r;
+}
 
-    ServerConfig::HTTPSiteCollection sites;
-    sites.push_back(site);
-    cfg.server.sites = sites;
+LibrarianConfig
+Librarian::loadConfig()
+{
+	LibrarianConfig cfg;
+	if (!fs::exists(cfg_path())) {
+		configDefaults(cfg);
+		saveConfig(cfg);
+	}
 
-    LibraryConfig lib;
-    lib.id = 0;
-    lib.nickname = L"bighurt";
-    lib.dataFile = (fs::wpath(cfg.librarian.dataDir.get()) / L"bighurt.db").wstring();
-    std::vector<std::wstring> targets;
-    targets.push_back(L"C:\\music\\~tagged");
-    lib.targets = targets;
-    LibrarianConfig::LibraryCollection libraries;
-    libraries[lib.id] = lib;
-    cfg.librarian.libraries = libraries;
+	cfg.server.controller = &controller;
+
+	try {
+		std::ifstream in(cfg_path());
+		storm::json::InputArchive json(in);
+		json >> cfg;
+		return cfg;
+	}
+	catch (const std::runtime_error& e) {
+		LOG(Error) << "Failed to load config: " << e.what();
+		return cfg;
+	}
+}
+
+
+void
+Librarian::saveConfig(const LibrarianConfig& cfg)
+{
+	try {
+		std::ofstream out(cfg_path());
+		storm::json::OutputArchive json(out);
+		json << cfg;
+	}
+	catch (const std::runtime_error& e) {
+		LOG(Error) << "Failed to save config: " << e.what();
+	}
+}
+
+void
+Librarian::configDefaults(LibrarianConfig& cfg)
+{
+	cfg.dataDir = data_path();
+
+	HTTP::Config site;
+	site.addr = "0.0.0.0";
+	site.port = 5152;
+	site.documentRoot = (fs::wpath(cfg.dataDir) / L"html").wstring();
+	site.requireAuth = false;
+	site.realm = L"Musador";
+
+	HTTP::User u("admin");
+	u.setPassword("password");
+	HTTP::UserCollection users;
+	users[u.getUsername()] = u;
+	site.users = users;
+
+	ServerConfig::HTTPSiteCollection sites;
+	sites.push_back(site);
+	cfg.server.sites = sites;
+
+	LibraryConfig lib;
+	lib.id = 0;
+	lib.nickname = L"bighurt";
+	lib.dataFile = (fs::wpath(cfg.dataDir) / L"bighurt.db").wstring();
+	std::vector<std::wstring> targets;
+	targets.push_back(L"C:\\music\\~tagged");
+	lib.targets = targets;
+	LibrarianConfig::LibraryCollection libraries;
+	libraries.push_back(lib);
+	cfg.libraries = libraries;
 }
 
 void 
@@ -133,7 +175,7 @@ Librarian::onGUIAccept(boost::shared_ptr<IO::Msg> msg, boost::any /*tag = NULL*/
         notifyGUI<GUIMsgEnabledNotify>();        
 
         // Keep listening
-        listener->beginAccept(boost::bind(&Librarian::onGUIAccept,this,_1,_2));
+        msgAccept->listener->beginAccept(boost::bind(&Librarian::onGUIAccept,this,_1,_2));
         gui->beginRead();
     }
 }

@@ -50,6 +50,11 @@ namespace storm {
 			typedef boost::mpl::bool_<true> is_saving;
 			typedef boost::mpl::bool_<false> is_loading;
 
+			template <typename T>
+			using Unqualified = typename std::remove_const<
+				typename std::remove_reference<T>::type
+			>::type;
+
 			OutputArchive(std::ostream& out) :
 				out(out),
 				writer(buf)
@@ -67,7 +72,7 @@ namespace storm {
 				writer.StartObject();
 				boost::serialization::serialize_adl(
 					*this,
-					t,
+					const_cast<typename std::add_reference<typename Unqualified<T>>::type>(t),
 					boost::serialization::version<T>::value);
 				writer.EndObject();
 				// TODO: Remove copy by wrapping std::ostream instead of using rapidjson::StringBuffer

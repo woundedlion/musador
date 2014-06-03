@@ -1,6 +1,7 @@
 #include "Library.h"
 #include "StatsBlock.h"
 #include "Utilities/Util.h"
+#include "Librarian/Config.h"
 
 using namespace Musador;
 using namespace storm::sqlite;

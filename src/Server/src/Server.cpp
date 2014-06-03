@@ -46,20 +46,20 @@ Server::start()
     for (ServerConfig::HTTPSiteCollection::const_iterator iter = sites.begin(); 
         iter != sites.end(); ++iter)
     {
-        if (!fs::exists(iter->documentRoot.get()))
+        if (!fs::exists(iter->documentRoot))
         {
             LOG(Error) << "Document Root does not exist: " << iter->documentRoot;
         }
 
         sockaddr_in ep = {0};
         ep.sin_family = AF_INET;
-        ep.sin_addr.s_addr = ::inet_addr(iter->addr.get().c_str());
+        ep.sin_addr.s_addr = ::inet_addr(iter->addr.c_str());
         ep.sin_port = ::htons(iter->port);
 
         HTTP::Env env;
-        env.cfg.reset(new HTTPConfig(*iter));
+        env.cfg.reset(new HTTP::Config(*iter));
         env.controller = cfg.controller;
-        env.server = shared_from_this();
+		env.server = this;
 
         boost::shared_ptr<IO::Listener> listener(new HTTPListener(ep));
         acceptConnections(listener, env);

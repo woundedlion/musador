@@ -12,6 +12,7 @@
 #include "Protocol/GUIListener.h"
 #include "Protocol/GUIConnection.h"
 #include "Database/Storm.h"
+#include "Config.h"
 
 using namespace Musador;
 namespace Musador
@@ -44,18 +45,21 @@ namespace Musador
 
         void onGUIAccept(boost::shared_ptr<IO::Msg> msg, boost::any tag);
         void onGUIMsg(boost::shared_ptr<GUIMsg> msg);
-		static std::wstring cfg_path();
-		void load_config();
+		static const std::wstring data_path();
+		static const std::wstring cfg_path();
+		static const std::wstring db_path();
+		LibrarianConfig loadConfig();
+		void saveConfig(const LibrarianConfig& cfg);
+		void configDefaults(LibrarianConfig& cfg);
 
         template <typename T>
         void notifyGUI();
 
 		storm::sqlite::Database db;
 		LibrarianConfig cfg;
-        boost::shared_ptr<GUIListener> listener;
+		LibrarianController controller;
         boost::shared_ptr<GUIConnection> gui;
-        boost::shared_ptr<Server> server;
-        boost::shared_ptr<LibrarianController> controller;
+        Server server;
 
     };
 

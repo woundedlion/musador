@@ -134,20 +134,22 @@ namespace storm {
 			throw std::runtime_error("Parse Error: Type mismatch");
 		}
 
-		void assign(int& dst, uint32_t src) { dst = static_cast<int>(src); }
-		void assign(int64_t& dst, uint32_t src) { dst = static_cast<int64_t>(src); }
-		void assign(int64_t& dst, uint64_t src) { dst = static_cast<int64_t>(src); }
-		void assign(int64_t& dst, int src) { dst = src; }
-		void assign(uint64_t& dst, uint32_t src) { dst = src; }
-		void assign(float& dst, double src) { dst = static_cast<float>(src); }
-		void assign(float& dst, int src) { dst = static_cast<float>(src); }
-		void assign(float& dst, uint32_t src) { dst = static_cast<float>(src); }
-		void assign(double& dst, int src) { dst = static_cast<double>(src); }
-		void assign(double& dst, int64_t src) { dst = static_cast<double>(src); }
-		void assign(double& dst, uint32_t src) { dst = static_cast<double>(src); }
-		void assign(double& dst, uint64_t src) { dst = static_cast<double>(src); }
-		void assign(std::wstring& dst, const std::string& src) { dst = Util::utf8ToUnicode(src);  }
-		void assign(char& dst, const std::string& src) { dst = src.empty() ? '\0' : src[0]; }
-		void assign(wchar_t& dst, const std::string& src) { dst = (src.empty() ? L'\0' : Util::utf8ToUnicode(src[0])[0]); }
+		static inline void assign(int16_t& dst, int src) { dst = static_cast<int16_t>(src); }
+		static inline void assign(uint16_t& dst, uint32_t src) { dst = static_cast<uint16_t>(src); }
+		static inline void assign(int& dst, uint32_t src) { dst = static_cast<int>(src); }
+		static inline void assign(int64_t& dst, uint32_t src) { dst = static_cast<int64_t>(src); }
+		static inline void assign(int64_t& dst, uint64_t src) { dst = static_cast<int64_t>(src); }
+		static inline void assign(int64_t& dst, int src) { dst = src; }
+		static inline void assign(uint64_t& dst, uint32_t src) { dst = src; }
+		static inline void assign(float& dst, double src) { dst = static_cast<float>(src); }
+		static inline void assign(float& dst, int src) { dst = static_cast<float>(src); }
+		static inline void assign(float& dst, uint32_t src) { dst = static_cast<float>(src); }
+		static inline void assign(double& dst, int src) { dst = static_cast<double>(src); }
+		static inline void assign(double& dst, int64_t src) { dst = static_cast<double>(src); }
+		static inline void assign(double& dst, uint32_t src) { dst = static_cast<double>(src); }
+		static inline void assign(double& dst, uint64_t src) { dst = static_cast<double>(src); }
+		static inline void assign(std::wstring& dst, const std::string& src) { dst = Util::utf8ToUnicode(src); }
+		static inline void assign(char& dst, const std::string& src) { dst = src.empty() ? '\0' : src[0]; }
+		static inline void assign(wchar_t& dst, const std::string& src) { dst = (src.empty() ? L'\0' : Util::utf8ToUnicode(src[0])[0]); }
 	}
 }

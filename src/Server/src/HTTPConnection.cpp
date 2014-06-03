@@ -77,7 +77,7 @@ void
 HTTPConnection::close()
 {
     SocketConnection::close();
-    if (NULL != env.server)
+    if (env.server)
     {
         boost::shared_ptr<IO::Connection> conn = shared_from_this();
         env.server->onError(conn, 0);

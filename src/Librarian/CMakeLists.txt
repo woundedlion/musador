@@ -12,7 +12,6 @@ SET(libs
         BoostSystem
         BoostSerialization
         BoostThread
-		Config
 		Database
 		Indexer
         IO

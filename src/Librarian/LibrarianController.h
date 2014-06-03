@@ -6,6 +6,7 @@
 #include <boost/serialization/nvp.hpp>
 #include "Server/Controller.h"
 #include "Indexer/Indexer.h"
+#include "Config.h"
 
 namespace Musador
 {
@@ -16,25 +17,25 @@ namespace Musador
     public:
 
         /// @brief Constructor.
-        LibrarianController();
+		LibrarianController(LibrarianConfig& cfg);
 
     private:
 
-		void loadConfig();
 		void bindHandlers();
 
 		bool dumpRequest(HTTP::Env& env);
 
-        bool reindex(HTTP::Env& env);
-        bool cancelIndex(HTTP::Env& env);
+//      bool reindex(HTTP::Env& env);
+//      bool cancelIndex(HTTP::Env& env);
 
         bool getConfig(HTTP::Env& env);
-        bool getIndexProgressXML(HTTP::Env& env);
-        bool getLibraryXML(HTTP::Env& env);
-        bool getLibraryStatsXML(HTTP::Env& env);
+//        bool getIndexProgressXML(HTTP::Env& env);
+//        bool getLibraryXML(HTTP::Env& env);
+//        bool getLibraryStatsXML(HTTP::Env& env);
 
         boost::shared_ptr<Indexer> indexer;
 
+		LibrarianConfig& cfg;
     };
 }
 

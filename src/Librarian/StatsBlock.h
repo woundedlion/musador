@@ -1,6 +1,7 @@
 #ifndef STATS_BLOCK_H_704610B2_D420_4d67_B986_04D8FF6EBD4E
 #define STATS_BLOCK_H_704610B2_D420_4d67_B986_04D8FF6EBD4E
 
+#include <map>
 namespace Musador
 {
 

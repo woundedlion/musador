@@ -8,7 +8,7 @@
 #include "IO/Connection.h"
 #include "IO/Proactor.h"
 #include "Session.h"
-#include "Config/Config.h"
+#include "HTTP.h"
 
 typedef boost::mutex Mutex;
 typedef boost::mutex::scoped_lock Guard;
@@ -17,6 +17,27 @@ typedef boost::thread Thread;
 
 namespace Musador
 {
+	class Controller;
+
+	class ServerConfig
+	{
+	public:
+
+		typedef std::vector<HTTP::Config> HTTPSiteCollection;
+
+		/// @brief Serialize this configuration.
+		/// @param[in] ar Destination archive for the serialized data.
+		/// @param[in] version The version of the archive. Used by boost::serialization version tracking.
+		template<class Archive>
+		void serialize(Archive & ar, const unsigned int version)
+		{
+			ar & BOOST_SERIALIZATION_NVP(sites);
+		}
+
+		HTTPSiteCollection sites;
+		Controller *controller = nullptr;
+	};
+
     /// @class Server
     /// @brief Generic Server class which can serve Connections for any type 
     /// of Listener

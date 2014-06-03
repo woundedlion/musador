@@ -6,7 +6,6 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/bind.hpp"
 #include "boost/archive/xml_oarchive.hpp"
-#include "Config/Config.h"
 #include "Logger/Logger.h"
 #include "Database/Storm.h"
 
@@ -14,29 +13,11 @@
 
 using namespace Musador;
 
-LibrarianController::LibrarianController()
+LibrarianController::LibrarianController(LibrarianConfig& cfg) : cfg(cfg)
 {
-	loadConfig();
 	bindHandlers();
 }
 
-void
-LibrarianController::loadConfig()
-{
-	LibrarianConfig::LibraryCollection libraries = Config::instance()->librarian.libraries;
-	LibrarianConfig::LibraryCollection::iterator iter = libraries.find(LibrarianConfig::LOCAL_LIB_ID);
-	if (iter != libraries.end()) {
-		indexer.reset(new Indexer(iter->second.dataFile));
-		std::vector<std::wstring> targets = iter->second.targets;
-		for (auto target : targets) {
-			indexer->addTarget(target);
-		}
-	}
-	else
-	{
-		LOG(Error) << "Local library missing!";
-	}
-}
 
 #define BIND_HANDLER(method, uri, handler) addHandler(method, uri, boost::bind(&LibrarianController::handler,this,_1))
 
@@ -65,6 +46,21 @@ LibrarianController::dumpRequest(HTTP::Env& env)
 	env.res->headers["Content-Length"] = boost::lexical_cast<std::string>(env.res->data->tellp());
 	return true;
 }
+
+bool 
+LibrarianController::getConfig(HTTP::Env& env)
+{
+	env.res->data.reset(new std::stringstream);
+	{
+		storm::json::OutputArchive json(*env.res->data);
+		json << cfg;
+	}
+	env.res->headers["Content-Type"] = "text/json";
+	env.res->headers["Content-Length"] = boost::lexical_cast<std::string>(env.res->data->tellp());
+	return true;
+}
+
+#if 0
 
 bool
 LibrarianController::reindex(HTTP::Env& env)
@@ -124,18 +120,6 @@ LibrarianController::cancelIndex(HTTP::Env& env)
     return true;    
 }
 
-bool 
-LibrarianController::getConfig(HTTP::Env& env)
-{
-    env.res->data.reset(new std::stringstream);
-    {
-        storm::json::OutputArchive ar(*env.res->data);
-        ar << boost::serialization::make_nvp("Librarian",*Config::instance());
-    }
-    env.res->headers["Content-Type"] = "text/json";
-    env.res->headers["Content-Length"] = boost::lexical_cast<std::string>(env.res->data->tellp());
-    return true;
-}
 
 bool
 LibrarianController::getIndexProgressXML(HTTP::Env& env)
@@ -250,3 +234,5 @@ LibrarianController::getLibraryStatsXML(HTTP::Env& env)
 
     return true;
 }
+
+#endif

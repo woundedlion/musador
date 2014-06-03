@@ -28,11 +28,12 @@ typedef boost::mutex::scoped_lock Guard;
 
 namespace Musador
 {
-    class HTTPConfig;
     class Controller;
 
     namespace HTTP
     {
+		class Config;
+
         /// @class User
         /// @brief Object representing a web user
         class User
@@ -205,24 +206,57 @@ namespace Musador
               }
 
               /// @brief A pointer to the current Request object
-              Request * req;
+              Request *req = nullptr;
 
               /// @brief A pointer to the current Response object
-              Response * res;
+              Response *res = nullptr;
 
               /// @brief A shared pointer to the HTTP configuration
-              boost::shared_ptr<HTTPConfig> cfg;
+              boost::shared_ptr<HTTP::Config> cfg;
 
               /// @brief A pointer to the Controller for this connection
               /// This is the object that maps specific requests to "business logic"
-              Controller * controller;
+              Controller *controller = nullptr;
 
               /// @brief A pointer to he HTTP Session for this connection
-              Session * session;
+              Session *session = nullptr;
 
               /// A shared pointer to the Server which owns this Connection
-              boost::shared_ptr<Server> server;
+              Server *server = nullptr;
         };
+
+
+		class Config
+		{
+		public:
+
+			HTTP::Config() :
+				documentRoot(L""),
+				addr("0.0.0.0"),
+				port(5152),
+				requireAuth(false),
+				realm(L"")
+			{}
+
+			template<class Archive>
+			void serialize(Archive & ar, const unsigned int version)
+			{
+				ar & BOOST_SERIALIZATION_NVP(documentRoot);
+				ar & BOOST_SERIALIZATION_NVP(addr);
+				ar & BOOST_SERIALIZATION_NVP(port);
+				ar & BOOST_SERIALIZATION_NVP(requireAuth);
+				ar & BOOST_SERIALIZATION_NVP(users);
+				ar & BOOST_SERIALIZATION_NVP(realm);
+			}
+
+			std::wstring documentRoot;
+			std::string addr;
+			unsigned short port;
+			bool requireAuth;
+			HTTP::UserCollection users;
+			std::wstring realm;
+		};
+
 
         //////////////////////////////////////////////////////////////////////
         /// Free functions
